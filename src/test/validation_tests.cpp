@@ -31,10 +31,15 @@ BOOST_AUTO_TEST_CASE(chain_test_classification)
     const auto regtest = CreateChainParams(*m_node.args, ChainType::REGTEST);
 
     BOOST_CHECK(!main->IsTestChain());
+    BOOST_CHECK(main->IsProductionChain());
     BOOST_CHECK(testnet->IsTestChain());
+    BOOST_CHECK(!testnet->IsProductionChain());
     BOOST_CHECK(testnet4->IsTestChain());
+    BOOST_CHECK(!testnet4->IsProductionChain());
     BOOST_CHECK(signet->IsTestChain());
+    BOOST_CHECK(!signet->IsProductionChain());
     BOOST_CHECK(regtest->IsTestChain());
+    BOOST_CHECK(!regtest->IsProductionChain());
 }
 
 
