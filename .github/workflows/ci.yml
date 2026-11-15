@@ -141,6 +141,8 @@ jobs:
         name: Checkout
         uses: actions/checkout@v6
         with:
+          # The repository name ends in a period; checkout into the workspace root to avoid invalid nested Windows paths.
+          path: .
           # Ensure the latest merged pull request state is used, even on re-runs.
           ref: &CHECKOUT_REF_TMPL ${{ github.event_name == 'pull_request' && github.ref || '' }}
 
@@ -331,6 +333,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          # The repository name ends in a period; checkout into the workspace root to avoid invalid nested Windows paths.
+          path: .
           ref: ${{ needs.record-frozen-commit.outputs.commit }}
 
       - name: Configure environment
@@ -391,6 +395,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          # The repository name ends in a period; checkout into the workspace root to avoid invalid nested Windows paths.
+          path: .
           ref: ${{ needs.record-frozen-commit.outputs.commit }}
 
       - name: Download built executables
@@ -601,6 +607,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          # The repository name ends in a period; checkout into the workspace root to avoid invalid nested Windows paths.
+          path: .
           ref: *CHECKOUT_REF_TMPL
           fetch-depth: 0
 
