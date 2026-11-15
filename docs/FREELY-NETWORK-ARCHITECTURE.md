@@ -110,8 +110,8 @@ A genesis nonce/hash must never be guessed or copied from Bitcoin. The genesis b
 
 ## 7. Current blockers and known source-review findings
 
-- The M1 PR's C++ test and dedicated Actions workflow have not yet completed; keep the PR unmerged until actual CI results and code review are available.
-- The existing GitHub Actions runs were still queued/pending at the last status check. Do not claim the C++ patch has compiled.
+- The dedicated M1 validation workflow has passed on earlier revisions; the latest revision is awaiting a fresh run after the Windows CI checkout-path fix. Keep the PR unmerged until current-head CI results and code review are available.
+- The latest revision `68829ade95abd4f632f350d78afccb9db04a0ef5` has two new Actions runs: general CI is queued and the dedicated M1 workflow is pending. Do not claim this revision has compiled until those runs finish.
 - `src/kernel/chainparams.cpp` currently contains Bitcoin's mainnet genesis, message-start bytes, Base58 prefixes and Bech32 HRP; these must not be reused for FREELY.
 - `src/chainparamsbase.cpp` currently maps each chain type to its own data directory and RPC port.
 - `src/init.cpp` constructs parameter objects for help/default descriptions and includes direct chain-type special cases. These need explicit review for a new production chain.
@@ -174,10 +174,33 @@ Other chain-specific logic also needs review:
 
 ### Classification correction status
 
-The M1 PR changes `CChainParams::IsTestChain()` from the old implicit rule “anything other than MAIN is a test chain” to an explicit `m_is_test_chain` flag. Existing Bitcoin test networks set that flag true; MAIN remains false by default. A regression test checks all five existing Bitcoin chain classifications.
+The M1 PR changes `CChainParams::IsTestChain()` from the old implicit rule “anything other than MAIN is a test chain” to an explicit `m_is_test_chain` flag, and adds `IsProductionChain()` with MAIN explicitly marked as production. Existing Bitcoin test networks set the test flag true. Regression tests check all five existing Bitcoin chain classifications and the production flag.
 
 This correction is compiled and covered by the passing M1 validation test run. It does not yet add `ChainType::FREELY`, nor does it solve the separate MAIN-only startup guard described above. Those remain implementation requirements.
 
 ### Next implementation gate
 
 Proceed with a narrowly scoped chain-selection patch only after the complete FREELY parameter sheet is defined. The chain type, data-directory and RPC plumbing can be prepared independently, but a selectable production chain must not be left with Bitcoin's genesis, network magic, address prefixes, activation assumptions or test-only startup behaviour. Keep the new chain private and unlaunched until all values and tests are independently reviewed.
+
+
+## 10. Progress update — 15 November 2026 (CI path correction)
+
+The previous full CI attempt exposed a Windows checkout failure before compilation. The runner attempted to create a nested checkout directory whose name repeated the repository name, including its trailing period:
+
+`D:\\a\\freely-bitcoin-core.\\freely-bitcoin-core.`
+
+The failure occurred in `actions/checkout`, not in C++ compilation. The repository name was intentionally left unchanged. Instead, all five checkout steps in `.github/workflows/ci.yml` were updated to use `path: .`, checking out directly into the workspace root and avoiding the invalid nested path.
+
+- Fix commit: `68829ade95abd4f632f350d78afccb9db04a0ef5`.
+- Updated branch: `freely/m1-consensus`.
+- PR: [FREELY M1 #1](https://github.com/Schmacko/freely-bitcoin-core./pull/1).
+- General CI run: [43765129757](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43765129757) — queued at the time of this update.
+- Dedicated M1 test run: [43765129758](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43765129758) — pending at the time of this update.
+
+The workflow file was read back after the commit; all five checkout steps contain the root path setting. The fix is not considered validated until the new Windows jobs get past checkout and the relevant builds/tests complete.
+
+The earlier targeted M1 validation success remains valid for its own tested revision, but it does not substitute for testing this new head commit. No PR merge or network launch has occurred.
+
+### Current implementation boundary
+
+The next source-level chain-selection patch is still gated on a complete, internally consistent network-parameter specification. The candidate P2P magic, ports, address prefixes and extended-key versions in `FREELY-NETWORK-PARAMETERS-DRAFT.md` remain proposals only. PoW limit, genesis target, activation policy, retarget edge cases and genesis transaction/header data remain unresolved. Do not expose a selectable production chain until those are defined and tested.
