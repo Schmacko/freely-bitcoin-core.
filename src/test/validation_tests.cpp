@@ -45,6 +45,25 @@ static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
     TestBlockSubsidyHalvings(consensusParams);
 }
 
+// FREELY's agreed issuance schedule currently matches Bitcoin Core's base schedule.
+// Keep these boundary checks explicit while FREELY-specific chain parameters are developed.
+BOOST_AUTO_TEST_CASE(freely_monetary_policy_test)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus = chainParams->GetConsensus();
+
+    BOOST_CHECK_EQUAL(consensus.nSubsidyHalvingInterval, 210000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(0, consensus), 50 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(209999, consensus), 50 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(210000, consensus), 25 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(419999, consensus), 25 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(420000, consensus), 12 * COIN + 50'000'000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(630000, consensus), 6 * COIN + 25'000'000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1260000, consensus), 78'125'000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(6720000, consensus), 1);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(6930000, consensus), 0);
+}
+
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
