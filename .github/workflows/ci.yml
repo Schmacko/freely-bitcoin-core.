@@ -49,6 +49,8 @@ jobs:
           fi
       - uses: actions/checkout@v6
         with:
+          # The repository name ends in a period; checkout into the workspace root to avoid invalid nested Windows paths.
+          path: .
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: ${{ env.FETCH_DEPTH }}
       - name: Determine commit range
