@@ -126,3 +126,58 @@ A genesis nonce/hash must never be guessed or copied from Bitcoin. The genesis b
 - `src/kernel/chainparams.h`, `src/kernel/chainparams.cpp`.
 - `src/chainparams.h`, `src/chainparams.cpp`.
 - `src/init.cpp`.
+
+
+## 9. Verified progress update — 15 November 2026
+
+### Gate A result: passed
+
+The dedicated FREELY M1 GitHub Actions run completed successfully:
+
+- Workflow: `FREELY M1 consensus tests`.
+- Run: [43662943218](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43662943218).
+- Tested commit: `cd00a88a3bd60ee1831e3877518390643864846b`.
+- Job: `validation-tests`.
+- Result: all workflow steps completed successfully.
+- The workflow configured the v32.1 source tree, built the `test_bitcoin` executable, and ran CTest with `-R '^validation_tests$'`.
+
+This verifies the C++ test binary builds and the selected validation test suite passes for that commit. It is not a full platform matrix, sanitizer run, full upstream test suite, security audit, or FREELY node build. The runtime chain implementation is still absent.
+
+### Source audit — exact integration points
+
+A read-only audit of the pinned v32.1 source confirmed the following integration map:
+
+| File | Current upstream behaviour | Required FREELY work |
+|---|---|---|
+| `src/util/chaintype.h` | Enum contains MAIN, TESTNET, SIGNET, REGTEST and TESTNET4 | Add a distinct FREELY production enum value |
+| `src/util/chaintype.cpp` | String conversion and parsing enumerate existing chains | Add canonical `freely` round-trip and invalid-name tests |
+| `src/chainparamsbase.h` | Allowed chain names omit FREELY | Add `freely` to the allowed-name list |
+| `src/chainparamsbase.cpp` | Base data directory and RPC port are selected by exhaustive switch | Add unique FREELY data-directory suffix and RPC port |
+| `src/kernel/chainparams.h` | Chain parameters expose chain type, genesis, magic, ports and address encodings | Add a dedicated FREELY parameter factory/options surface only where needed |
+| `src/kernel/chainparams.cpp` | Constructors define each Bitcoin network; magic lookup maps known networks | Add a separate FREELY parameter class and unique message magic; never mutate Bitcoin constructors |
+| `src/chainparams.cpp` | `CreateChainParams` is an exhaustive chain-type switch | Add FREELY construction |
+| `src/init.cpp` | Help/default setup creates each current network; startup has direct MAIN/REGTEST/SIGNET comparisons | Add FREELY to setup and audit each special-case semantically |
+
+### Startup policy findings
+
+The source audit found two particularly important direct checks in `src/init.cpp`:
+
+1. Around line 1186, `-testactivationheight` and `-vbparams` are blocked only when the selected chain is exactly `ChainType::MAIN`. A future FREELY production chain would bypass that guard unless it is changed to use an explicit production-chain policy.
+2. Around line 1171, `-test=<option>` is restricted to REGTEST. This should remain a regtest-only facility; FREELY must not be added to this exception.
+
+Other chain-specific logic also needs review:
+- `-acceptstalefeeestimates` currently has a REGTEST-only exception.
+- Testnet3 deprecation logging is specifically tied to TESTNET and should not be generalized.
+- Signet magic logging is specifically tied to SIGNET.
+- `GetNetworkForMagic` in `src/kernel/chainparams.cpp` must map FREELY's unique magic without collisions.
+- `CreateBaseChainParams`, `CreateChainParams`, and all enum-to-string/parser switches must remain exhaustive.
+
+### Classification correction status
+
+The M1 PR changes `CChainParams::IsTestChain()` from the old implicit rule “anything other than MAIN is a test chain” to an explicit `m_is_test_chain` flag. Existing Bitcoin test networks set that flag true; MAIN remains false by default. A regression test checks all five existing Bitcoin chain classifications.
+
+This correction is compiled and covered by the passing M1 validation test run. It does not yet add `ChainType::FREELY`, nor does it solve the separate MAIN-only startup guard described above. Those remain implementation requirements.
+
+### Next implementation gate
+
+Proceed with a narrowly scoped chain-selection patch only after the complete FREELY parameter sheet is defined. The chain type, data-directory and RPC plumbing can be prepared independently, but a selectable production chain must not be left with Bitcoin's genesis, network magic, address prefixes, activation assumptions or test-only startup behaviour. Keep the new chain private and unlaunched until all values and tests are independently reviewed.
