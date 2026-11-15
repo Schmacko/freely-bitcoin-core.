@@ -21,6 +21,23 @@
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, BasicTestingSetup)
 
+
+BOOST_AUTO_TEST_CASE(chain_test_classification)
+{
+    const auto main = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto testnet = CreateChainParams(*m_node.args, ChainType::TESTNET);
+    const auto testnet4 = CreateChainParams(*m_node.args, ChainType::TESTNET4);
+    const auto signet = CreateChainParams(*m_node.args, ChainType::SIGNET);
+    const auto regtest = CreateChainParams(*m_node.args, ChainType::REGTEST);
+
+    BOOST_CHECK(!main->IsTestChain());
+    BOOST_CHECK(testnet->IsTestChain());
+    BOOST_CHECK(testnet4->IsTestChain());
+    BOOST_CHECK(signet->IsTestChain());
+    BOOST_CHECK(regtest->IsTestChain());
+}
+
+
 static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
     int maxHalvings = 64;

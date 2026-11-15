@@ -1,9 +1,6 @@
 name: FREELY M1 consensus tests
 
 on:
-  push:
-    branches:
-      - freely/m1-consensus
   pull_request:
     branches:
       - freely/upstream-v32.1
