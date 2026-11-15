@@ -109,6 +109,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams(const MainNetOptions& opts) {
         m_chain_type = ChainType::MAIN;
+        m_is_production_chain = true;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210000;
