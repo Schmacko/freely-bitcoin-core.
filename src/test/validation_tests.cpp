@@ -61,6 +61,16 @@ BOOST_AUTO_TEST_CASE(freely_monetary_policy_test)
     BOOST_CHECK_EQUAL(GetBlockSubsidy(1260000, consensus), 78'125'000);
     BOOST_CHECK_EQUAL(GetBlockSubsidy(6720000, consensus), 1);
     BOOST_CHECK_EQUAL(GetBlockSubsidy(6930000, consensus), 0);
+    BOOST_CHECK_EQUAL(consensus.nSubsidyHalvingInterval, 210000);
+
+    // Sum every scheduled subsidy era in base units. The 33rd halving reaches zero.
+    CAmount total_issuance{0};
+    for (int halvings = 0; halvings < 64; ++halvings) {
+        const int height = halvings * consensus.nSubsidyHalvingInterval;
+        total_issuance += GetBlockSubsidy(height, consensus) * consensus.nSubsidyHalvingInterval;
+    }
+    BOOST_CHECK_EQUAL(total_issuance, 2'099'999'997'690'000LL);
+    BOOST_CHECK(total_issuance <= 21'000'000 * COIN);
 }
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
