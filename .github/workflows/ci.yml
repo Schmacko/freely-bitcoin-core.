@@ -220,7 +220,16 @@ jobs:
     steps:
       - *ANNOTATION_PR_NUMBER
 
-      - *CHECKOUT
+      - name: Checkout repository (Windows-safe)
+        shell: pwsh
+        env:
+          CHECKOUT_REF: ${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+        run: |
+          git -C $env:GITHUB_WORKSPACE init
+          git -C $env:GITHUB_WORKSPACE remote add origin "https://github.com/${{ github.repository }}.git"
+          git -C $env:GITHUB_WORKSPACE fetch --depth=1 origin $env:CHECKOUT_REF
+          git -C $env:GITHUB_WORKSPACE checkout --detach FETCH_HEAD
+          git config --global --add safe.directory $env:GITHUB_WORKSPACE
 
       - &IMPORT_VS_ENV
         name: Import Visual Studio env vars
@@ -394,12 +403,16 @@ jobs:
     steps:
       - *ANNOTATION_PR_NUMBER
 
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          # The repository name ends in a period; checkout into the workspace root to avoid invalid nested Windows paths.
-          path: .
-          ref: ${{ needs.record-frozen-commit.outputs.commit }}
+      - name: Checkout repository (Windows-safe)
+        shell: pwsh
+        env:
+          CHECKOUT_REF: ${{ needs.record-frozen-commit.outputs.commit }}
+        run: |
+          git -C $env:GITHUB_WORKSPACE init
+          git -C $env:GITHUB_WORKSPACE remote add origin "https://github.com/${{ github.repository }}.git"
+          git -C $env:GITHUB_WORKSPACE fetch --depth=1 origin $env:CHECKOUT_REF
+          git -C $env:GITHUB_WORKSPACE checkout --detach FETCH_HEAD
+          git config --global --add safe.directory $env:GITHUB_WORKSPACE
 
       - name: Download built executables
         uses: actions/download-artifact@v8
