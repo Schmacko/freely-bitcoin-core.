@@ -202,3 +202,8 @@ This specification authorises no public testnet, mainnet, mining deployment, wal
 - `src/init.cpp`: startup option restrictions and activation overrides.
 - FREELY architecture plan: `docs/FREELY-NETWORK-ARCHITECTURE.md`.
 - Provisional network parameter sheet: `docs/FREELY-NETWORK-PARAMETERS-DRAFT.md`.
+
+
+## Decision register
+
+See [FREELY consensus decision register](FREELY-CONSENSUS-DECISION-REGISTER.md) for recommended defaults and unresolved owner decisions. All recommendations remain provisional until explicitly reviewed and approved.
