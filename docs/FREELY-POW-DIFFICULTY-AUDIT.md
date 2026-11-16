@@ -172,3 +172,45 @@ A private development network is suitable for engineering validation. It is not 
 ## 9. Scope and approval boundary
 
 This is a static source audit only. It does not select final consensus parameters, change runtime code, create genesis, start mining, deploy nodes, or launch any network. All consensus-critical owner decisions remain open until explicitly approved.
+
+## 10. Owner-approved policy reconciliation and audit closure — 16 November 2026
+
+The project owner subsequently approved the production retarget policy. This section supersedes the earlier provisional status labels in this audit for the following settings only:
+
+| Setting | Production FREELY decision |
+|---|---|
+| SHA-256d | Approved |
+| Target spacing | 600 seconds |
+| Target timespan | 1,209,600 seconds |
+| Retarget interval | 2,016 blocks |
+| Retarget clamp | 1/4x–4x (302,400–4,838,400 seconds) |
+| Minimum-difficulty exception | Disabled |
+| No-retargeting | Disabled |
+| Algorithm | Reuse pinned Bitcoin Core v32.1 integer target arithmetic and compact encoding |
+
+At candidate height 2,016, the first retarget uses the completed period's first and last block timestamps (heights 0 and 2,015). At non-boundary heights, production FREELY carries forward the prior nBits. The deterministic synthetic compact-target vectors and exact expected encodings are maintained separately in FREELY-RETARGET-TEST-VECTORS.md on the retarget-test-vectors branch.
+
+### Remaining consensus decisions — not resolved by the policy approval
+
+- Numeric FREELY powLimit and corresponding genesis nBits.
+- Whether to adopt BIP94/time-warp mitigation and its exact semantics.
+- Genesis timestamp, output treatment and proof-of-work commitment.
+- Timestamp/MTP deviations, if any; upstream v32.1 remains the baseline.
+- Production activation matrix and network identity.
+
+The owner-approved retarget settings do not authorize copying Bitcoin MAIN's PoW limit or genesis target. They also do not make a low-hashrate SHA-256d chain secure.
+
+### Audit completion checklist
+
+- [x] Pinned v32.1 PoW and difficulty source paths mapped.
+- [x] Retarget boundary selection and first-period ancestry documented.
+- [x] Compact target decoding and PoW rejection behaviour documented.
+- [x] Factor-of-four clamp and integer arithmetic requirements documented.
+- [x] Production minimum-difficulty and no-retargeting policy approved and reconciled.
+- [x] Deterministic synthetic vector contract linked.
+- [x] BIP94, powLimit and genesis dependencies explicitly separated.
+- [x] Implementation test and independent-review gates defined.
+- [ ] FREELY runtime parameter sanity tests and full C++ CI (implementation phase).
+- [ ] Independent consensus/security review (later security phase).
+
+**Audit branch completion: 100% as a static PoW/difficulty audit deliverable.** Runtime parameter integration, C++ test execution, genesis activation and security review remain separate workstreams and are not claimed complete.
