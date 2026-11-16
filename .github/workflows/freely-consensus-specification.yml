@@ -6,6 +6,7 @@ on:
       - freely/upstream-v32.1
     paths:
       - "docs/FREELY-CONSENSUS-SPECIFICATION.md"
+      - "docs/FREELY-CONSENSUS-DECISION-REGISTER.md"
       - "scripts/verify-freely-consensus-spec.py"
       - ".github/workflows/freely-consensus-specification.yml"
   workflow_dispatch:
