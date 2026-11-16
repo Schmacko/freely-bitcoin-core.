@@ -399,3 +399,53 @@ The architecture work can proceed in parallel with documentation/test preparatio
 
 **Completion rule:** the phase can be scored 100% when the remaining two audit/reconciliation tasks are completed and the architecture is signed off as implementation-ready. The blocked parameter values are separate owner decisions for the later consensus/network-identity gate; they must not be guessed merely to inflate this phase score.
 
+
+
+## 16. Repository-wide integration-point verification — 16 November 2026
+
+The architecture sprint reconciled the M1 production-classification patch with the chain architecture and checked the principal chain-selection source files on `freely/m1-consensus` (the current M1 PR head at the time of review).
+
+### Verified current M1 integration
+
+- `CChainParams::IsTestChain()` reads the explicit `m_is_test_chain` flag.
+- `CChainParams::IsProductionChain()` reads the explicit `m_is_production_chain` flag.
+- Bitcoin MAIN explicitly sets production; TESTNET, TESTNET4, SIGNET and REGTEST explicitly set test-chain.
+- `src/init.cpp` rejects `-testactivationheight` and `-vbparams` through `IsProductionChain()`.
+- `-test=<option>` remains restricted to REGTEST.
+- `-acceptstalefeeestimates` retains its REGTEST-only exception.
+- No `ChainType::FREELY` enum, FREELY parameter class or production network identity exists yet.
+
+### Verified chain-selection call sites
+
+| File / location | Current verified behaviour | Required when FREELY is implemented |
+|---|---|---|
+| `src/init.cpp` setup around lines 484–493 | Constructs base and kernel parameter objects for MAIN, TESTNET, TESTNET4, SIGNET and REGTEST | Add FREELY base and kernel objects to help/default setup |
+| `src/init.cpp` around line 971 | Signet-specific option path checks SIGNET | Keep signet-only behaviour scoped to SIGNET |
+| `src/init.cpp` around lines 1171–1191 | `-test` is REGTEST-only; production override guard uses `IsProductionChain()` | Preserve these guards; test FREELY production rejection |
+| `src/init.cpp` around line 1957 | Stale fee estimates exception is REGTEST-only | Do not extend to FREELY |
+| `src/chainparams.cpp` around lines 135–160 | `CreateChainParams` switch constructs the five current Bitcoin networks | Add a dedicated FREELY factory and FREELY-specific options; keep switch exhaustive |
+| `src/chainparamsbase.cpp` around lines 42–53 | Base parameter switch assigns data-dir suffix and RPC port for five networks | Add isolated FREELY suffix and an approved, collision-checked RPC port |
+| `src/util/chaintype.cpp` around lines 14–43 | Both chain-to-string and string-to-chain switches enumerate five networks | Add canonical `freely` mapping and round-trip tests |
+| `src/kernel/chainparams.cpp` around lines 729–746 | `GetNetworkForMagic` maps the five Bitcoin network magic values | Add FREELY only with an approved unique four-byte magic |
+| `src/kernel/chainparams.cpp` network constructors | MAIN, SIGNET and REGTEST assign their own chain types and network values | Add an independent FREELY constructor; do not clone Bitcoin MAIN identity or history |
+
+This is a targeted integration-point audit of the chain-selection surfaces and direct comparisons found in the principal startup/parameter files. It is not a claim that every network-dependent call site across all wallet, GUI, RPC, networking and validation files has already been changed; those are implementation-time searches and regression checks in the acceptance matrix.
+
+### Cross-document reconciliation
+
+- The M1 PR #1 is the source of truth for the explicit production/test classification patch; it remains separate and unmerged until its current-head CI and review gates pass.
+- The chain-selection audit in PR #3 provides the deeper monetary, consensus and genesis integration analysis.
+- The architecture plan now consolidates the chain selector, base parameter, kernel parameter, startup guard, identity registry, genesis and acceptance contracts.
+- The retarget and PoW audit/PRs remain separate sources for detailed difficulty behaviour; the agreed production retarget policy is recorded in the architecture contract.
+- No contradictory production identity values are introduced by this architecture document.
+
+### Architecture phase exit review
+
+- [x] M1 classification design reconciled with the architecture contract.
+- [x] Principal chain-selection switches and startup guards inspected on the M1 branch.
+- [x] Integration ownership and required FREELY extension points documented.
+- [x] Network identity and consensus values not yet approved remain explicitly blocked, not guessed.
+- [x] Acceptance matrix and safe implementation sequence defined.
+- [x] Cross-document ownership and dependency boundaries recorded.
+
+**Architecture phase status: 100% — design and implementation contract complete.** This score applies only to the Network Architecture roadmap phase. Runtime implementation, parameter approval, consensus activation, security review, private-network validation and launch remain separate roadmap phases and are not complete.
