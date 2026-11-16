@@ -1,0 +1,30 @@
+name: FREELY consensus specification checks
+
+on:
+  pull_request:
+    branches:
+      - freely/upstream-v32.1
+    paths:
+      - "docs/FREELY-CONSENSUS-SPECIFICATION.md"
+      - "scripts/verify-freely-consensus-spec.py"
+      - ".github/workflows/freely-consensus-specification.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  subsidy-specification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          path: .
+
+      - name: Check Python syntax
+        run: python3 -m py_compile scripts/verify-freely-consensus-spec.py
+
+      - name: Verify subsidy boundaries and issuance arithmetic
+        run: python3 scripts/verify-freely-consensus-spec.py
