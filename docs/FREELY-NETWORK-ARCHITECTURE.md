@@ -220,3 +220,8 @@ The specification formalizes the agreed integer subsidy formula, boundary vector
 The proof-of-work limit, genesis target, retarget edge behaviour, minimum-difficulty policy, time-warp mitigation, activation matrix and genesis details remain unresolved. No consensus code or network identity has been activated by this documentation work.
 
 The Windows workflow correction is being verified separately on the current M1 PR head. Do not infer CI success from this documentation commit.
+
+
+## 13. Static chain-selection audit
+
+A dedicated source audit now maps the required chain selector, base parameters, chain factory, production/test classification, monetary range, genesis and consensus integration points. See [FREELY chain-selection and consensus integration audit](FREELY-CHAIN-SELECTION-AUDIT.md) and draft [PR #3](https://github.com/Schmacko/freely-bitcoin-core./pull/3). The audit is documentation-only; it does not activate any chain identity or change runtime behaviour.
