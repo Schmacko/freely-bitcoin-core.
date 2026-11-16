@@ -2,9 +2,11 @@
 
 **Date:** 16 November 2026  
 **Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`  
-**Status:** Proposed consensus specification for owner review. This document does not activate parameters or change runtime code.
+**Status:** Owner-approved consensus policy (16 November 2026). This document records policy approval only; it does not activate parameters or change runtime code.
 
 ## 1. Decision summary
+
+**Owner decision:** Approved on 16 November 2026. The production values below are now project policy; runtime implementation, parameter integration and tests remain pending.
 
 This proposal resolves the retarget/minimum-difficulty item using the existing Bitcoin Core v32.1 retarget implementation, with the FREELY values already agreed by the project:
 
