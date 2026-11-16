@@ -429,6 +429,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: ${{ matrix.artifact-name }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/freely-repo
 
       - name: Run bitcoind.exe
         working-directory: ${{ runner.temp }}/freely-repo
