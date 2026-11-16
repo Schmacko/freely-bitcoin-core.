@@ -155,3 +155,37 @@ The network identity should be frozen as one versioned sheet and tested as a set
 **Not safe to activate yet:** `ChainType::FREELY`, network magic, ports, address prefixes, genesis, PoW limit, activation heights, minimum chainwork, assume-valid, seeds or any public network.
 
 No code changes or network launch are authorised by this audit.
+
+## 10. M1 integration reconciliation and audit closure — 16 November 2026
+
+The M1 production/test-classification work has been checked against the architecture contract and the current M1 branch source.
+
+### Verified on the M1 branch
+
+- IsTestChain() reads the explicit m_is_test_chain member.
+- IsProductionChain() reads the explicit m_is_production_chain member.
+- Bitcoin MAIN is explicitly marked production.
+- TESTNET, TESTNET4, SIGNET and REGTEST are explicitly marked test chains.
+- src/init.cpp rejects -testactivationheight and -vbparams when IsProductionChain() is true.
+- -test=<option> remains REGTEST-only.
+- The REGTEST-only stale-fee-estimate exception remains scoped to REGTEST.
+- FREELY does not yet have a chain enum, factory, parameter object or runtime network identity.
+
+### Chain-selection integration call-site checklist
+
+- [x] src/util/chaintype.h/.cpp: enum and string conversion identified.
+- [x] src/chainparamsbase.h/.cpp: selector list, data directory and RPC port identified.
+- [x] src/chainparams.cpp: parameter factory switch identified.
+- [x] src/kernel/chainparams.h/.cpp: kernel parameter class, classification and magic lookup identified.
+- [x] src/init.cpp: startup setup, production overrides, REGTEST-only options and stale-fee-estimate guard inspected.
+- [x] Existing Bitcoin chain classification invariants and required regression coverage specified.
+- [x] Identity, genesis, deployment and history-dependent fields explicitly blocked until approved.
+- [ ] Runtime FREELY selector implementation and exhaustive compile/test audit.
+- [ ] Runtime FREELY factory and parameter isolation tests.
+- [ ] Full wallet/RPC/GUI/networking call-site regression after implementation.
+
+### Audit conclusion
+
+The static chain-selection audit and implementation hand-off are complete. The remaining unchecked items are runtime implementation and integration tests, not missing audit documentation. This branch is therefore **100% complete as a static audit deliverable**, while FREELY runtime chain selection remains unimplemented and must be tracked in the core implementation roadmap.
+
+No candidate identity value, genesis field, port, magic, address prefix, PoW limit or activation height is approved by this audit.
