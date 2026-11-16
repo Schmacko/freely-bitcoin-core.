@@ -225,11 +225,13 @@ jobs:
         env:
           CHECKOUT_REF: ${{ github.event_name == 'pull_request' && github.ref || github.sha }}
         run: |
-          git -C $env:GITHUB_WORKSPACE init
-          git -C $env:GITHUB_WORKSPACE remote add origin "https://github.com/${{ github.repository }}.git"
-          git -C $env:GITHUB_WORKSPACE fetch --depth=1 origin $env:CHECKOUT_REF
-          git -C $env:GITHUB_WORKSPACE checkout --detach FETCH_HEAD
-          git config --global --add safe.directory $env:GITHUB_WORKSPACE
+          $repoPath = Join-Path $env:RUNNER_TEMP "freely-repo"
+          New-Item -ItemType Directory -Force -Path $repoPath | Out-Null
+          git -C $repoPath init
+          git -C $repoPath remote add origin "https://github.com/${{ github.repository }}.git"
+          git -C $repoPath fetch --depth=1 origin $env:CHECKOUT_REF
+          git -C $repoPath checkout --detach FETCH_HEAD
+          git config --global --add safe.directory $repoPath
 
       - &IMPORT_VS_ENV
         name: Import Visual Studio env vars
@@ -408,11 +410,13 @@ jobs:
         env:
           CHECKOUT_REF: ${{ needs.record-frozen-commit.outputs.commit }}
         run: |
-          git -C $env:GITHUB_WORKSPACE init
-          git -C $env:GITHUB_WORKSPACE remote add origin "https://github.com/${{ github.repository }}.git"
-          git -C $env:GITHUB_WORKSPACE fetch --depth=1 origin $env:CHECKOUT_REF
-          git -C $env:GITHUB_WORKSPACE checkout --detach FETCH_HEAD
-          git config --global --add safe.directory $env:GITHUB_WORKSPACE
+          $repoPath = Join-Path $env:RUNNER_TEMP "freely-repo"
+          New-Item -ItemType Directory -Force -Path $repoPath | Out-Null
+          git -C $repoPath init
+          git -C $repoPath remote add origin "https://github.com/${{ github.repository }}.git"
+          git -C $repoPath fetch --depth=1 origin $env:CHECKOUT_REF
+          git -C $repoPath checkout --detach FETCH_HEAD
+          git config --global --add safe.directory $repoPath
 
       - name: Download built executables
         uses: actions/download-artifact@v8
