@@ -245,3 +245,157 @@ The audit does not select `powLimit`, genesis `nBits`, minimum-difficulty policy
 On head `3c48e0fc2f3433a946ed29326c3c5233f4d826a3`, both affected Windows jobs have successfully completed the Windows-safe checkout and entered build-system generation. The general CI's `No wallet` job failed while Docker attempted to retrieve `mirror.gcr.io/ubuntu:24.04`; the registry returned HTTP 429 (rate limited) on both attempts. This is an external image-registry retrieval failure, not a compiler diagnostic. The Windows builds and the dedicated M1 validation workflow are not yet terminal. See [general CI #34](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43782087333) and [M1 tests #16](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43782087351).
 
 The current M1 branch is being left unchanged while these workflows run.
+
+
+## 15. Architecture completion sprint — 16 November 2026
+
+This section supersedes stale status statements in earlier historical notes where they conflict with the current project state. It records the architecture as a design deliverable; it does not claim that FREELY runtime code has been implemented.
+
+### 15.1 Definition of architecture completion
+
+The Network Architecture phase is considered 100% complete when the following are documented, internally consistent, traceable to the pinned v32.1 source, and covered by a test/acceptance matrix:
+
+1. Chain-selection and classification contract.
+2. Base-chain parameter contract and isolation requirements.
+3. Kernel consensus/network parameter ownership.
+4. Startup, CLI, RPC, wallet and GUI integration points.
+5. Network identity inventory and collision/approval gates.
+6. Genesis construction and reproducibility procedure.
+7. Upgrade, activation, compatibility and regression strategy.
+8. Test matrix, implementation sequencing, threat boundaries and release gates.
+
+A 100% architecture score means the design is ready for implementation. It does **not** mean the chain type, genesis, network identifiers, consensus constants, wallet, node or network are implemented or launch-ready.
+
+### 15.2 Canonical chain-selection contract
+
+The eventual production selector is the distinct canonical name `freely`, represented by a dedicated `ChainType::FREELY`. It must never alias `MAIN`, `REGTEST`, `SIGNET` or either Bitcoin testnet. A public FREELY test chain is a separate future decision; it is not implied by this production selector.
+
+Required invariants:
+
+- `ChainTypeToString(ChainType::FREELY)` returns exactly `freely`.
+- `ChainTypeFromString("freely")` returns exactly `ChainType::FREELY`.
+- Parsing and serialization round-trip for every chain type; unknown names fail closed.
+- `-chain=freely` selects FREELY in both daemon and CLI.
+- The config section and data directory are isolated from all Bitcoin networks and from each other.
+- Every exhaustive switch over `ChainType` handles FREELY explicitly.
+- `GetNetworkForMagic` recognizes only FREELY's approved, unique four-byte message magic.
+- Existing Bitcoin network behaviour and identifiers remain unchanged.
+
+### 15.3 Production/test classification contract
+
+Do not infer production status from “not MAIN”. The implementation must use explicit classification with tests for every chain.
+
+| Network | Production | Test-only | Mockable time |
+|---|---:|---:|---:|
+| Bitcoin MAIN | Yes | No | No |
+| Bitcoin TESTNET / TESTNET4 | No | Yes | No, unless upstream explicitly says otherwise |
+| Bitcoin SIGNET | No | Yes | No, unless upstream explicitly says otherwise |
+| Bitcoin REGTEST | No | Yes | Yes |
+| FREELY | Yes | No | No |
+| FREELY public test chain | Not defined | Not defined | Not defined |
+
+The FREELY production row is a required target, not a claim that the enum exists today. The separate public test-chain row remains deliberately undefined until approved.
+
+Production classification must protect production networks from test-only consensus overrides. In particular:
+- `-testactivationheight` and `-vbparams` must be rejected for **all** production chains, including FREELY.
+- `-test=<option>` remains REGTEST-only.
+- Do not broaden REGTEST-only exceptions (including fast-prune or mock-time behaviour) to FREELY.
+- Keep testnet deprecation messages and signet-specific options scoped to their own networks.
+
+### 15.4 Parameter ownership and isolation map
+
+| Layer | Owner / source files | Required FREELY behaviour |
+|---|---|---|
+| Name and enum | `src/util/chaintype.h/.cpp` | Dedicated enum, canonical parse/string conversion |
+| Shared CLI/RPC base | `src/chainparamsbase.h/.cpp` | Unique data-dir suffix and RPC port; allowed-name/help updates |
+| Kernel identity and consensus | `src/kernel/chainparams.h/.cpp` | Dedicated immutable parameter object; unique magic, P2P port, address encodings, genesis and consensus |
+| Parameter construction | `src/chainparams.h/.cpp` | Exhaustive FREELY factory and parameter selection |
+| Startup and safety guards | `src/init.cpp` plus callers | Production-aware guards; no test-only overrides |
+| Network lookup | `GetNetworkForMagic` and protocol consumers | Unique magic mapping; no collisions |
+| Wallet/address presentation | wallet, GUI and RPC network-dependent code | FREELY prefixes and HRP only; no Bitcoin address ambiguity |
+| Tests | `src/test`, functional tests and CI workflows | Round-trip, isolation, regression, startup and end-to-end checks |
+
+The existing `freely/network-architecture` branch is a documentation branch pinned to upstream v32.1. Its checked-in source files still show upstream behaviour (including the old `IsTestChain() { return m_chain_type != ChainType::MAIN; }` implementation). The explicit classification work described in the M1 PR is on a separate implementation branch and must be integrated/reconciled before code implementation. Do not treat this documentation branch's source snapshot as proof that M1 has been merged.
+
+### 15.5 Network identity registry and approval gate
+
+The implementation must maintain one authoritative parameter registry, with each field marked as one of: **approved**, **derived**, **provisional**, or **blocked pending owner decision**.
+
+| Parameter | Required uniqueness / rule | Current decision |
+|---|---|---|
+| Chain name | Canonical `freely` | Approved |
+| Production/test classification | Production, not test/mockable | Approved as design target |
+| P2P message magic | Unique four bytes; no collision with Bitcoin networks | Blocked: value not assigned |
+| P2P port | Dedicated, documented and collision-checked | Blocked: value not assigned |
+| RPC port | Dedicated, documented and collision-checked | Blocked: value not assigned |
+| Data directory | Dedicated FREELY suffix | Requirement approved; exact suffix can be `freely` |
+| Base58 prefixes | Unique public-key, script and secret-key values | Blocked: values not assigned |
+| Extended-key versions | Unique public/private versions | Blocked: values not assigned |
+| Bech32 HRP | Unique human-readable prefix | Blocked: value not assigned |
+| Genesis timestamp/message | Durable and approved | Blocked |
+| Genesis output script | Unspendable; no founder allocation | Rule approved; exact script blocked |
+| Genesis `nBits` and nonce | Must satisfy approved `powLimit`; reproducibly generated | Blocked |
+| `powLimit` | Numeric FREELY-specific consensus limit | Blocked |
+| Difficulty retarget | 600 s spacing; 2,016 interval; 14-day timespan; clamp 1/4–4x | Approved |
+| Minimum difficulty | Disabled for production | Approved |
+| No-retargeting | Disabled for production | Approved |
+| BIP94/time-warp mitigation | Explicit production choice and vectors | Blocked |
+| DNS/fixed seeds | Empty until controlled infrastructure exists | Approved |
+| Assume-valid / minimum chainwork | No Bitcoin mainnet values copied | Approved rule; initial values must be conservative |
+| Versionbits / buried activations | FREELY-specific reviewed activation matrix | Blocked |
+
+No blocked value may be filled with a plausible-looking placeholder in executable consensus code. A value becoming approved requires an explicit owner decision recorded in the parameter registry and corresponding test vectors.
+
+### 15.6 Genesis and consensus safety contract
+
+- Preserve Bitcoin Core v32.1 serialization, block-header hashing and proof-of-work validation paths unless a separately reviewed requirement justifies a change.
+- Generate the genesis block using the upstream serialization and hash routines.
+- Independently reproduce and verify header bytes, Merkle root, block hash and proof-of-work result.
+- The genesis coinbase output must be unspendable and must not constitute a premine or founder allocation.
+- Document separately the scheduled height-zero subsidy and the spendable issuance total under the unspendable-genesis convention.
+- Do not activate a selectable production network until `powLimit`, genesis `nBits`, genesis data, activation matrix and the remaining production consensus decisions are complete and tested.
+- Do not copy Bitcoin checkpoints, assume-valid hashes, chainwork assumptions or seed infrastructure.
+
+### 15.7 Acceptance matrix
+
+| Test group | Minimum acceptance evidence |
+|---|---|
+| Chain type | Parse/string round-trip; unknown-name rejection; all switches compile |
+| Classification | Explicit production/test/mockable assertions for every chain |
+| Startup guards | FREELY rejects test activation overrides and test-only flags |
+| Base isolation | Distinct data directory, config section and RPC port |
+| P2P isolation | Unique magic, port and network lookup; collision tests |
+| Address isolation | Base58, extended-key and Bech32 prefixes are distinct |
+| Genesis | Exact hash, Merkle root, header fields and PoW assertions |
+| Consensus | Subsidy, money range, powLimit, target decoding and retarget vectors |
+| Regression | Existing Bitcoin mainnet/testnet/testnet4/signet/regtest tests unchanged |
+| Functional | Private isolated FREELY node startup, mining and restart only after parameter approval |
+| Compatibility | Wallet/RPC/GUI network selection cannot silently select Bitcoin MAIN |
+| Security | Independent review of consensus and chain separation before public exposure |
+
+### 15.8 Implementation sequence and parallel work
+
+The architecture work can proceed in parallel with documentation/test preparation:
+1. Reconcile M1 explicit production classification with the architecture branch.
+2. Complete a repository-wide inventory of chain-type switches, MAIN comparisons, network magic lookup, address encoding and startup guards.
+3. Create a machine-readable parameter registry with approval status; keep blocked values out of runtime code.
+4. Prepare the chain-type/base-parameter implementation patch only after its safe defaults and tests are specified.
+5. Implement kernel parameters and genesis only after the blocked consensus/identity decisions are approved.
+6. Run the acceptance matrix and preserve existing Bitcoin regression behaviour.
+7. Keep all network exposure and launch actions behind separate explicit approval.
+
+### 15.9 Current architecture sprint checklist
+
+- [x] Define what 100% architecture completion means, separately from implementation and launch.
+- [x] Specify canonical FREELY chain type and isolation invariants.
+- [x] Specify explicit production/test classification and test-only startup guard behaviour.
+- [x] Map source-file ownership and integration responsibilities.
+- [x] Inventory network identity fields and mark unresolved values as blocked.
+- [x] Specify genesis reproducibility and no-premine constraints.
+- [x] Define architecture acceptance tests and implementation gates.
+- [ ] Reconcile the M1 implementation branch with this architecture plan.
+- [ ] Complete repository-wide call-site inventory and verify every chain-type switch/guard.
+- [ ] Record the final architecture review and cross-document consistency check.
+
+**Completion rule:** the phase can be scored 100% when the remaining two audit/reconciliation tasks are completed and the architecture is signed off as implementation-ready. The blocked parameter values are separate owner decisions for the later consensus/network-identity gate; they must not be guessed merely to inflate this phase score.
+
