@@ -1,7 +1,7 @@
 # FREELY consensus decision register
 
 **Date:** 16 November 2026  
-**Status:** Recommendations for review only — not approved parameters.  
+**Status:** Mixed status: monetary/genesis recommendations remain provisional; production retarget/minimum-difficulty policy approved by owner on 16 November 2026.  
 **Related:** [Consensus specification](FREELY-CONSENSUS-SPECIFICATION.md) · [Chain-selection audit](FREELY-CHAIN-SELECTION-AUDIT.md)
 
 This register separates agreed policy from recommendations and unresolved decisions. No value in the recommendation column is activated by this document.
@@ -29,9 +29,10 @@ Rationale: the conventional genesis output is not inserted into the spendable UT
 | Target spacing | 600 seconds | Agreed |
 | Retarget interval | 2,016 blocks | Agreed |
 | Target timespan | 1,209,600 seconds (14 days) | Derived from agreed spacing and interval |
-| Retarget algorithm | Reuse the pinned upstream v32.1 algorithm and integer semantics; document exact boundary/clamp behaviour | Avoid an unnecessary bespoke algorithm |
-| Minimum-difficulty blocks | **Recommend disabled on production FREELY** | Prevents opportunistic difficulty drops; may mean slow blocks at low hashrate |
-| No-retargeting | **Recommend disabled on production FREELY** | Production difficulty must adapt |
+| Retarget algorithm | Reuse pinned upstream v32.1 `GetNextWorkRequired` / `CalculateNextWorkRequired` semantics | **Owner-approved 16 Nov 2026** |
+| Retarget clamp | Clamp elapsed timespan to ¼×–4× target timespan (302,400–4,838,400 seconds) | **Owner-approved 16 Nov 2026** |
+| Minimum-difficulty blocks | Disabled on production FREELY | **Owner-approved 16 Nov 2026** |
+| No-retargeting | Disabled on production FREELY | **Owner-approved 16 Nov 2026** |
 | BIP94 time-warp mitigation | **Recommend enabling after code-path review and dedicated tests** | Adds timestamp protection at retarget boundaries; confirm exact semantics in v32.1 |
 | PoW limit | Do not select a numeric target until initial mining model and attack assumptions are reviewed | This is a consensus-critical ceiling and genesis target constraint |
 | Genesis nBits | Must encode a target no easier than the approved PoW limit | Cannot be chosen independently |
@@ -94,10 +95,23 @@ Every proposed deviation must include:
 
 1. Confirm unspendable genesis coinbase and corresponding spendable-supply wording.
 2. Review and approve a production PoW limit / initial difficulty based on the security and mining model.
-3. Approve minimum-difficulty disabled and no-retargeting disabled for production.
+3. **Resolved 16 Nov 2026:** approve production minimum-difficulty disabled and no-retargeting disabled; use the v32.1 retarget algorithm with ¼×–4× clamp.
 4. Review and approve BIP94/time-warp mitigation semantics.
 5. Approve the chain-specific script activation matrix.
 6. Approve final network identity values after collision checks.
 7. Approve genesis timestamp/message and output script after all dependent fields are fixed.
 
 No consensus or network identity parameter is final until the complete sheet is internally consistent, independently reviewed and approved. No public testnet or mainnet launch is authorised.
+
+
+## H. Owner decision record — 16 November 2026
+
+The owner explicitly approved the FREELY production retarget policy proposed in [FREELY-RETARGET-POLICY-PROPOSAL.md](../freely/retarget-policy/docs/FREELY-RETARGET-POLICY-PROPOSAL.md) / PR #5:
+
+- 600-second target spacing; 2,016-block interval; 1,209,600-second target timespan.
+- Clamp actual elapsed timespan to ¼×–4× the target timespan.
+- Production minimum-difficulty exception disabled.
+- Production no-retargeting mode disabled.
+- Reuse pinned Bitcoin Core v32.1 retarget calculation semantics, implemented and tested with FREELY-specific parameters.
+
+This is a consensus-policy approval, not activation in runtime code. `powLimit`, genesis `nBits`, BIP94/time-warp mitigation, genesis construction, and final network identity remain unresolved. No public testnet or mainnet is authorised.
