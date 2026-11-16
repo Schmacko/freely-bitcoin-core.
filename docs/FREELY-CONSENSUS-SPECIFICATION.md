@@ -213,3 +213,88 @@ This specification authorises no public testnet, mainnet, mining deployment, wal
 ## Decision register
 
 See [FREELY consensus decision register](FREELY-CONSENSUS-DECISION-REGISTER.md) for recommended defaults and unresolved owner decisions. All recommendations remain provisional until explicitly reviewed and approved.
+
+## 12. Specification completeness and implementation acceptance — 16 November 2026
+
+### 12.1 Completion statement
+
+The FREELY consensus specification package is complete as an **implementation contract and decision-controlled draft**. Every consensus domain required before implementation is identified, its known rules are stated, its unresolved choices are explicitly registered, and the required tests and activation gates are defined.
+
+**Specification coverage: 100% (document deliverable). Consensus freeze: not complete.** A complete specification can identify a blocked owner decision without inventing a value. It is not safe to claim the production consensus is frozen while those decisions remain open.
+
+### 12.2 Authoritative parameter status
+
+| Domain | Defined rule / value | Status |
+|---|---|---|
+| Native asset | FLY, 8 decimals, integer base units | Approved |
+| Monetary ceiling | 21,000,000 FLY | Approved |
+| Initial subsidy | 50 FLY | Approved |
+| Halving | Every 210,000 blocks; integer right shift | Approved |
+| Scheduled issuance | 20,999,999.9769 FLY | Arithmetic verified |
+| Genesis spendability | Conventional unspendable genesis recommended | Owner confirmation pending |
+| PoW hash | SHA-256d | Approved |
+| Target spacing | 600 seconds | Approved |
+| Retarget interval | 2,016 blocks | Approved |
+| Retarget timespan | 1,209,600 seconds | Derived |
+| Retarget clamp | 302,400–4,838,400 seconds | Owner-approved |
+| Minimum difficulty | Disabled in production | Owner-approved |
+| No-retargeting | Disabled in production | Owner-approved |
+| Retarget algorithm | Pinned v32.1 integer/compact-target semantics | Owner-approved |
+| Numeric powLimit | Not selected | Owner decision pending |
+| Genesis nBits and genesis commitment | Not selected | Depends on powLimit/genesis decisions |
+| BIP94/time-warp mitigation | Not selected | Owner decision pending |
+| Timestamp/MTP | Preserve v32.1 unless a reviewed change is approved | Baseline rule |
+| Script/soft-fork activation matrix | Required matrix and test format defined; individual activation states open | Owner decision pending |
+| Chain/network identity | Fields and collision requirements enumerated | Owner decision pending |
+| Chain-history shortcuts | No Bitcoin history-specific assumptions copied | Approved safety rule |
+
+### 12.3 Exact monetary boundary correction
+
+The subsidy vectors include both sides of the final one-base-unit era:
+- Height 6,719,999: 2 base units.
+- Height 6,720,000: 1 base unit.
+- Height 6,929,999: 1 base unit.
+- Height 6,930,000: 0 base units.
+
+All tests and cumulative issuance calculations MUST use integer base units. The total scheduled issuance remains 2,099,999,997,690,000 base units. The spendable issuance total is conditional on the genesis output convention and must not be conflated with the schedule.
+
+### 12.4 Retarget test contract cross-reference
+
+The approved policy is covered by the dedicated deterministic vector contract in FREELY-RETARGET-TEST-VECTORS.md. That document specifies exact lower/upper clamp and normal-period compact-target expectations, one-second boundary cases, first retarget at candidate height 2,016 using timestamps at heights 0 and 2,015, non-boundary carry-forward, compact target negative/zero/overflow/above-limit rejection, and separate BIP94 vectors pending a decision.
+
+The synthetic test powLimit and nBits are fixtures only, never FREELY production values.
+
+### 12.5 Script and deployment matrix template
+
+Before a FREELY parameter object is frozen, the implementation decision sheet must contain one row for every upstream buried deployment and version-bits deployment considered for FREELY:
+
+| Required field | Required content |
+|---|---|
+| Rule identifier | BIP / deployment name and upstream source |
+| Rule class | Buried deployment, version-bits deployment, policy-only, or unsupported |
+| Initial state | Active from genesis, scheduled activation, or deliberately unsupported |
+| Activation parameters | Exact height or start/timeout/bit/threshold/period/minimum height as applicable |
+| Historical dependencies | Required block hash, exception, chain history, or none |
+| Compatibility impact | Blocks/transactions accepted or rejected differently |
+| Tests | Before/at/after activation and invalid-block cases |
+| Approval | Owner decision and independent review reference |
+
+No Bitcoin MAIN activation height, hash, exception or deployment timestamp is presumed valid for FREELY. The matrix is a required deliverable; its individual consensus values remain open until reviewed.
+
+### 12.6 Final pre-implementation gates
+
+- [x] Monetary rule and exact integer issuance formula documented.
+- [x] Subsidy boundary and cumulative issuance vectors documented.
+- [x] Production retarget policy owner-approved and specified.
+- [x] PoW validation interfaces and invalid-target cases specified.
+- [x] Genesis and network identity dependencies enumerated.
+- [x] Script/deployment matrix structure defined.
+- [x] Regression, integration, private-network and independent-review gates defined.
+- [x] Public launch, mining deployment and paid infrastructure explicitly excluded absent separate approval.
+- [ ] Owner confirms genesis coinbase spendability convention.
+- [ ] Owner approves numeric powLimit and initial difficulty model after security review.
+- [ ] Owner decides BIP94/time-warp mitigation.
+- [ ] Owner approves the script/deployment activation matrix.
+- [ ] Owner approves final identity and genesis commitment after collision/reproducibility checks.
+
+**Release rule:** do not enable production FREELY chain parameters, generate a production genesis commitment, or expose a public network while any consensus-critical gate above remains unresolved. Completing this specification document does not waive those gates.
