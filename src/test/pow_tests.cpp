@@ -210,4 +210,42 @@ BOOST_AUTO_TEST_CASE(ChainParams_SIGNET_sanity)
     sanity_check_chainparams(*m_node.args, ChainType::SIGNET);
 }
 
+/* FREELY-approved production retarget policy, tested with synthetic targets.
+ * Synthetic powLimit and nBits are fixtures only; they are not FREELY network parameters.
+ */
+BOOST_AUTO_TEST_CASE(freely_retarget_clamp_vectors)
+{
+    Consensus::Params consensus;
+    consensus.nPowTargetSpacing = 600;
+    consensus.nPowTargetTimespan = 1'209'600;
+    consensus.fPowAllowMinDifficultyBlocks = false;
+    consensus.fPowNoRetargeting = false;
+    consensus.enforce_BIP94 = false;
+
+    arith_uint256 pow_limit;
+    bool negative{false};
+    bool overflow{false};
+    pow_limit.SetCompact(0x207fffffU, &negative, &overflow);
+    BOOST_REQUIRE(!negative);
+    BOOST_REQUIRE(!overflow);
+    consensus.powLimit = ArithToUint256(pow_limit);
+
+    CBlockIndex previous;
+    previous.nHeight = 2015;
+    previous.nBits = 0x1f7fffffU;
+
+    const auto check_vector = [&](int64_t elapsed, uint32_t expected)
+    {
+        previous.nTime = elapsed;
+        BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&previous, 0, consensus), expected);
+    };
+
+    // The values are independently fixed in docs/FREELY-RETARGET-TEST-VECTORS.md.
+    check_vector(302'399, 0x1f1fffffU);  // just below lower clamp
+    check_vector(302'400, 0x1f1fffffU);  // lower clamp
+    check_vector(1'209'600, 0x1f7fffffU); // target timespan
+    check_vector(4'838'400, 0x2001ffffU); // upper clamp
+    check_vector(4'838'401, 0x2001ffffU); // just above upper clamp
+}
+
 BOOST_AUTO_TEST_SUITE_END()
