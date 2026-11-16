@@ -1,6 +1,6 @@
 # FREELY consensus specification — engineering baseline
 
-**Status:** working specification; not activation-ready.  
+**Status:** working specification; retarget/minimum-difficulty policy owner-approved on 16 November 2026; not activation-ready.  
 **Date:** 16 November 2026  
 **Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`.  
 **Branch:** `freely/consensus-specification`  
@@ -75,22 +75,27 @@ Required invariants:
 
 ## 4. Proof of work and difficulty
 
-Agreed:
-- Block-header proof of work uses SHA-256d.
-- Target spacing is 600 seconds.
-- Retarget interval is 2,016 blocks.
-- Nominal target timespan implied by those values is 1,209,600 seconds (14 days).
+### Owner-approved production retarget policy (16 November 2026)
 
-Not yet specified — all are consensus-critical:
+The project owner has approved the following production policy, based on the dedicated proposal in [FREELY-RETARGET-POLICY-PROPOSAL.md](FREELY-RETARGET-POLICY-PROPOSAL.md):
+
+- SHA-256d proof of work; 600-second target spacing.
+- Retarget interval: 2,016 blocks; target timespan: 1,209,600 seconds (14 days).
+- Clamp elapsed retarget time to one quarter through four times the target timespan (302,400 to 4,838,400 seconds).
+- Disable minimum-difficulty blocks on production FREELY.
+- Disable no-retargeting mode on production FREELY.
+- Reuse Bitcoin Core v32.1 `GetNextWorkRequired` / `CalculateNextWorkRequired` semantics, including upstream integer arithmetic and compact-target handling, subject to FREELY-specific parameters and tests.
+- At non-boundary heights, retain the previous block's `nBits`. At a retarget boundary, use the upstream v32.1 period timestamp selection and clamp/scale procedure. The exact code path and vectors must be confirmed by implementation tests before activation.
+
+This approval resolves the production retarget/clamp/minimum-difficulty/no-retargeting policy only. It does not approve BIP94/time-warp mitigation, a numeric `powLimit`, genesis `nBits`, genesis fields, or any network identity value.
+
+### Still unresolved — consensus-critical
+
 1. Exact `powLimit` and corresponding compact target.
-2. Genesis `nBits`.
-3. Retarget boundary formula and precise first/last timestamp selection.
-4. Retarget clamp bounds and integer division/rounding behaviour.
-5. Compact target decoding, overflow and negative-target rejection expectations.
-6. Whether minimum-difficulty blocks are allowed (recommended default for a production chain: no, but this remains a decision).
-7. Whether any no-retargeting mode exists outside regtest.
-8. Whether to adopt a time-warp mitigation such as BIP94, and exact activation semantics.
-9. Timestamp validity constraints and median-time-past behaviour (preserve upstream rules unless a deliberate consensus change is specified).
+2. Genesis `nBits` (must be compatible with the approved `powLimit`).
+3. Whether to adopt BIP94 time-warp mitigation, and its exact activation semantics.
+4. Timestamp validity constraints and median-time-past behaviour; preserve upstream rules unless a deliberate change is specified.
+5. Compact target decoding, overflow and negative-target rejection vectors must be fixed in the implementation test contract.
 
 Do not copy Bitcoin mainnet's proof-of-work limit or special difficulty flags by default. Do not invent these values merely to make a node compile.
 
@@ -166,8 +171,9 @@ No guessed nonce, hash, Merkle root, address prefix or network magic is acceptab
 |---|---|---|
 | Genesis coinbase / height-zero issuance accounting | Open | Determines spendable issuance and supply description |
 | PoW limit and genesis target | Open | Defines valid block difficulty from genesis |
-| Retarget algorithm details | Open | Consensus compatibility; different rules split the chain |
-| Minimum difficulty policy | Open | Changes block validity |
+| Retarget algorithm / clamp / production flags | **Owner-approved policy; implementation and tests pending** | Consensus compatibility; different rules split the chain |
+| Minimum difficulty policy | **Owner-approved: disabled on production FREELY** | Changes block validity |
+| No-retargeting mode | **Owner-approved: disabled on production FREELY** | Changes block validity |
 | Time-warp mitigation | Open | Changes block validity and security |
 | Buried deployments / script rules | Open | Defines valid transaction and block rules |
 | Version-bits schedule | Open | Defines future consensus transitions |
