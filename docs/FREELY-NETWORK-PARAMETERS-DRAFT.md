@@ -63,9 +63,9 @@ See the separate [FREELY consensus specification](FREELY-CONSENSUS-SPECIFICATION
 | PoW algorithm | SHA-256d | Agreed |
 | PoW limit | TBD | Requires difficulty/security analysis |
 | Genesis `nBits` | TBD | Must be consistent with selected PoW limit |
-| Retarget clamp and rounding | Upstream v32.1 baseline pending review | Must be tested explicitly |
-| Minimum-difficulty blocks | Candidate: disabled for production | Confirm against launch threat model |
-| No-retargeting | Disabled for production | Local development profile must remain separate |
+| Retarget algorithm / clamp | v32.1 semantics; ¼×–4× clamp; owner-approved 16 Nov 2026 | Runtime integration and exact regression vectors pending |
+| Minimum-difficulty blocks | Disabled for production | Owner-approved 16 Nov 2026; runtime parameter test pending |
+| No-retargeting | Disabled for production | Owner-approved 16 Nov 2026; runtime parameter test pending |
 | Versionbits deployments | TBD | Do not copy Bitcoin activation schedules blindly |
 | Buried deployment heights | TBD | Review each upstream consensus rule |
 | Checkpoints | None initially | Only add independently verified FREELY checkpoints |
@@ -73,7 +73,7 @@ See the separate [FREELY consensus specification](FREELY-CONSENSUS-SPECIFICATION
 | Assume-valid | Empty/null initially where supported | Never copy Bitcoin's value |
 | DNS/fixed seeds | None initially | No seed infrastructure exists |
 
-The 600-second target and 2,016-block interval imply a 14-day target timespan. They do not by themselves define the initial difficulty or make a low-hashrate chain secure.
+The 600-second target and 2,016-block interval imply a 14-day target timespan. The production retarget algorithm, ¼×–4× clamp, disabled minimum-difficulty exception and enabled retargeting are owner-approved (16 Nov 2026), but runtime integration and tests remain pending. These choices do not define the initial difficulty or make a low-hashrate chain secure.
 
 ## 4. Genesis block requirements
 
