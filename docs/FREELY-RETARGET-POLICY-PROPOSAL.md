@@ -158,3 +158,31 @@ After owner approval, the selected policy can be copied into the formal consensu
 - `src/pow.cpp`: `GetNextWorkRequired`, `CalculateNextWorkRequired`, `PermittedDifficultyTransition`, `DeriveTarget` and `CheckProofOfWorkImpl`.
 - `src/pow.h`: PoW interface contracts.
 - Bitcoin Core v32.1 pinned commit: `f0de87f040621468b956f01f526a43a010310501`.
+
+## 9. Owner approval and policy hand-off — 16 November 2026
+
+The project owner explicitly approved the production policy recorded in this proposal. It is no longer merely a recommendation. The approved settings are:
+
+- 600-second target spacing.
+- 2,016-block adjustment interval and 1,209,600-second target timespan.
+- 1/4x–4x elapsed-timespan clamp.
+- Previous completed period selection at candidate heights divisible by 2,016.
+- Pinned Bitcoin Core v32.1 integer target arithmetic and compact encoding.
+- Minimum-difficulty exception disabled on production FREELY.
+- No-retargeting disabled on production FREELY.
+
+The formal consensus specification and decision register record the same approval. This policy hand-off is complete.
+
+Still deliberately outside this approval: numeric powLimit, genesis nBits, BIP94/time-warp mitigation, timestamp deviations, genesis fields and network identity. The synthetic values in the retarget test-vector document are test fixtures only.
+
+### Policy deliverable closure
+
+- [x] Exact policy values and formula documented.
+- [x] First retarget boundary and non-boundary behaviour documented.
+- [x] Integer/compact encoding and powLimit cap requirements documented.
+- [x] Minimum-difficulty and no-retargeting settings owner-approved.
+- [x] Regression test matrix defined and cross-linked.
+- [x] Consensus and network decisions outside scope explicitly separated.
+- [x] Runtime implementation, C++ test and release gates retained.
+
+**Retarget policy branch: 100% complete as an approved policy specification.** The separate C++ test-vector and runtime integration work remains tracked independently.
