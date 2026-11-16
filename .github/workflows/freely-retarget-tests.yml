@@ -1,0 +1,47 @@
+name: FREELY retarget tests
+
+on:
+  pull_request:
+    branches:
+      - freely/upstream-v32.1
+    paths:
+      - "src/test/pow_tests.cpp"
+      - ".github/workflows/freely-retarget-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: freely-retarget-tests-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pow-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out FREELY fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install minimal build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            build-essential cmake python3 libboost-dev
+
+      - name: Configure unit-test build
+        run: |
+          cmake -B build \
+            -DENABLE_WALLET=OFF \
+            -DENABLE_IPC=OFF \
+            -DBUILD_GUI=OFF \
+            -DBUILD_TESTS=ON
+
+      - name: Build Bitcoin Core unit-test executable
+        run: cmake --build build --target test_bitcoin --parallel 2
+
+      - name: Run proof-of-work test suite
+        run: ctest --test-dir build --output-on-failure -R '^pow_tests$'
