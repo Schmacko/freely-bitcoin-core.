@@ -235,9 +235,11 @@ jobs:
 
       - &IMPORT_VS_ENV
         name: Import Visual Studio env vars
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows.py "standard" github_import_vs_env
 
       - name: Get tool information
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           set -o errexit -o pipefail -o xtrace -o nounset
 
@@ -265,6 +267,7 @@ jobs:
           key: ${{ github.job }}-vcpkg-binary-release-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
 
       - name: Generate build system
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} generate
 
@@ -287,20 +290,24 @@ jobs:
           key: ${{ steps.vcpkg-downloads-cache.outputs.cache-primary-key }}
 
       - name: Build
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} build
 
       - name: Check executable manifests
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} check_manifests
 
       - name: Prepare tests
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} prepare_tests
 
       - name: Run tests
         env:
           TEST_RUNNER_EXTRA: "--timeout-factor=${{ env.TEST_RUNNER_TIMEOUT_FACTOR }} ${{ case(github.event_name == 'pull_request', '', '--extended') }}"
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} run_tests
 
@@ -424,6 +431,7 @@ jobs:
           name: ${{ matrix.artifact-name }}-${{ github.run_id }}
 
       - name: Run bitcoind.exe
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows-cross.py print_version
 
       - *IMPORT_VS_ENV
@@ -431,20 +439,25 @@ jobs:
       - name: Check imported DLLs
         env:
           CRT: ${{ matrix.crt }}
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows-cross.py check_imports
 
       - name: Check executable manifests
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows-cross.py check_manifests
 
       - name: Prepare Windows test environment
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows-cross.py prepare_tests
 
       - name: Run unit tests
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows-cross.py run_unit_tests
 
       - name: Run functional tests
         env:
           TEST_RUNNER_EXTRA: "--timeout-factor=${{ env.TEST_RUNNER_TIMEOUT_FACTOR }} ${{ case(github.event_name == 'pull_request', '', '--extended') }}"
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows-cross.py run_functional_tests
 
