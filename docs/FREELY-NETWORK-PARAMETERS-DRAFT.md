@@ -47,6 +47,10 @@ The following are engineering candidates, not final values. They must be checked
 
 Do not distribute addresses, private keys, wallet backups or software using these candidate prefixes until the values have been finalized and end-to-end tested.
 
+## 2A. Detailed consensus specification
+
+See the separate [FREELY consensus specification](FREELY-CONSENSUS-SPECIFICATION.md) for the exact subsidy formula, integer issuance tests, genesis accounting distinction, proof-of-work decision list, deployment matrix and required validation vectors. This document remains a candidate network identity sheet; none of its proposed identifiers is final or activated.
+
 ## 3. Consensus parameters — agreed versus unresolved
 
 | Parameter | Proposed value | Status |
