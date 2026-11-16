@@ -204,3 +204,19 @@ The earlier targeted M1 validation success remains valid for its own tested revi
 ### Current implementation boundary
 
 The next source-level chain-selection patch is still gated on a complete, internally consistent network-parameter specification. The candidate P2P magic, ports, address prefixes and extended-key versions in `FREELY-NETWORK-PARAMETERS-DRAFT.md` remain proposals only. PoW limit, genesis target, activation policy, retarget edge cases and genesis transaction/header data remain unresolved. Do not expose a selectable production chain until those are defined and tested.
+
+
+## 12. Progress update — 16 November 2026 (consensus specification)
+
+A separate documentation branch, `freely/consensus-specification`, now contains a testable engineering baseline:
+
+- [FREELY consensus specification](FREELY-CONSENSUS-SPECIFICATION.md).
+- [Independent integer subsidy/specification check](../scripts/verify-freely-consensus-spec.py).
+- Specification commit: `41f418e9f1fc662f66b83a4da4b5040d0a9c2cee`.
+- Arithmetic check commit: `1b5a830ae5c4f805f45e3459ce77ee4efd7201ec`.
+
+The specification formalizes the agreed integer subsidy formula, boundary vectors, issuance ceiling, reward/fee rule and test contract. It also highlights an accounting point that must be settled before genesis implementation: a conventional unspendable genesis coinbase means the height-zero 50 FLY is included in scheduled subsidy arithmetic but is not spendable. Under that convention, the spendable subsidy total would be 20,999,949.9769 FLY, not 20,999,999.9769 FLY.
+
+The proof-of-work limit, genesis target, retarget edge behaviour, minimum-difficulty policy, time-warp mitigation, activation matrix and genesis details remain unresolved. No consensus code or network identity has been activated by this documentation work.
+
+The Windows workflow correction is being verified separately on the current M1 PR head. Do not infer CI success from this documentation commit.
