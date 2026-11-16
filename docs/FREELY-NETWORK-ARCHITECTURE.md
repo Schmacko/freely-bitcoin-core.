@@ -225,3 +225,23 @@ The Windows workflow correction is being verified separately on the current M1 P
 ## 13. Static chain-selection audit
 
 A dedicated source audit now maps the required chain selector, base parameters, chain factory, production/test classification, monetary range, genesis and consensus integration points. See [FREELY chain-selection and consensus integration audit](FREELY-CHAIN-SELECTION-AUDIT.md) and draft [PR #3](https://github.com/Schmacko/freely-bitcoin-core./pull/3). The audit is documentation-only; it does not activate any chain identity or change runtime behaviour.
+
+
+## 14. Proof-of-work and difficulty source audit — 16 November 2026
+
+A separate documentation-only branch now records a detailed audit of the pinned v32.1 proof-of-work path:
+
+- [FREELY PoW and difficulty audit](https://github.com/Schmacko/freely-bitcoin-core./blob/freely/pow-difficulty-audit/docs/FREELY-POW-DIFFICULTY-AUDIT.md).
+- Draft PR: [#4](https://github.com/Schmacko/freely-bitcoin-core./pull/4).
+- Branch: `freely/pow-difficulty-audit`.
+- Commit: `f0bdd6e4e5b180ed4cb1d01a7e9681b9d66b05c0`.
+
+The audit confirms that upstream v32.1 already implements the SHA-256d proof-of-work check, compact-target validation, 2,016-block retarget machinery, factor-of-four timespan clamp, optional minimum-difficulty rule and optional BIP94 period-start-target handling. FREELY's agreed 600-second spacing implies a 1,209,600-second (14-day) target timespan.
+
+The audit does not select `powLimit`, genesis `nBits`, minimum-difficulty policy, BIP94 policy or any other open consensus parameter. It makes no runtime code changes and does not enable a chain.
+
+### Current M1 CI observation — 16 November 2026
+
+On head `3c48e0fc2f3433a946ed29326c3c5233f4d826a3`, both affected Windows jobs have successfully completed the Windows-safe checkout and entered build-system generation. The general CI's `No wallet` job failed while Docker attempted to retrieve `mirror.gcr.io/ubuntu:24.04`; the registry returned HTTP 429 (rate limited) on both attempts. This is an external image-registry retrieval failure, not a compiler diagnostic. The Windows builds and the dedicated M1 validation workflow are not yet terminal. See [general CI #34](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43782087333) and [M1 tests #16](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43782087351).
+
+The current M1 branch is being left unchanged while these workflows run.
