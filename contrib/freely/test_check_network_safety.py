@@ -69,7 +69,7 @@ class NetworkSafetyTests(unittest.TestCase):
 
     def test_rejects_bitcoin_genesis(self):
         data = complete_fixture()
-        data["genesis"]["hash"] = "000000000019d6689c085ae165831e934ff763ae46a2c1a172b3f1b60a8ce26f"
+        data["genesis"]["hash"] = "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
         self.assertTrue(any("Bitcoin mainnet genesis" in item for item in validate(data)))
 
     def test_rejects_invalid_ports_and_equal_ports(self):
