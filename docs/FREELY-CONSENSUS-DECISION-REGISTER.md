@@ -51,8 +51,8 @@ Important security limitation: a 600-second target does not guarantee a 600-seco
 | CLTV (BIP65) | Enforce from first post-genesis block | Boundary and invalid-script tests |
 | Strict DER signatures (BIP66) | Enforce from first post-genesis block | Signature-encoding tests |
 | CSV / relative locktime (BIP68/112/113) | Enforce from first post-genesis block | Sequence-lock and MTP tests |
-| SegWit v0 / witness rules (BIP141/143/147) | Enforce from first post-genesis block; verify any flags already enforced unconditionally by v32.1 | Witness commitment, malleability and invalid-witness tests |
-| Taproot / Tapscript (BIP341/342) | Candidate: enforce from first post-genesis block | Audit exact v32.1 enforcement path and add key/script-path vectors |
+| SegWit witness script rules (BIP141/143) | Unconditional from genesis in v32.1; SegwitHeight=1 for block witness commitments and BIP147 NULLDUMMY | Verify script flags, witness commitment and data-handling boundaries |
+| Taproot / Tapscript (BIP341/342) | Unconditional from genesis in v32.1 script flags | Verify key-path and script-path vectors; no historical exceptions copied |
 | Version-bits deployments | No historical Bitcoin deployment schedule copied; future changes controlled individually | Each future deployment needs bit, period, threshold, start/timeout, min height and tests |
 | Historical script exceptions | None copied from Bitcoin mainnet | Any exception requires a FREELY-specific justification and explicit review |
 
@@ -131,3 +131,8 @@ The owner explicitly approved the following bounded decisions and authorisations
 - Network identity: generate and collision-check candidate identity values and generate/independently verify a candidate genesis commitment. Final production values and activation are not approved.
 
 These approvals authorise reversible documentation, candidate modelling, code review, tests and non-production tooling only. They do not authorise production parameter activation, public network exposure, mining deployment, paid services or launch.
+
+
+## J. Pinned-v32.1 script compatibility audit — 17 November 2026
+
+Targeted source inspection of `src/validation.cpp` confirms P2SH, witness and Taproot script flags are unconditional in `GetBlockScriptFlags`, except for explicit historical hash exceptions. FREELY must not copy Bitcoin mainnet exceptions. BIP66/DERSIG, BIP65/CLTV and CSV are controlled by buried-deployment heights; BIP147 NULLDUMMY is controlled by SegwitHeight; BIP34 coinbase-height enforcement is controlled separately. The current candidate is height 1 for these height-controlled rules, with BIP30 duplicate-coinbase protection retained and no historical BIP34 hash copied. Witness data download/validation paths also use SegwitHeight and require boundary tests. These are source-audited candidates, not yet compiled or validated in a FREELY parameter object.
