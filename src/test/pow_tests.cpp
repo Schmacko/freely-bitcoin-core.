@@ -322,4 +322,45 @@ BOOST_AUTO_TEST_CASE(freely_derive_target_rejects_invalid_compact_values)
     BOOST_CHECK(!DeriveTarget(0x2100ffffU, limit)); // above powLimit
 }
 
+
+/* BIP94 uses the first block's target as the retarget base. FREELY has
+ * minimum-difficulty blocks disabled, but still enables this protection
+ * from genesis. The synthetic values are test fixtures only.
+ */
+BOOST_AUTO_TEST_CASE(freely_bip94_uses_first_block_period_target)
+{
+    Consensus::Params consensus;
+    consensus.nPowTargetSpacing = 600;
+    consensus.nPowTargetTimespan = 1'209'600;
+    consensus.fPowAllowMinDifficultyBlocks = false;
+    consensus.fPowNoRetargeting = false;
+    consensus.enforce_BIP94 = true;
+
+    arith_uint256 pow_limit;
+    bool negative{false};
+    bool overflow{false};
+    pow_limit.SetCompact(0x207fffffU, &negative, &overflow);
+    BOOST_REQUIRE(!negative);
+    BOOST_REQUIRE(!overflow);
+    consensus.powLimit = ArithToUint256(pow_limit);
+
+    std::vector<CBlockIndex> period(2016);
+    for (int height = 0; height < static_cast<int>(period.size()); ++height) {
+        period[height].nHeight = height;
+        period[height].nBits = 0x1f3fffffU;
+        period[height].pprev = height == 0 ? nullptr : &period[height - 1];
+    }
+    period.front().nBits = 0x1f7fffffU;
+    period.front().nTime = 100'000;
+    period.back().nTime = 1'309'600; // exactly one target timespan later
+
+    const auto bip94_target = CalculateNextWorkRequired(&period.back(), period.front().nTime, consensus);
+    BOOST_CHECK_EQUAL(bip94_target, period.front().nBits);
+
+    consensus.enforce_BIP94 = false;
+    const auto legacy_target = CalculateNextWorkRequired(&period.back(), period.front().nTime, consensus);
+    BOOST_CHECK_EQUAL(legacy_target, period.back().nBits);
+    BOOST_CHECK_NE(bip94_target, legacy_target);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
