@@ -72,6 +72,17 @@ For a 2,016-block period, the first retarget is calculated for candidate block h
 
 The measured interval is therefore the timestamp difference between blocks 0 and 2,015, not a fabricated timestamp at height 2,016. The same period-start selection repeats at later retarget boundaries.
 
+
+## Additional executable regression coverage
+
+The C++ test suite now supplements the five arithmetic vectors with:
+
+- A linked 2,016-block ancestry fixture that calls `GetNextWorkRequired` at candidate height 2,016 and proves the first timestamp comes from ancestor height 0. Its timestamp arrangement makes an off-by-one choice of height 1 produce a different compact target.
+- A non-retarget boundary test confirming that, with minimum-difficulty blocks disabled, the prior compact target is carried forward unchanged.
+- Direct `DeriveTarget` rejection tests for negative, zero, overflowing and above-`powLimit` compact targets, alongside a valid target.
+
+All target limits and compact values in these tests remain synthetic fixtures. They exercise the upstream PoW machinery and approved retarget arithmetic without choosing FREELY's production `powLimit`, genesis `nBits`, or BIP94 policy.
+
 ## Safety and integration gates
 
 - These vectors test the approved clamp/scaling policy and upstream algorithm semantics only.
