@@ -50,7 +50,10 @@ jobs:
         run: cmake --build build --target bitcoind bitcoin-cli test_bitcoin --parallel 2
 
       - name: Run proof-of-work unit-test suite
-        run: ctest --test-dir build --output-on-failure -R '^pow_tests
+        run: ctest --test-dir build --output-on-failure -R "^pow_tests$"
+
+      - name: Run BIP94 timestamp-boundary functional test
+        run: python3 test/functional/test_runner.py --jobs=1 feature_bip94.py
 
 
       - name: Run BIP94 timestamp-boundary functional test
