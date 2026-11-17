@@ -19,6 +19,10 @@ The validator uses only the Python standard library. Exit codes are:
 - `1`: manifest is readable but incomplete or invalid.
 - `2`: manifest cannot be read or parsed.
 
+## Source audit
+
+See [FREELY upstream network-identity audit](FREELY-UPSTREAM-NETWORK-IDENTITY-AUDIT.md) for the v32.1 source-derived network identifiers, chain-parameter integration points, production/test classification requirements, and remaining runtime checks.
+
 ## What is checked
 
 - FREELY / FLY project identity.
