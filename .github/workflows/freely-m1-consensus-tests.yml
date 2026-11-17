@@ -15,7 +15,7 @@ permissions:
 
 concurrency:
   group: freely-m1-consensus-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   validation-tests:
@@ -31,7 +31,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
-            build-essential cmake python3 libboost-dev
+            build-essential cmake python3 libboost-dev libevent-dev
 
       - name: Configure unit-test build
         run: |
@@ -45,4 +45,5 @@ jobs:
         run: cmake --build build --target test_bitcoin --parallel 2
 
       - name: Run validation test suite
-        run: ctest --test-dir build --output-on-failure -R '^validation_tests$'
+        run: ctest --test-dir build --output-on-failure -R '^(validation_tests|pow_tests)
+
