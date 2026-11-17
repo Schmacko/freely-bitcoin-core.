@@ -101,8 +101,12 @@ def validate(data: dict[str, Any]) -> list[str]:
         if value is not None:
             if not isinstance(value, int) or isinstance(value, bool) or not 1 <= value <= 65535:
                 errors.append(f"network.{field} must be an integer from 1 to 65535")
-            elif any(value == item[field] for item in BITCOIN_NETWORKS.values()):
-                errors.append(f"network.{field} collides with an existing Bitcoin network port")
+            elif value in {
+                item[port_field]
+                for item in BITCOIN_NETWORKS.values()
+                for port_field in ("p2p_port", "rpc_port")
+            }:
+                errors.append(f"network.{field} collides with a reserved Bitcoin network TCP port")
     if network.get("p2p_port") is not None and network.get("p2p_port") == network.get("rpc_port"):
         errors.append("P2P and RPC ports must be different")
 
