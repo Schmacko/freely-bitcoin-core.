@@ -61,7 +61,7 @@ class NetworkSafetyTests(unittest.TestCase):
         data["network"]["rpc_port"] = 8332
         errors = validate(data)
         self.assertTrue(any("existing Bitcoin network magic" in item for item in errors))
-        self.assertTrue(any("existing Bitcoin network port" in item for item in errors))
+        self.assertTrue(any("reserved Bitcoin network TCP port" in item for item in errors))
         self.assertTrue(any("existing Bitcoin network port" in item for item in errors))
 
     def test_rejects_bitcoin_address_identity(self):
@@ -111,6 +111,12 @@ class NetworkSafetyTests(unittest.TestCase):
         data = complete_fixture()
         data["genesis"]["hash"] = "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
         self.assertTrue(any("Bitcoin mainnet genesis" in item for item in validate(data)))
+
+    def test_rejects_cross_role_port_collisions(self):
+        data = complete_fixture()
+        data["network"]["p2p_port"] = 8332
+        errors = validate(data)
+        self.assertTrue(any("reserved Bitcoin network TCP port" in item for item in errors))
 
     def test_rejects_invalid_ports_and_equal_ports(self):
         data = complete_fixture()
