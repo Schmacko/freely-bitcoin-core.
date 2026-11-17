@@ -13,6 +13,9 @@
   "address": {
     "base58_public_key_prefix": null,
     "base58_script_prefix": null,
+    "base58_secret_key_prefix": null,
+    "base58_extended_public_key_prefix": null,
+    "base58_extended_secret_key_prefix": null,
     "bech32_hrp": null
   },
   "genesis": {
