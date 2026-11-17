@@ -117,3 +117,20 @@ The compact encodings in the table include the expected truncation/normalization
 ## Next implementation step
 
 Implement these deterministic fixtures as C++ regression tests on a dedicated branch, run the focused PoW test suite, and open a draft PR. Keep this work separate from the monitored M1 branch and do not introduce any FREELY production parameter values.
+
+
+## Additional compact-target rejection coverage
+
+The independent checker and C++ regression suite also reject malformed compact
+targets beyond the five retarget arithmetic vectors:
+
+- zero mantissa / zero target;
+- negative compact target;
+- exponent overflow;
+- a non-zero mantissa that truncates to a zero target after exponent shifting
+  (for example, `0x01000001`);
+- targets above the synthetic `powLimit`.
+
+The Python checker additionally verifies a compact encode/decode round-trip and
+that encoding a zero target is rejected. These are validation fixtures only;
+they do not select or imply any production FREELY proof-of-work parameters.
