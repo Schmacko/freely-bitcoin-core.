@@ -216,13 +216,26 @@ jobs:
     steps:
       - *ANNOTATION_PR_NUMBER
 
-      - *CHECKOUT
+      - name: Checkout repository (Windows-safe)
+        shell: pwsh
+        env:
+          CHECKOUT_REF: ${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+        run: |
+          $repoPath = Join-Path $env:RUNNER_TEMP "freely-repo"
+          New-Item -ItemType Directory -Force -Path $repoPath | Out-Null
+          git -C $repoPath init
+          git -C $repoPath remote add origin "https://github.com/${{ github.repository }}.git"
+          git -C $repoPath fetch --depth=1 origin $env:CHECKOUT_REF
+          git -C $repoPath checkout --detach FETCH_HEAD
+          git config --global --add safe.directory $repoPath
 
       - &IMPORT_VS_ENV
         name: Import Visual Studio env vars
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows.py "standard" github_import_vs_env
 
       - name: Get tool information
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           set -o errexit -o pipefail -o xtrace -o nounset
 
@@ -233,6 +246,16 @@ jobs:
           py -3 --version
           bash --version
 
+      - name: Compute vcpkg cache keys
+        id: vcpkg-cache-key
+        shell: pwsh
+        working-directory: ${{ runner.temp }}/freely-repo
+        run: |
+          $downloadHash = (git hash-object vcpkg.json).Trim()
+          $binaryHash = (git hash-object cmake_version msbuild_version toolset_version vcpkg.json) -join "-"
+          "downloads=$downloadHash" >> $env:GITHUB_OUTPUT
+          "binary=$binaryHash" >> $env:GITHUB_OUTPUT
+
       - name: Restore vcpkg downloads cache
         id: vcpkg-downloads-cache
         uses: actions/cache/restore@v5
@@ -240,16 +263,17 @@ jobs:
           path: |
             ~/AppData/Local/vcpkg/downloads/*
             !~/AppData/Local/vcpkg/downloads/tools
-          key: ${{ github.job }}-vcpkg-downloads-${{ hashFiles('vcpkg.json') }}
+          key: ${{ github.job }}-vcpkg-downloads-${{ steps.vcpkg-cache-key.outputs.downloads }}
 
       - name: Restore vcpkg binary cache
         uses: actions/cache/restore@v5
         id: vcpkg-binary-cache
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: ${{ github.job }}-vcpkg-binary-release-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
+          key: ${{ github.job }}-vcpkg-binary-release-${{ steps.vcpkg-cache-key.outputs.binary }}
 
       - name: Generate build system
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} generate
 
@@ -272,20 +296,24 @@ jobs:
           key: ${{ steps.vcpkg-downloads-cache.outputs.cache-primary-key }}
 
       - name: Build
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} build
 
       - name: Check executable manifests
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} check_manifests
 
       - name: Prepare tests
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} prepare_tests
 
       - name: Run tests
         env:
           TEST_RUNNER_EXTRA: "--timeout-factor=${{ env.TEST_RUNNER_TIMEOUT_FACTOR }} ${{ case(github.event_name == 'pull_request', '', '--extended') }}"
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows.py ${{ matrix.job-type }} run_tests
 
@@ -388,17 +416,27 @@ jobs:
     steps:
       - *ANNOTATION_PR_NUMBER
 
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.record-frozen-commit.outputs.commit }}
+      - name: Checkout repository (Windows-safe)
+        shell: pwsh
+        env:
+          CHECKOUT_REF: ${{ needs.record-frozen-commit.outputs.commit }}
+        run: |
+          $repoPath = Join-Path $env:RUNNER_TEMP "freely-repo"
+          New-Item -ItemType Directory -Force -Path $repoPath | Out-Null
+          git -C $repoPath init
+          git -C $repoPath remote add origin "https://github.com/${{ github.repository }}.git"
+          git -C $repoPath fetch --depth=1 origin $env:CHECKOUT_REF
+          git -C $repoPath checkout --detach FETCH_HEAD
+          git config --global --add safe.directory $repoPath
 
       - name: Download built executables
         uses: actions/download-artifact@v8
         with:
           name: ${{ matrix.artifact-name }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/freely-repo
 
       - name: Run bitcoind.exe
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows-cross.py print_version
 
       - *IMPORT_VS_ENV
@@ -406,20 +444,25 @@ jobs:
       - name: Check imported DLLs
         env:
           CRT: ${{ matrix.crt }}
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows-cross.py check_imports
 
       - name: Check executable manifests
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows-cross.py check_manifests
 
       - name: Prepare Windows test environment
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows-cross.py prepare_tests
 
       - name: Run unit tests
+        working-directory: ${{ runner.temp }}/freely-repo
         run: py -3 .github/ci-windows-cross.py run_unit_tests
 
       - name: Run functional tests
         env:
           TEST_RUNNER_EXTRA: "--timeout-factor=${{ env.TEST_RUNNER_TIMEOUT_FACTOR }} ${{ case(github.event_name == 'pull_request', '', '--extended') }}"
+        working-directory: ${{ runner.temp }}/freely-repo
         run: |
           py -3 .github/ci-windows-cross.py run_functional_tests
 
