@@ -8,7 +8,8 @@
     "message_start": null,
     "p2p_port": null,
     "rpc_port": null,
-    "data_directory": null
+    "data_directory": null,
+    "config_section": null
   },
   "address": {
     "base58_public_key_prefix": null,
