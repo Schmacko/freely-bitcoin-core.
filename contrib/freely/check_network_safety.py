@@ -21,7 +21,7 @@ BITCOIN_MAINNET = {
     "base58_public_key_prefix": 0,
     "base58_script_prefix": 5,
     "bech32_hrp": "bc",
-    "genesis_hash": "000000000019d6689c085ae165831e934ff763ae46a2c1 72b3f1b60a8ce26f".replace(" ", ""),
+    "genesis_hash": "000000000019d6689c085ae165831e934ff763ae46a2a6c172f1b60a8ce26f".replace(" ", ""),
 }
 
 REQUIRED_PATHS = (
