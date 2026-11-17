@@ -20,6 +20,9 @@ BITCOIN_MAINNET = {
     "data_directory": "bitcoin",
     "base58_public_key_prefix": 0,
     "base58_script_prefix": 5,
+    "base58_secret_key_prefix": 128,
+    "base58_extended_public_key_prefix": "0488b21e",
+    "base58_extended_secret_key_prefix": "0488ade4",
     "bech32_hrp": "bc",
     "genesis_hash": "000000000019d6689c085ae165831e934ff763ae46a2a6c172f1b60a8ce26f".replace(" ", ""),
 }
@@ -31,6 +34,9 @@ REQUIRED_PATHS = (
     "network.data_directory",
     "address.base58_public_key_prefix",
     "address.base58_script_prefix",
+    "address.base58_secret_key_prefix",
+    "address.base58_extended_public_key_prefix",
+    "address.base58_extended_secret_key_prefix",
     "address.bech32_hrp",
     "genesis.hash",
     "genesis.n_bits",
@@ -98,13 +104,25 @@ def validate(data: dict[str, Any]) -> list[str]:
     if datadir is not None and (not isinstance(datadir, str) or not datadir.strip() or datadir.lower() == "bitcoin"):
         errors.append("network.data_directory must be non-empty and must not be Bitcoin's data directory")
 
-    for field, forbidden in (("base58_public_key_prefix", 0), ("base58_script_prefix", 5)):
+    for field, forbidden in (
+        ("base58_public_key_prefix", 0),
+        ("base58_script_prefix", 5),
+        ("base58_secret_key_prefix", 128),
+    ):
         value = address.get(field)
         if value is not None:
             if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 255:
                 errors.append(f"address.{field} must be an integer from 0 to 255")
             elif value == forbidden:
                 errors.append(f"address.{field} reuses Bitcoin mainnet prefix {forbidden}")
+
+    for field in ("base58_extended_public_key_prefix", "base58_extended_secret_key_prefix"):
+        value = address.get(field)
+        if value is not None:
+            if not isinstance(value, str) or not re.fullmatch(r"[0-9a-fA-F]{8}", value):
+                errors.append(f"address.{field} must be exactly 4 bytes encoded as 8 hex characters")
+            elif value.lower() == BITCOIN_MAINNET[field]:
+                errors.append(f"address.{field} reuses Bitcoin mainnet extended-key prefix")
 
     hrp = address.get("bech32_hrp")
     if hrp is not None and (not isinstance(hrp, str) or not re.fullmatch(r"[a-z]{1,83}", hrp) or hrp == "bc"):
