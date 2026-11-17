@@ -30,7 +30,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
-            build-essential cmake python3 libboost-dev
+            build-essential cmake python3 libboost-dev libevent-dev
 
       - name: Configure unit-test build
         run: |
