@@ -13,25 +13,31 @@ import sys
 from pathlib import Path
 from typing import Any
 
-BITCOIN_MAINNET = {
-    "message_start": "f9beb4d9",
-    "p2p_port": 8333,
-    "rpc_port": 8332,
-    "data_directory": "bitcoin",
-    "base58_public_key_prefix": 0,
-    "base58_script_prefix": 5,
-    "base58_secret_key_prefix": 128,
-    "base58_extended_public_key_prefix": "0488b21e",
-    "base58_extended_secret_key_prefix": "0488ade4",
-    "bech32_hrp": "bc",
-    "genesis_hash": "000000000019d6689c085ae165831e934ff763ae46a2a6c172f1b60a8ce26f".replace(" ", ""),
+BITCOIN_NETWORKS = {
+    "main": {"message_start": "f9beb4d9", "p2p_port": 8333, "rpc_port": 8332, "data_directory": "", "bech32_hrp": "bc"},
+    "testnet3": {"message_start": "0b110907", "p2p_port": 18333, "rpc_port": 18332, "data_directory": "testnet3", "bech32_hrp": "tb"},
+    "testnet4": {"message_start": "1c163f28", "p2p_port": 48333, "rpc_port": 48332, "data_directory": "testnet4", "bech32_hrp": "tb"},
+    # Signet magic is challenge-derived; ports and HRP are fixed.
+    "signet": {"message_start": None, "p2p_port": 38333, "rpc_port": 38332, "data_directory": "signet", "bech32_hrp": "tb"},
+    "regtest": {"message_start": "fabfb5da", "p2p_port": 18444, "rpc_port": 18443, "data_directory": "regtest", "bech32_hrp": "bcrt"},
 }
+BITCOIN_BASE58_PREFIXES = {
+    "base58_public_key_prefix": {0, 111},
+    "base58_script_prefix": {5, 196},
+    "base58_secret_key_prefix": {128, 239},
+}
+BITCOIN_EXTENDED_KEY_PREFIXES = {
+    "base58_extended_public_key_prefix": {"0488b21e", "043587cf"},
+    "base58_extended_secret_key_prefix": {"0488ade4", "04358394"},
+}
+BITCOIN_GENESIS_HASH = "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
 
 REQUIRED_PATHS = (
     "network.message_start",
     "network.p2p_port",
     "network.rpc_port",
     "network.data_directory",
+    "network.config_section",
     "address.base58_public_key_prefix",
     "address.base58_script_prefix",
     "address.base58_secret_key_prefix",
@@ -87,52 +93,60 @@ def validate(data: dict[str, Any]) -> list[str]:
     if magic is not None:
         if not isinstance(magic, str) or not re.fullmatch(r"[0-9a-fA-F]{8}", magic):
             errors.append("network.message_start must be exactly 4 bytes encoded as 8 hex characters")
-        elif magic.lower() == BITCOIN_MAINNET["message_start"]:
-            errors.append("network.message_start reuses Bitcoin mainnet magic")
+        elif any(magic.lower() == item["message_start"] for item in BITCOIN_NETWORKS.values() if item["message_start"]):
+            errors.append("network.message_start collides with an existing Bitcoin network magic")
 
-    for field, forbidden in (("p2p_port", 8333), ("rpc_port", 8332)):
+    for field in ("p2p_port", "rpc_port"):
         value = network.get(field)
         if value is not None:
             if not isinstance(value, int) or isinstance(value, bool) or not 1 <= value <= 65535:
                 errors.append(f"network.{field} must be an integer from 1 to 65535")
-            elif value == forbidden:
-                errors.append(f"network.{field} reuses Bitcoin mainnet port {forbidden}")
+            elif any(value == item[field] for item in BITCOIN_NETWORKS.values()):
+                errors.append(f"network.{field} collides with an existing Bitcoin network port")
     if network.get("p2p_port") is not None and network.get("p2p_port") == network.get("rpc_port"):
         errors.append("P2P and RPC ports must be different")
 
     datadir = network.get("data_directory")
-    if datadir is not None and (not isinstance(datadir, str) or not datadir.strip() or datadir.lower() == "bitcoin"):
-        errors.append("network.data_directory must be non-empty and must not be Bitcoin's data directory")
+    if datadir is not None:
+        if not isinstance(datadir, str) or not datadir.strip():
+            errors.append("network.data_directory must be a non-empty relative directory name")
+        elif datadir.startswith("/") or ".." in Path(datadir).parts:
+            errors.append("network.data_directory must not be absolute or traverse parent directories")
+        elif datadir in {item["data_directory"] for item in BITCOIN_NETWORKS.values()}:
+            errors.append("network.data_directory collides with an existing Bitcoin network directory")
+    config_section = network.get("config_section")
+    if config_section is not None and config_section != "freely":
+        errors.append("network.config_section must be the canonical 'freely' section name")
 
-    for field, forbidden in (
-        ("base58_public_key_prefix", 0),
-        ("base58_script_prefix", 5),
-        ("base58_secret_key_prefix", 128),
-    ):
+
+    for field, forbidden in BITCOIN_BASE58_PREFIXES.items():
         value = address.get(field)
         if value is not None:
             if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 255:
                 errors.append(f"address.{field} must be an integer from 0 to 255")
-            elif value == forbidden:
-                errors.append(f"address.{field} reuses Bitcoin mainnet prefix {forbidden}")
+            elif value in forbidden:
+                errors.append(f"address.{field} collides with an existing Bitcoin network prefix")
 
     for field in ("base58_extended_public_key_prefix", "base58_extended_secret_key_prefix"):
         value = address.get(field)
         if value is not None:
             if not isinstance(value, str) or not re.fullmatch(r"[0-9a-fA-F]{8}", value):
                 errors.append(f"address.{field} must be exactly 4 bytes encoded as 8 hex characters")
-            elif value.lower() == BITCOIN_MAINNET[field]:
-                errors.append(f"address.{field} reuses Bitcoin mainnet extended-key prefix")
+            elif value.lower() in BITCOIN_EXTENDED_KEY_PREFIXES[field]:
+                errors.append(f"address.{field} collides with an existing Bitcoin network extended-key prefix")
 
     hrp = address.get("bech32_hrp")
-    if hrp is not None and (not isinstance(hrp, str) or not re.fullmatch(r"[a-z]{1,83}", hrp) or hrp == "bc"):
-        errors.append("address.bech32_hrp must be 1-83 lowercase letters and must not be 'bc'")
+    if hrp is not None:
+        if not isinstance(hrp, str) or not re.fullmatch(r"[a-z]{1,83}", hrp):
+            errors.append("address.bech32_hrp must be 1-83 lowercase letters")
+        elif hrp in {item["bech32_hrp"] for item in BITCOIN_NETWORKS.values()}:
+            errors.append("address.bech32_hrp collides with an existing Bitcoin network HRP")
 
     genesis_hash = genesis.get("hash")
     if genesis_hash is not None:
         if not isinstance(genesis_hash, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", genesis_hash):
             errors.append("genesis.hash must be a 32-byte hash encoded as 64 hex characters")
-        elif genesis_hash.lower() == BITCOIN_MAINNET["genesis_hash"]:
+        elif genesis_hash.lower() == BITCOIN_GENESIS_HASH:
             errors.append("genesis.hash reuses Bitcoin mainnet genesis")
 
     for field in ("n_bits", "pow_limit"):
