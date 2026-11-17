@@ -161,3 +161,26 @@ The existing candidate sheet is authorised for static collision review only. A p
 ## 12. Proof-of-work candidate modelling
 
 See [FREELY PoW Candidate Model](FREELY-POW-CANDIDATE-MODEL.md). The model translates candidate difficulty levels into expected SHA-256d work and expected block intervals at specified hashrates. It is a mathematical planning tool, not a live mining benchmark and not a security guarantee. A real recommendation requires a declared honest-hashrate assumption, a plausible attacker-hashrate/cost model, and a block-stall tolerance. No production `powLimit` or genesis `nBits` is selected by the model.
+
+
+## 13. Provisional genesis coinbase candidate — 17 November 2026
+
+The owner authorised generation and verification of candidate genesis material. A reproducible candidate coinbase transaction has been constructed using the previously suggested message:
+
+**Candidate message (not final):** FREELY — Freedom Through Decentralisation
+
+**Candidate output:** 50.00000000 FLY to the single-byte OP_RETURN script (hex `6a`). The output is provably unspendable. The height-zero reward remains included in the scheduled issuance accounting, as approved by the owner.
+
+**Candidate coinbase transaction ID / single-transaction Merkle root:**
+
+`f489a4267153fef618863eeeeb202862ca1742cfc32574fd508afa500fb83ce1`
+
+The candidate transaction uses version 1, a null prevout, max sequence, the standard Bitcoin genesis-style coinbase script prefix, and a single 50 FLY OP_RETURN output. The candidate message is UTF-8 encoded. The timestamp in the block header is intentionally unset.
+
+The generator `scripts/generate-freely-genesis-candidate.py`:
+- serializes the candidate transaction deterministically;
+- verifies its serialization routine against Bitcoin's known genesis coinbase transaction ID before producing FREELY output;
+- emits the candidate transaction bytes, txid and Merkle root;
+- leaves block time, nBits, nonce and full block hash unset.
+
+**Important:** this is a candidate coinbase transaction and Merkle root, not a valid or final FREELY genesis block. The message wording has not been finally approved; the numeric powLimit and genesis nBits are still unresolved; the block header hash cannot be frozen or verified against proof of work yet. Do not use this candidate in runtime parameters, wallets or a public network.
