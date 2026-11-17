@@ -1,10 +1,10 @@
 # FREELY consensus specification — engineering baseline
 
-**Status:** working specification; not activation-ready.  
-**Date:** 16 November 2026  
-**Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`.  
-**Branch:** `freely/consensus-specification`  
-**Purpose:** turn agreed monetary and block-production rules into an auditable implementation contract, while explicitly isolating unresolved consensus choices. This document does not activate a chain, choose a genesis block, or authorise a public network.
+- **Status:** working specification; not activation-ready.
+- **Date:** 16 November 2026
+- **Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`.
+- **Branch:** `freely/consensus-specification`
+- **Purpose:** turn agreed monetary and block-production rules into an auditable implementation contract, while explicitly isolating unresolved consensus choices. This document does not activate a chain, choose a genesis block, or authorise a public network.
 
 ## 1. Consensus rules already agreed
 
