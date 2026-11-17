@@ -49,8 +49,6 @@ jobs:
           fi
       - uses: actions/checkout@v6
         with:
-          # The repository name ends in a period; checkout into the workspace root to avoid invalid nested Windows paths.
-          path: .
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: ${{ env.FETCH_DEPTH }}
       - name: Determine commit range
@@ -143,8 +141,6 @@ jobs:
         name: Checkout
         uses: actions/checkout@v6
         with:
-          # The repository name ends in a period; checkout into the workspace root to avoid invalid nested Windows paths.
-          path: .
           # Ensure the latest merged pull request state is used, even on re-runs.
           ref: &CHECKOUT_REF_TMPL ${{ github.event_name == 'pull_request' && github.ref || '' }}
 
@@ -250,6 +246,16 @@ jobs:
           py -3 --version
           bash --version
 
+      - name: Compute vcpkg cache keys
+        id: vcpkg-cache-key
+        shell: pwsh
+        working-directory: ${{ runner.temp }}/freely-repo
+        run: |
+          $downloadHash = (git hash-object vcpkg.json).Trim()
+          $binaryHash = (git hash-object cmake_version msbuild_version toolset_version vcpkg.json) -join "-"
+          "downloads=$downloadHash" >> $env:GITHUB_OUTPUT
+          "binary=$binaryHash" >> $env:GITHUB_OUTPUT
+
       - name: Restore vcpkg downloads cache
         id: vcpkg-downloads-cache
         uses: actions/cache/restore@v5
@@ -257,14 +263,14 @@ jobs:
           path: |
             ~/AppData/Local/vcpkg/downloads/*
             !~/AppData/Local/vcpkg/downloads/tools
-          key: ${{ github.job }}-vcpkg-downloads-${{ hashFiles('vcpkg.json') }}
+          key: ${{ github.job }}-vcpkg-downloads-${{ steps.vcpkg-cache-key.outputs.downloads }}
 
       - name: Restore vcpkg binary cache
         uses: actions/cache/restore@v5
         id: vcpkg-binary-cache
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: ${{ github.job }}-vcpkg-binary-release-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
+          key: ${{ github.job }}-vcpkg-binary-release-${{ steps.vcpkg-cache-key.outputs.binary }}
 
       - name: Generate build system
         working-directory: ${{ runner.temp }}/freely-repo
@@ -353,8 +359,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          # The repository name ends in a period; checkout into the workspace root to avoid invalid nested Windows paths.
-          path: .
           ref: ${{ needs.record-frozen-commit.outputs.commit }}
 
       - name: Configure environment
@@ -640,8 +644,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          # The repository name ends in a period; checkout into the workspace root to avoid invalid nested Windows paths.
-          path: .
           ref: *CHECKOUT_REF_TMPL
           fetch-depth: 0
 
