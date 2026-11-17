@@ -78,7 +78,7 @@ def push_script_number(value: int) -> bytes:
 def serialize_coinbase(timestamp: bytes, output_script: bytes, amount: int = GENESIS_REWARD) -> bytes:
     script_sig = (
         push_script_number(486604799)
-        + push_script_number(4)
+        + push_data(encode_script_number(4))
         + push_data(timestamp)
     )
     tx = (
@@ -140,7 +140,7 @@ def main() -> int:
             "version": 1,
             "script_sig_hex": (
                 push_script_number(486604799)
-                + push_script_number(4)
+                + push_data(encode_script_number(4))
                 + push_data(timestamp)
             ).hex(),
             "output_value_base_units": GENESIS_REWARD,
