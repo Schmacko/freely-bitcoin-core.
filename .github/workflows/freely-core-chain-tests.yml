@@ -5,6 +5,7 @@ on:
     branches:
       - freely/m1-consensus
     paths:
+      - "test/functional/feature_freely_startup.py"
       - "src/bitcoin-cli.cpp"
       - "src/chainparams.cpp"
       - "src/chainparamsbase.cpp"
