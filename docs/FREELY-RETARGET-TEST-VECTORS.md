@@ -81,7 +81,7 @@ The C++ test suite now supplements the five arithmetic vectors with:
 - A non-retarget boundary test confirming that, with minimum-difficulty blocks disabled, the prior compact target is carried forward unchanged.
 - Direct `DeriveTarget` rejection tests for negative, zero, overflowing and above-`powLimit` compact targets, alongside a valid target.
 
-All target limits and compact values in these tests remain synthetic fixtures. They exercise the upstream PoW machinery and approved retarget arithmetic without choosing FREELY's production `powLimit`, genesis `nBits`, or BIP94 policy.
+All target limits and compact values in these tests remain synthetic fixtures. They exercise the upstream PoW machinery and approved retarget arithmetic without choosing FREELY's production `powLimit` or genesis `nBits`. BIP94 is owner-approved; the separate synthetic BIP94 regression test is still awaiting CI.
 
 ## Executable independent arithmetic checker
 
