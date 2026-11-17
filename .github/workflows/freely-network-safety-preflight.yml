@@ -1,0 +1,39 @@
+name: FREELY network safety preflight
+
+on:
+  pull_request:
+    paths:
+      - 'contrib/freely/**'
+      - 'docs/FREELY-NETWORK-SAFETY-PREFLIGHT.md'
+      - '.github/workflows/freely-network-safety-preflight.yml'
+  push:
+    branches:
+      - 'freely/network-safety-preflight'
+    paths:
+      - 'contrib/freely/**'
+      - 'docs/FREELY-NETWORK-SAFETY-PREFLIGHT.md'
+      - '.github/workflows/freely-network-safety-preflight.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  preflight-tests:
+    name: Python preflight tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run unit tests
+        run: python -m unittest discover -s contrib/freely -p 'test_check_network_safety.py' -v
+      - name: Confirm production template is fail-closed
+        run: |
+          set +e
+          python contrib/freely/check_network_safety.py
+          status=$?
+          set -e
+          test "$status" -eq 1
