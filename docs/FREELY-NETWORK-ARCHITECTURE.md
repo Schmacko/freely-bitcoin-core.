@@ -219,7 +219,7 @@ The specification formalizes the agreed integer subsidy formula, boundary vector
 
 The proof-of-work limit, genesis target, retarget edge behaviour, minimum-difficulty policy, time-warp mitigation, activation matrix and genesis details remain unresolved. No consensus code or network identity has been activated by this documentation work.
 
-The Windows workflow correction is being verified separately on the current M1 PR head. Do not infer CI success from this documentation commit.
+The Windows checkout and no-wallet image failures were reproduced in CI logs and are now addressed in draft PR #9. The revised workflow is queued for current-head validation; do not infer CI success from this documentation commit.
 
 
 ## 13. Static chain-selection audit
@@ -242,9 +242,9 @@ The audit does not select `powLimit`, genesis `nBits`, minimum-difficulty policy
 
 ### Current M1 CI observation — 16 November 2026
 
-On head `3c48e0fc2f3433a946ed29326c3c5233f4d826a3`, both affected Windows jobs have successfully completed the Windows-safe checkout and entered build-system generation. The general CI's `No wallet` job failed while Docker attempted to retrieve `mirror.gcr.io/ubuntu:24.04`; the registry returned HTTP 429 (rate limited) on both attempts. This is an external image-registry retrieval failure, not a compiler diagnostic. The Windows builds and the dedicated M1 validation workflow are not yet terminal. See [general CI #34](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43782087333) and [M1 tests #16](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43782087351).
+On head `3c48e0fc2f3433a946ed29326c3c5233f4d826a3`, both Windows native jobs completed checkout, build and test successfully. The general CI `No wallet` job failed twice because Docker received HTTP 429 from `mirror.gcr.io/ubuntu:24.04`; this was an external image-registry failure, not a compiler error. See [general CI #34](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43782087333) and [M1 tests #16](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43782087351).
 
-The current M1 branch is being left unchanged while these workflows run.
+A later run on 17 November exposed a separate default-checkout failure on Windows: `D:\\a\\freely-bitcoin-core.\\freely-bitcoin-core.` did not exist. Draft PR #9 now addresses both CI issues by cloning Windows jobs under `RUNNER_TEMP`, deriving vcpkg cache keys from that temporary checkout, and using `ubuntu:24.04` for the no-wallet container. Current-head validation is queued; neither fix is yet claimed as CI-passed.
 
 
 ## 15. Architecture completion sprint — 16 November 2026
@@ -413,7 +413,8 @@ The architecture sprint reconciled the M1 production-classification patch with t
 - `src/init.cpp` rejects `-testactivationheight` and `-vbparams` through `IsProductionChain()`.
 - `-test=<option>` remains restricted to REGTEST.
 - `-acceptstalefeeestimates` retains its REGTEST-only exception.
-- No `ChainType::FREELY` enum, FREELY parameter class or production network identity exists yet.
+- PR #8 now adds `ChainType::FREELY`, canonical parsing/serialization, help registration and fail-closed guards in both parameter factories; selector-entrypoint regression tests are written, with C++ execution still pending.
+- No FREELY parameter class, genesis, production network identity, magic, ports, address prefixes, seeds or activation matrix exists yet.
 
 ### Verified chain-selection call sites
 
@@ -423,9 +424,9 @@ The architecture sprint reconciled the M1 production-classification patch with t
 | `src/init.cpp` around line 971 | Signet-specific option path checks SIGNET | Keep signet-only behaviour scoped to SIGNET |
 | `src/init.cpp` around lines 1171–1191 | `-test` is REGTEST-only; production override guard uses `IsProductionChain()` | Preserve these guards; test FREELY production rejection |
 | `src/init.cpp` around line 1957 | Stale fee estimates exception is REGTEST-only | Do not extend to FREELY |
-| `src/chainparams.cpp` around lines 135–160 | `CreateChainParams` switch constructs the five current Bitcoin networks | Add a dedicated FREELY factory and FREELY-specific options; keep switch exhaustive |
-| `src/chainparamsbase.cpp` around lines 42–53 | Base parameter switch assigns data-dir suffix and RPC port for five networks | Add isolated FREELY suffix and an approved, collision-checked RPC port |
-| `src/util/chaintype.cpp` around lines 14–43 | Both chain-to-string and string-to-chain switches enumerate five networks | Add canonical `freely` mapping and round-trip tests |
+| `src/chainparams.cpp` around lines 135–160 | The switch now has a FREELY branch that throws until parameters are finalized | Replace the fail-closed guard with a dedicated FREELY factory only after consensus and identity decisions are approved |
+| `src/chainparamsbase.cpp` around lines 42–53 | The FREELY base-parameter branch deliberately throws pending final identity | Replace the guard only with an isolated data-dir suffix and approved, collision-checked RPC port |
+| `src/util/chaintype.cpp` around lines 14–43 | Both chain-to-string and string-to-chain switches now include canonical `freely` mapping | Keep round-trip, unknown-name and exhaustive handling tests |
 | `src/kernel/chainparams.cpp` around lines 729–746 | `GetNetworkForMagic` maps the five Bitcoin network magic values | Add FREELY only with an approved unique four-byte magic |
 | `src/kernel/chainparams.cpp` network constructors | MAIN, SIGNET and REGTEST assign their own chain types and network values | Add an independent FREELY constructor; do not clone Bitcoin MAIN identity or history |
 
