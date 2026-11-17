@@ -33,7 +33,7 @@ Rationale: the conventional genesis output is not inserted into the spendable UT
 | Retarget clamp | Clamp elapsed timespan to ¼×–4× target timespan (302,400–4,838,400 seconds) | **Owner-approved 16 Nov 2026** |
 | Minimum-difficulty blocks | Disabled on production FREELY | **Owner-approved 16 Nov 2026** |
 | No-retargeting | Disabled on production FREELY | **Owner-approved 16 Nov 2026** |
-| BIP94 time-warp mitigation | Enable from genesis (`enforce_BIP94 = true`) | **Owner-approved 17 Nov 2026; exact v32.1 code path and dedicated tests required before activation** |
+| BIP94 time-warp mitigation | Enable from genesis (`enforce_BIP94 = true`): first-period target base plus first-block timestamp bound (previous block time − 600 seconds) | **Owner-approved 17 Nov 2026; both code paths and dedicated tests required before activation** |
 | PoW limit | Do not select a numeric target until initial mining model and attack assumptions are reviewed | This is a consensus-critical ceiling and genesis target constraint |
 | Genesis nBits | Must encode a target no easier than the approved PoW limit | Cannot be chosen independently |
 | Timestamp validity | Preserve upstream median-time-past and future-time checks; document any additional rules | Avoid needless divergence |
@@ -136,3 +136,8 @@ These approvals authorise reversible documentation, candidate modelling, code re
 ## J. Pinned-v32.1 script compatibility audit — 17 November 2026
 
 Targeted source inspection of `src/validation.cpp` confirms P2SH, witness and Taproot script flags are unconditional in `GetBlockScriptFlags`, except for explicit historical hash exceptions. FREELY must not copy Bitcoin mainnet exceptions. BIP66/DERSIG, BIP65/CLTV and CSV are controlled by buried-deployment heights; BIP147 NULLDUMMY is controlled by SegwitHeight; BIP34 coinbase-height enforcement is controlled separately. The current candidate is height 1 for these height-controlled rules, with BIP30 duplicate-coinbase protection retained and no historical BIP34 hash copied. Witness data download/validation paths also use SegwitHeight and require boundary tests. These are source-audited candidates, not yet compiled or validated in a FREELY parameter object.
+
+
+## K. BIP94 complete-rule clarification — 17 November 2026
+
+The BIP94 approval covers both the period-start retarget base and the time-warp timestamp bound. At candidate heights divisible by 2,016 (excluding genesis), the block timestamp must be at least the previous block timestamp minus 600 seconds and must still exceed median-time-past. PR #6 now adds (1) a C++ test for first-block-of-period target selection at a 2,016-block interval and (2) a regtest functional test at the test chain's 144-block interval that rejects a 601-second backward timestamp and accepts the exact 600-second boundary. CI and full FREELY runtime validation remain pending.
