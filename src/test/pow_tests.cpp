@@ -317,6 +317,7 @@ BOOST_AUTO_TEST_CASE(freely_derive_target_rejects_invalid_compact_values)
     BOOST_CHECK(DeriveTarget(0x1f7fffffU, limit).has_value());
     BOOST_CHECK(!DeriveTarget(arith_uint256{1}.GetCompact(true), limit)); // negative
     BOOST_CHECK(!DeriveTarget(0, limit)); // zero
+    BOOST_CHECK(!DeriveTarget(0x01000001U, limit)); // non-zero mantissa truncated to zero
     BOOST_CHECK(!DeriveTarget(0x23000001U, limit)); // overflow
     BOOST_CHECK(!DeriveTarget(0x2100ffffU, limit)); // above powLimit
 }
