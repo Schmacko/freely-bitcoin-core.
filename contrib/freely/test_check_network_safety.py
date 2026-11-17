@@ -75,7 +75,7 @@ class NetworkSafetyTests(unittest.TestCase):
             "bech32_hrp": "tb",
         })
         errors = validate(data)
-        self.assertTrue(any("public_key_prefix" in item and "Bitcoin mainnet" in item for item in errors))
+        self.assertTrue(any("public_key_prefix" in item and "existing Bitcoin network" in item for item in errors))
         self.assertTrue(any("script_prefix" in item and "Bitcoin mainnet" in item for item in errors))
         self.assertTrue(any("collides with an existing Bitcoin network HRP" in item for item in errors))
 
