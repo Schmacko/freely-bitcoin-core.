@@ -228,7 +228,12 @@ def main() -> int:
     transaction = serialize_coinbase(timestamp, output_script)
     txid = display_hash(hash256(transaction))
     header_result = None
+    header_time, header_bits, header_nonce, header_pow_limit = (
+        args.time, args.n_bits, args.nonce, args.pow_limit
+    )
     if args.self_test_header:
+        header_time, header_bits, header_nonce = 1_700_000_000, 0x207FFFFF, 1
+        header_pow_limit = "7f" + "ff" * 31
         header_result = verify_synthetic_header_fixture(txid)
     elif all(value is not None for value in header_args):
         if args.time is None:
@@ -263,15 +268,13 @@ def main() -> int:
             "version": 1,
             "previous_block_hash": "00" * 32,
             "merkle_root": txid,
-            "time": args.time,
-            "n_bits": args.n_bits,
-            "nonce": args.nonce,
+            "time": header_time,
+            "n_bits": header_bits,
+            "nonce": header_nonce,
             "block_hash": None if header_result is None else header_result["block_hash"],
             "serialized_header_hex": None if header_result is None else header_result["header_hex"],
             "decoded_target_hex": None if header_result is None else header_result["target_hex"],
-            "pow_limit_hex": args.pow_limit if args.pow_limit is not None else (
-                "7f" + "ff" * 31 if args.self_test_header else None
-            ),
+            "pow_limit_hex": header_pow_limit,
             "header_verification": (
                 "synthetic_test_fixture_passed" if args.self_test_header else (
                     "candidate_header_proof_of_work_passed" if header_result is not None else "not_run"
