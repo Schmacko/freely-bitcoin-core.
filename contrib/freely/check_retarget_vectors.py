@@ -25,8 +25,14 @@ def decode_compact(compact: int) -> int:
     if negative or overflow or word == 0:
         raise ValueError(f"invalid compact target: 0x{compact:08x}")
     if size <= 3:
-        return word >> (8 * (3 - size))
-    return word << (8 * (size - 3))
+        target = word >> (8 * (3 - size))
+    else:
+        target = word << (8 * (size - 3))
+    # A non-zero mantissa can still decode to zero for compact exponents 0..3.
+    # Match Bitcoin Core's SetCompact validity checks by rejecting that target.
+    if target == 0:
+        raise ValueError(f"zero compact target: 0x{compact:08x}")
+    return target
 
 
 def encode_compact(target: int) -> int:
@@ -58,6 +64,30 @@ def main() -> None:
     assert MIN_TIMESPAN == 302_400
     assert MAX_TIMESPAN == 4_838_400
 
+    # Compact-target edge cases: reject zero, negative, overflow and values
+    # whose non-zero mantissa truncates to a zero target after exponent shifting.
+    invalid_compacts = (
+        0x00000000,  # zero mantissa
+        0x01800001,  # negative target
+        0x23010000,  # exponent overflow
+        0x01000001,  # non-zero mantissa truncates to zero
+    )
+    for compact in invalid_compacts:
+        try:
+            decode_compact(compact)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"invalid compact target accepted: 0x{compact:08x}")
+
+    assert encode_compact(decode_compact(SYNTHETIC_PREVIOUS_BITS)) == SYNTHETIC_PREVIOUS_BITS
+    try:
+        encode_compact(0)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("zero target unexpectedly encoded")
+
     vectors = (
         (302_399, 0x1F1FFFFF),
         (302_400, 0x1F1FFFFF),
@@ -80,6 +110,7 @@ def main() -> None:
     assert correct_period_bits != wrong_ancestor_bits
 
     print("FREELY synthetic retarget vectors: PASS (5 clamp/scaling cases + 2,016-block boundary)")
+    print("Compact target edge cases: PASS (zero, negative, overflow, truncated-zero, round-trip)")
     print("Production powLimit/genesis parameters: NOT selected by this checker")
 
 
