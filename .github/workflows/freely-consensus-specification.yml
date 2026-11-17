@@ -8,6 +8,8 @@ on:
       - "docs/FREELY-CONSENSUS-SPECIFICATION.md"
       - "docs/FREELY-CONSENSUS-DECISION-REGISTER.md"
       - "scripts/verify-freely-consensus-spec.py"
+      - "scripts/model-freely-pow-candidates.py"
+      - "docs/FREELY-POW-CANDIDATE-MODEL.md"
       - ".github/workflows/freely-consensus-specification.yml"
   workflow_dispatch:
 
@@ -27,5 +29,11 @@ jobs:
       - name: Check Python syntax
         run: python3 -m py_compile scripts/verify-freely-consensus-spec.py
 
+      - name: Check candidate model syntax
+        run: python3 -m py_compile scripts/model-freely-pow-candidates.py
+
       - name: Verify subsidy boundaries and issuance arithmetic
         run: python3 scripts/verify-freely-consensus-spec.py
+
+      - name: Run deterministic PoW candidate model smoke test
+        run: python3 scripts/model-freely-pow-candidates.py --difficulty 1 --difficulty 256 --hashrate 1000000000 --window 600
