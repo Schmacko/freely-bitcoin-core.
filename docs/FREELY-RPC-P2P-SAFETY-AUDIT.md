@@ -74,7 +74,7 @@ The selected chain name is used by the base-parameter/config selection path to f
 Before this audit can be marked fully verified:
 - compile `bitcoind`, `bitcoin-cli` and `test_bitcoin`;
 - run `chaintype_tests`, `validation_tests` and `pow_tests`;
-- add a binary-level test proving `-chain=freely` exits with the expected fail-closed error;
+- run the new binary-level `feature_freely_startup.py` test proving `-chain=freely` exits with the expected fail-closed error;
 - add CLI chain-label coverage where practical;
 - test RPC loopback defaults and P2P listener suppression in the eventual FREELY parameter integration;
 - test data-directory separation;
