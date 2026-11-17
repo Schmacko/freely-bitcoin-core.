@@ -83,6 +83,18 @@ The C++ test suite now supplements the five arithmetic vectors with:
 
 All target limits and compact values in these tests remain synthetic fixtures. They exercise the upstream PoW machinery and approved retarget arithmetic without choosing FREELY's production `powLimit`, genesis `nBits`, or BIP94 policy.
 
+## Executable independent arithmetic checker
+
+The repository now includes `contrib/freely/check_retarget_vectors.py`, a standard-library-only Python checker that independently decodes and encodes compact targets using integer arithmetic. It verifies all five clamp/scaling vectors and the height-2,016 ancestor-selection trap.
+
+Run it with:
+
+```sh
+python3 contrib/freely/check_retarget_vectors.py
+```
+
+The focused GitHub Actions workflow runs this checker before configuring and compiling the C++ unit-test executable. A successful script run is useful arithmetic validation, but it does not replace the C++ build or `pow_tests` result.
+
 ## Safety and integration gates
 
 - These vectors test the approved clamp/scaling policy and upstream algorithm semantics only.
