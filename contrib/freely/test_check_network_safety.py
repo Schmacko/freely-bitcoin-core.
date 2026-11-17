@@ -36,6 +36,11 @@ def complete_fixture():
 
 
 class NetworkSafetyTests(unittest.TestCase):
+    def test_rejects_boolean_schema_version(self):
+        data = complete_fixture()
+        data["schema_version"] = True
+        self.assertTrue(any("schema_version must be the integer 1" in item for item in validate(data)))
+
     def test_unconfigured_template_fails_closed(self):
         errors = validate(MANIFEST)
         self.assertTrue(any("network.message_start is unset" in item for item in errors))
