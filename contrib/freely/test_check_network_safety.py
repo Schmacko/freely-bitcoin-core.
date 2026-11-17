@@ -154,6 +154,15 @@ class NetworkSafetyTests(unittest.TestCase):
         self.assertTrue(any("retarget_interval" in item for item in errors))
         self.assertTrue(any("allow_min_difficulty_blocks must remain false" in item for item in errors))
 
+    def test_rejects_invalid_compact_genesis_targets(self):
+        for compact in ("0x01000001", "0x20800001", "0x23010000"):
+            data = complete_fixture()
+            data["genesis"]["n_bits"] = compact
+            self.assertTrue(any("negative, zero, or overflowing" in item for item in validate(data)))
+        data = complete_fixture()
+        data["genesis"]["pow_limit"] = "0x7ffffe" + "00" * 29
+        self.assertTrue(any("exceeds genesis.pow_limit" in item for item in validate(data)))
+
     def test_rejects_out_of_range_genesis_fields_and_activation_heights(self):
         data = complete_fixture()
         data["genesis"]["n_bits"] = "0x100000000"
