@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_nowallet
-export CI_IMAGE_NAME_TAG="ubuntu:24.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
 # Use minimum supported python3.10 (or best-effort 3.12) and clang-17, see doc/dependencies.md
 export PACKAGES="python3-zmq python3-pip clang-17 llvm-17 libc++abi-17-dev libc++-17-dev"
 export PIP_PACKAGES="--break-system-packages pycapnp"
