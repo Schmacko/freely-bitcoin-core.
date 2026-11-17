@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "FREELY",
+    "ticker": "FLY"
+  },
+  "network": {
+    "message_start": null,
+    "p2p_port": null,
+    "rpc_port": null,
+    "data_directory": null
+  },
+  "address": {
+    "base58_public_key_prefix": null,
+    "base58_script_prefix": null,
+    "bech32_hrp": null
+  },
+  "genesis": {
+    "hash": null,
+    "n_bits": null,
+    "pow_limit": null,
+    "coinbase_spendable": null
+  },
+  "consensus": {
+    "target_spacing_seconds": 600,
+    "retarget_interval": 2016,
+    "allow_min_difficulty_blocks": false,
+    "no_retargeting": false,
+    "bip94_enabled": null,
+    "script_activation_heights": null
+  }
+}
