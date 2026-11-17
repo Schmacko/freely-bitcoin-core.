@@ -184,3 +184,10 @@ The generator `scripts/generate-freely-genesis-candidate.py`:
 - leaves block time, nBits, nonce and full block hash unset.
 
 **Important:** this is a candidate coinbase transaction and Merkle root, not a valid or final FREELY genesis block. The message wording has not been finally approved; the numeric powLimit and genesis nBits are still unresolved; the block header hash cannot be frozen or verified against proof of work yet. Do not use this candidate in runtime parameters, wallets or a public network.
+
+
+### Candidate block-header verification tool — 17 November 2026
+
+The candidate generator now also accepts explicit `--time`, `--n-bits`, `--nonce` and `--pow-limit` inputs together. It serializes the 80-byte Bitcoin-style header, decodes compact target values with negative/zero/overflow checks, verifies target <= supplied powLimit, calculates SHA-256d and checks the header hash against the target. It emits the header bytes, candidate block hash and decoded target only when the proof-of-work check succeeds.
+
+A deterministic `--self-test-header` fixture exercises both a valid and invalid nonce using synthetic regtest-like test-only values (`nBits=0x207fffff`, synthetic `powLimit=7fff...ffff`, timestamp 1,700,000,000). The expected fixture hash is fixed in the script. These synthetic values are never selected as FREELY production parameters. The focused specification workflow now py-compiles the generator and runs both the candidate transaction self-check and the synthetic header/PoW fixture. Until CI executes successfully, this is implemented but unverified.
