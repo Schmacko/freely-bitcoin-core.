@@ -138,7 +138,7 @@ they do not select or imply any production FREELY proof-of-work parameters.
 
 ## Owner-approved BIP94 regression vector — 17 November 2026
 
-The owner approved BIP94 enabled from genesis, subject to implementation review and tests. Bitcoin Core v32.1's `CalculateNextWorkRequired` path uses the first block of the difficulty period as the difficulty base when `enforce_BIP94` is true. The test below isolates that behaviour.
+The owner approved BIP94 enabled from genesis, subject to implementation review and tests. BIP94 has two relevant v32.1 behaviours: `CalculateNextWorkRequired` uses the first block of the previous difficulty period as the difficulty base; and `ContextualCheckBlockHeader` rejects a first block of a new difficulty period whose timestamp is more than 600 seconds earlier than the previous block, while retaining the median-time-past rule.
 
 Synthetic fixture:
 - Target spacing: 600 seconds.
@@ -155,4 +155,9 @@ Expected results:
 - With `enforce_BIP94=false`, next target is `0x1f3fffff` (the previous tip's target).
 - The outputs must differ, proving the test exercises the BIP94-specific branch.
 
-The C++ test `freely_bip94_uses_first_block_period_target` has been added to `src/test/pow_tests.cpp`. It is a synthetic algorithm test, not a FREELY production parameter or genesis target. The focused PoW workflow must pass on the new PR head before this behaviour is considered verified.
+The C++ test `freely_bip94_uses_first_block_period_target` has been added to `src/test/pow_tests.cpp`. A functional test `test/functional/feature_bip94.py` uses regtest's 144-block interval to reject a boundary block 601 seconds earlier than its parent and accept the exact 600-second grace boundary. The production FREELY interval remains 2,016 blocks; the regtest test validates the same conditional code path but is not a production-parameter test. Both tests are synthetic/non-production tests and must pass CI before BIP94 is considered verified.
+
+
+## BIP94 time-warp timestamp functional test
+
+The new functional test runs a private regtest node with the existing regtest-only `-test=bip94` option. It builds 143 blocks with timestamps 600 seconds apart, then submits candidate height 144. The candidate timestamp at parent time minus 601 seconds remains above median-time-past in this fixture but must be rejected as `time-timewarp-attack`; the parent time minus exactly 600 seconds must be accepted. This directly tests the timestamp constraint independently of the C++ retarget-base test. Regtest uses a 144-block interval, so the test does not replace a future end-to-end FREELY test at heights 2,016, 4,032, etc.
