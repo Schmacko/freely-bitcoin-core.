@@ -20,6 +20,9 @@ def complete_fixture():
     data["address"].update({
         "base58_public_key_prefix": 111,
         "base58_script_prefix": 196,
+        "base58_secret_key_prefix": 239,
+        "base58_extended_public_key_prefix": "043587cf",
+        "base58_extended_secret_key_prefix": "04358394",
         "bech32_hrp": "fly",
     })
     data["genesis"].update({
@@ -65,12 +68,23 @@ class NetworkSafetyTests(unittest.TestCase):
         data["address"].update({
             "base58_public_key_prefix": 0,
             "base58_script_prefix": 5,
+            "base58_secret_key_prefix": 128,
+            "base58_extended_public_key_prefix": "0488b21e",
+            "base58_extended_secret_key_prefix": "0488ade4",
             "bech32_hrp": "bc",
         })
         errors = validate(data)
         self.assertTrue(any("public_key_prefix" in item and "Bitcoin mainnet" in item for item in errors))
         self.assertTrue(any("script_prefix" in item and "Bitcoin mainnet" in item for item in errors))
         self.assertTrue(any("must not be 'bc'" in item for item in errors))
+
+    def test_rejects_bitcoin_extended_wallet_prefixes(self):
+        data = complete_fixture()
+        data["address"]["base58_extended_public_key_prefix"] = "0488b21e"
+        data["address"]["base58_extended_secret_key_prefix"] = "0488ade4"
+        errors = validate(data)
+        self.assertTrue(any("extended_public_key_prefix" in item and "Bitcoin mainnet" in item for item in errors))
+        self.assertTrue(any("extended_secret_key_prefix" in item and "Bitcoin mainnet" in item for item in errors))
 
     def test_rejects_bitcoin_genesis(self):
         data = complete_fixture()
