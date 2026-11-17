@@ -1,8 +1,8 @@
 # FREELY network architecture plan (draft)
 
-**Status:** design only; no runtime code or network identity is activated.  
-**Pinned upstream:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`.  
-**Purpose:** define a safe implementation sequence for an independent FREELY UTXO chain while preserving Bitcoin's existing networks.
+- **Status:** design only; no runtime code or network identity is activated.
+- **Pinned upstream:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`.
+- **Purpose:** define a safe implementation sequence for an independent FREELY UTXO chain while preserving Bitcoin's existing networks.
 
 ## 1. Non-negotiable project rules
 
