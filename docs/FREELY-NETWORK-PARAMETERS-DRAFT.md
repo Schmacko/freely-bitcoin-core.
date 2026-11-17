@@ -1,9 +1,9 @@
 # FREELY network parameters — provisional engineering draft
 
-**Status:** proposal only; not activated in code and not approved as final network identity.  
-**Date:** 15 November 2026  
-**Upstream baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`  
-**Purpose:** provide a concrete, reviewable starting point for the dedicated FREELY chain implementation while keeping launch-sensitive values visibly provisional.
+- **Status:** proposal only; not activated in code and not approved as final network identity.
+- **Date:** 15 November 2026
+- **Upstream baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`
+- **Purpose:** provide a concrete, reviewable starting point for the dedicated FREELY chain implementation while keeping launch-sensitive values visibly provisional.
 
 ## 1. Fixed project decisions
 
