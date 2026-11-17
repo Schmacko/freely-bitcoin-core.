@@ -54,7 +54,10 @@ def validate(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     if data.get("schema_version") != 1:
         errors.append("schema_version must be 1")
-    project = data.get("project", {})
+    project = data.get("project")
+    if not isinstance(project, dict):
+        errors.append("project must be a JSON object")
+        project = {}
     if project.get("name") != "FREELY" or project.get("ticker") != "FLY":
         errors.append("project identity must be FREELY / FLY")
 
@@ -62,10 +65,17 @@ def validate(data: dict[str, Any]) -> list[str]:
         if at_path(data, path) is None:
             errors.append(f"{path} is unset; production configuration is fail-closed")
 
-    network = data.get("network", {})
-    address = data.get("address", {})
-    genesis = data.get("genesis", {})
-    consensus = data.get("consensus", {})
+    sections = {}
+    for section in ("network", "address", "genesis", "consensus"):
+        value = data.get(section)
+        if not isinstance(value, dict):
+            errors.append(f"{section} must be a JSON object")
+            value = {}
+        sections[section] = value
+    network = sections["network"]
+    address = sections["address"]
+    genesis = sections["genesis"]
+    consensus = sections["consensus"]
 
     magic = network.get("message_start")
     if magic is not None:
@@ -109,17 +119,39 @@ def validate(data: dict[str, Any]) -> list[str]:
 
     for field in ("n_bits", "pow_limit"):
         value = genesis.get(field)
-        if value is not None and (not isinstance(value, str) or not re.fullmatch(r"0x[0-9a-fA-F]+", value) or int(value, 16) == 0):
-            errors.append(f"genesis.{field} must be a non-zero hexadecimal string such as '0x1d00ffff'")
+        if value is not None:
+            if not isinstance(value, str) or not re.fullmatch(r"0x[0-9a-fA-F]+", value) or int(value, 16) == 0:
+                errors.append(f"genesis.{field} must be a non-zero hexadecimal string such as '0x1d00ffff'")
+            elif field == "n_bits" and int(value, 16) > 0xFFFFFFFF:
+                errors.append("genesis.n_bits must fit in an unsigned 32-bit compact field")
+            elif field == "pow_limit" and int(value, 16).bit_length() > 256:
+                errors.append("genesis.pow_limit must not exceed 256 bits")
 
-    for field in ("target_spacing_seconds", "retarget_interval"):
+    if genesis.get("coinbase_spendable") is not None and not isinstance(genesis.get("coinbase_spendable"), bool):
+        errors.append("genesis.coinbase_spendable must be explicitly true or false")
+
+    for field, expected in (("target_spacing_seconds", 600), ("retarget_interval", 2016)):
         value = consensus.get(field)
-        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
-            errors.append(f"consensus.{field} must be a positive integer")
+        if not isinstance(value, int) or isinstance(value, bool) or value != expected:
+            errors.append(f"consensus.{field} must match the approved value {expected}")
 
-    for field in ("allow_min_difficulty_blocks", "no_retargeting"):
-        if not isinstance(consensus.get(field), bool):
+    for field in ("allow_min_difficulty_blocks", "no_retargeting", "bip94_enabled"):
+        value = consensus.get(field)
+        if not isinstance(value, bool):
             errors.append(f"consensus.{field} must be explicitly true or false")
+        elif field in ("allow_min_difficulty_blocks", "no_retargeting") and value is not False:
+            errors.append(f"consensus.{field} must remain false under the approved policy")
+
+    activations = consensus.get("script_activation_heights")
+    if activations is not None:
+        if not isinstance(activations, dict):
+            errors.append("consensus.script_activation_heights must be a JSON object")
+        else:
+            for deployment, height in activations.items():
+                if not isinstance(deployment, str) or not deployment:
+                    errors.append("script activation names must be non-empty strings")
+                if not isinstance(height, int) or isinstance(height, bool) or height < 0:
+                    errors.append(f"script activation height for {deployment!r} must be a non-negative integer")
 
     return errors
 
