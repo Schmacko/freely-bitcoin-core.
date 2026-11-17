@@ -1,0 +1,75 @@
+name: FREELY wallet and node readiness
+
+on:
+  pull_request:
+    branches:
+      - freely/core-chain-implementation
+    paths:
+      - "src/chainparams.cpp"
+      - "src/chainparamsbase.cpp"
+      - "src/chainparamsbase.h"
+      - "src/init.cpp"
+      - "src/node/**"
+      - "src/rpc/**"
+      - "src/wallet/**"
+      - "test/functional/wallet_*.py"
+      - "test/functional/test_framework/**"
+      - "CMakeLists.txt"
+      - ".github/workflows/freely-wallet-node-readiness.yml"
+      - "docs/FREELY-WALLET-NODE-READINESS.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: freely-wallet-node-readiness-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wallet-functional-tests:
+    name: Wallet-enabled build and functional regression tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out FREELY fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build and wallet dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            build-essential cmake python3 libboost-dev libevent-dev libsqlite3-dev
+
+      - name: Configure wallet-enabled build
+        run: |
+          cmake -B build \
+            -DENABLE_WALLET=ON \
+            -DENABLE_IPC=OFF \
+            -DBUILD_GUI=OFF \
+            -DBUILD_TESTS=OFF \
+            -DWITH_ZMQ=OFF
+
+      - name: Build node and CLI with wallet support
+        run: cmake --build build --parallel 2
+
+      - name: Run wallet and node functional regression tests
+        run: |
+          python3 test/functional/test_runner.py \
+            --jobs=2 \
+            --combinedlogslen=100 \
+            wallet_backup.py \
+            wallet_encryption.py \
+            wallet_startup.py \
+            wallet_createwallet.py \
+            wallet_basic.py \
+            wallet_exported_watchonly.py \
+            wallet_descriptor.py \
+            wallet_createwalletdescriptor.py \
+            wallet_importdescriptors.py \
+            wallet_rescan_unconfirmed.py \
+            wallet_send.py \
+            wallet_reorgsrestore.py \
+            wallet_multiwallet.py \
+            wallet_taproot.py
