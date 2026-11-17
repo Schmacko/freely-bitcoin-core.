@@ -111,7 +111,7 @@ Do not copy Bitcoin mainnet's proof-of-work limit or special difficulty flags by
 | DERSIG (BIP66) | First ordinary block, height 1 | Signature-encoding tests |
 | CSV (BIP68/112/113) | First ordinary block, height 1 | Sequence locks, MTP and boundary tests |
 | SegWit v0 (BIP141/143/147) | First ordinary block, height 1, except flags proven unconditional in v32.1 | Witness commitment, invalid witness and compatibility tests |
-| Taproot/Tapscript (BIP341/342) | Candidate first ordinary block, height 1 | Confirm exact v32.1 enforcement path; key-path and script-path vectors |
+| Taproot/Tapscript (BIP341/342) | Unconditional from genesis in v32.1 script flags | Confirm exact enforcement path; key-path and script-path vectors |
 | Version-bits upgrades | No Bitcoin mainnet schedule copied | Each future change receives its own bit, period, threshold, start/timeout and minimum-height proposal |
 | Historical exception blocks | None copied | Any FREELY exception requires a specific rationale and independent review |
 
@@ -311,3 +311,16 @@ No Bitcoin MAIN activation height, hash, exception or deployment timestamp is pr
 The owner approved: (1) permanently unspendable genesis coinbase, counted in scheduled issuance; (2) candidate `powLimit` / initial-difficulty modelling only, with no production number selected; (3) BIP94 enabled from genesis subject to testing; (4) established Bitcoin script features active from the start subject to v32.1 compatibility verification, with controlled future soft forks; and (5) candidate network-identity generation plus genesis-commitment generation and independent verification, without production activation.
 
 The authorised next work is documentation reconciliation, deterministic modelling tools, source-code compatibility audit, candidate collision checks, unit/regression test design, and reproducible non-production genesis tooling. Production chain parameters remain fail-closed. No public testnet, mainnet, mining deployment, paid infrastructure or launch is authorised.
+
+
+### 12.7 Pinned-v32.1 script-flag source audit — 17 November 2026
+
+A targeted read of the pinned v32.1 fork's `src/validation.cpp` `GetBlockScriptFlags` and `src/consensus/params.h` confirms:
+
+- `SCRIPT_VERIFY_P2SH`, `SCRIPT_VERIFY_WITNESS` and `SCRIPT_VERIFY_TAPROOT` are included unconditionally in block script flags, except for entries in `script_flag_exceptions`. FREELY should copy no Bitcoin mainnet historical exceptions.
+- DERSIG/BIP66, CLTV/BIP65 and CSV/BIP112 are height-controlled through the buried-deployment fields; candidate FREELY activation is height 1.
+- BIP147 NULLDUMMY is activated together with SegWit through `SegwitHeight`; candidate FREELY height is 1.
+- BIP34 coinbase-height enforcement is separately height-controlled; candidate FREELY height is 1. Do not copy Bitcoin's historical BIP34 activation hash. Keep BIP30 duplicate-coinbase protection unless a chain-specific, independently reviewed reason permits a later optimization.
+- `NeedsRedownload` also consults `SegwitHeight`; test witness data handling at the height-1 boundary.
+
+This is a source-level compatibility audit, not yet a runtime FREELY implementation or test pass. The candidate height values require dedicated before/at/after tests. The genesis block remains a dedicated construction path and is not treated as an ordinary height-1 block.
