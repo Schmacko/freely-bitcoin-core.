@@ -99,6 +99,11 @@ class NetworkSafetyTests(unittest.TestCase):
         self.assertTrue(any("directory" in item for item in errors))
         self.assertTrue(any("HRP" in item for item in errors))
 
+    def test_rejects_windows_absolute_data_directory(self):
+        data = complete_fixture()
+        data["network"]["data_directory"] = "C:\\bitcoin"
+        self.assertTrue(any("absolute or traverse parent directories" in item for item in validate(data)))
+
     def test_rejects_unsafe_or_wrong_config_section(self):
         data = complete_fixture()
         data["network"]["data_directory"] = "../bitcoin"
