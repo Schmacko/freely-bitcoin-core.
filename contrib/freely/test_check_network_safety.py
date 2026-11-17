@@ -16,13 +16,14 @@ def complete_fixture():
         "p2p_port": 18444,
         "rpc_port": 18443,
         "data_directory": "freely",
+        "config_section": "freely",
     })
     data["address"].update({
-        "base58_public_key_prefix": 111,
-        "base58_script_prefix": 196,
-        "base58_secret_key_prefix": 239,
-        "base58_extended_public_key_prefix": "043587cf",
-        "base58_extended_secret_key_prefix": "04358394",
+        "base58_public_key_prefix": 55,
+        "base58_script_prefix": 56,
+        "base58_secret_key_prefix": 57,
+        "base58_extended_public_key_prefix": "01020304",
+        "base58_extended_secret_key_prefix": "05060708",
         "bech32_hrp": "fly",
     })
     data["genesis"].update({
@@ -59,24 +60,24 @@ class NetworkSafetyTests(unittest.TestCase):
         data["network"]["p2p_port"] = 8333
         data["network"]["rpc_port"] = 8332
         errors = validate(data)
-        self.assertTrue(any("Bitcoin mainnet magic" in item for item in errors))
-        self.assertTrue(any("Bitcoin mainnet port 8333" in item for item in errors))
-        self.assertTrue(any("Bitcoin mainnet port 8332" in item for item in errors))
+        self.assertTrue(any("existing Bitcoin network magic" in item for item in errors))
+        self.assertTrue(any("existing Bitcoin network port" in item for item in errors))
+        self.assertTrue(any("existing Bitcoin network port" in item for item in errors))
 
     def test_rejects_bitcoin_address_identity(self):
         data = complete_fixture()
         data["address"].update({
-            "base58_public_key_prefix": 0,
-            "base58_script_prefix": 5,
-            "base58_secret_key_prefix": 128,
-            "base58_extended_public_key_prefix": "0488b21e",
-            "base58_extended_secret_key_prefix": "0488ade4",
-            "bech32_hrp": "bc",
+            "base58_public_key_prefix": 111,
+            "base58_script_prefix": 196,
+            "base58_secret_key_prefix": 239,
+            "base58_extended_public_key_prefix": "043587cf",
+            "base58_extended_secret_key_prefix": "04358394",
+            "bech32_hrp": "tb",
         })
         errors = validate(data)
         self.assertTrue(any("public_key_prefix" in item and "Bitcoin mainnet" in item for item in errors))
         self.assertTrue(any("script_prefix" in item and "Bitcoin mainnet" in item for item in errors))
-        self.assertTrue(any("must not be 'bc'" in item for item in errors))
+        self.assertTrue(any("collides with an existing Bitcoin network HRP" in item for item in errors))
 
     def test_rejects_bitcoin_extended_wallet_prefixes(self):
         data = complete_fixture()
@@ -85,6 +86,26 @@ class NetworkSafetyTests(unittest.TestCase):
         errors = validate(data)
         self.assertTrue(any("extended_public_key_prefix" in item and "Bitcoin mainnet" in item for item in errors))
         self.assertTrue(any("extended_secret_key_prefix" in item and "Bitcoin mainnet" in item for item in errors))
+
+    def test_rejects_testnet_and_regtest_identity_collisions(self):
+        data = complete_fixture()
+        data["network"]["message_start"] = "0b110907"
+        data["network"]["p2p_port"] = 48333
+        data["network"]["rpc_port"] = 18443
+        data["network"]["data_directory"] = "testnet4"
+        data["address"]["bech32_hrp"] = "bcrt"
+        errors = validate(data)
+        self.assertGreaterEqual(sum("existing Bitcoin network" in item for item in errors), 4)
+        self.assertTrue(any("directory" in item for item in errors))
+        self.assertTrue(any("HRP" in item for item in errors))
+
+    def test_rejects_unsafe_or_wrong_config_section(self):
+        data = complete_fixture()
+        data["network"]["data_directory"] = "../bitcoin"
+        data["network"]["config_section"] = "main"
+        errors = validate(data)
+        self.assertTrue(any("traverse parent directories" in item for item in errors))
+        self.assertTrue(any("canonical" in item for item in errors))
 
     def test_rejects_bitcoin_genesis(self):
         data = complete_fixture()
