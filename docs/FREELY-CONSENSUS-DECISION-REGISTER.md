@@ -1,7 +1,7 @@
 # FREELY consensus decision register
 
-**Date:** 16 November 2026  
-**Status:** Mixed status: monetary/genesis recommendations remain provisional; production retarget/minimum-difficulty policy approved by owner on 16 November 2026.  
+**Date:** 17 November 2026  
+**Status:** Genesis accounting, BIP94 policy, initial script-feature policy, and candidate-generation work approved by owner on 17 November 2026. Numeric production PoW parameters and final identity/genesis values remain unapproved.  
 **Related:** [Consensus specification](FREELY-CONSENSUS-SPECIFICATION.md) · [Chain-selection audit](FREELY-CHAIN-SELECTION-AUDIT.md)
 
 This register separates agreed policy from recommendations and unresolved decisions. No value in the recommendation column is activated by this document.
@@ -15,8 +15,8 @@ This register separates agreed policy from recommendations and unresolved decisi
 | Halving | Every 210,000 blocks; integer right shift | Agreed |
 | Hard ceiling | 21,000,000 FLY | Agreed |
 | Scheduled issuance | 20,999,999.9769 FLY including height-zero schedule | Agreed arithmetic |
-| Genesis coinbase | **Recommend conventional unspendable genesis output**, matching Bitcoin's no-premine convention | Owner confirmation required |
-| Spendable supply statement | If genesis reward is unspendable, state maximum scheduled subsidy spendable as 20,999,949.9769 FLY; do not advertise scheduled total as spendable | Conditional on genesis choice |
+| Genesis coinbase | Permanently unspendable; included in scheduled issuance accounting | **Owner-approved 17 Nov 2026** |
+| Spendable supply statement | Scheduled issuance: 20,999,999.9769 FLY; maximum spendable scheduled subsidy: 20,999,949.9769 FLY | **Owner-approved accounting convention 17 Nov 2026** |
 | Fees | Preserve upstream fee accounting and coinbase limit = subsidy + fees | Recommended |
 
 Rationale: the conventional genesis output is not inserted into the spendable UTXO set. Making it spendable would require a deliberate consensus deviation and could undermine the no-premine statement unless carefully disclosed.
@@ -33,7 +33,7 @@ Rationale: the conventional genesis output is not inserted into the spendable UT
 | Retarget clamp | Clamp elapsed timespan to ¼×–4× target timespan (302,400–4,838,400 seconds) | **Owner-approved 16 Nov 2026** |
 | Minimum-difficulty blocks | Disabled on production FREELY | **Owner-approved 16 Nov 2026** |
 | No-retargeting | Disabled on production FREELY | **Owner-approved 16 Nov 2026** |
-| BIP94 time-warp mitigation | **Recommend enabling after code-path review and dedicated tests** | Adds timestamp protection at retarget boundaries; confirm exact semantics in v32.1 |
+| BIP94 time-warp mitigation | Enable from genesis (`enforce_BIP94 = true`) | **Owner-approved 17 Nov 2026; exact v32.1 code path and dedicated tests required before activation** |
 | PoW limit | Do not select a numeric target until initial mining model and attack assumptions are reviewed | This is a consensus-critical ceiling and genesis target constraint |
 | Genesis nBits | Must encode a target no easier than the approved PoW limit | Cannot be chosen independently |
 | Timestamp validity | Preserve upstream median-time-past and future-time checks; document any additional rules | Avoid needless divergence |
@@ -42,15 +42,21 @@ Important security limitation: a 600-second target does not guarantee a 600-seco
 
 ## C. Script rules and soft-fork activation
 
-**Recommendation:** create a chain-specific activation matrix before writing FREELY parameters. Do not copy Bitcoin mainnet activation heights, hashes, exception blocks, BIP9 timestamps or warning heights.
+**Owner-approved policy (17 Nov 2026):** established Bitcoin script and consensus features should be active from the start of FREELY, subject to a per-feature Bitcoin Core v32.1 compatibility audit and tests. Future consensus upgrades must use a controlled, documented activation process. This policy does not authorize copying Bitcoin mainnet historical heights, hashes, exception blocks, BIP9 timestamps or warning heights.
 
-The review should decide for each supported rule:
-- active from genesis, activated later, or deliberately unsupported;
-- exact consensus flag and height/time semantics;
-- any deployment bit, threshold, period, start, timeout and minimum activation height;
-- test vectors for blocks immediately before and after activation.
+| Feature / rule | FREELY candidate treatment | Compatibility gate |
+|---|---|---|
+| P2SH (BIP16) | Enforce from genesis | Verify script-flag path; no Bitcoin historical exception copied |
+| BIP34 coinbase height | Enforce from first post-genesis block (height 1); genesis is constructed/validated by its dedicated path | Verify genesis special handling and BIP34 hash semantics |
+| CLTV (BIP65) | Enforce from first post-genesis block | Boundary and invalid-script tests |
+| Strict DER signatures (BIP66) | Enforce from first post-genesis block | Signature-encoding tests |
+| CSV / relative locktime (BIP68/112/113) | Enforce from first post-genesis block | Sequence-lock and MTP tests |
+| SegWit v0 / witness rules (BIP141/143/147) | Enforce from first post-genesis block; verify any flags already enforced unconditionally by v32.1 | Witness commitment, malleability and invalid-witness tests |
+| Taproot / Tapscript (BIP341/342) | Candidate: enforce from first post-genesis block | Audit exact v32.1 enforcement path and add key/script-path vectors |
+| Version-bits deployments | No historical Bitcoin deployment schedule copied; future changes controlled individually | Each future deployment needs bit, period, threshold, start/timeout, min height and tests |
+| Historical script exceptions | None copied from Bitcoin mainnet | Any exception requires a FREELY-specific justification and explicit review |
 
-A new chain has no inherited Bitcoin history to justify historical activation heights. Whether modern script rules are active from genesis must be an explicit, independently reviewed decision.
+The table is an implementation proposal under the approved policy, not proof that these rules are already active in FREELY. Exact parameter values and special cases must be confirmed against the pinned source before implementation. Height 0 remains the dedicated genesis block; the first ordinary block is height 1.
 
 ## D. Chain history shortcuts and bootstrapping
 
@@ -93,15 +99,12 @@ Every proposed deviation must include:
 
 ## G. Decisions still requiring owner approval
 
-1. Confirm unspendable genesis coinbase and corresponding spendable-supply wording.
-2. Review and approve a production PoW limit / initial difficulty based on the security and mining model.
-3. **Resolved 16 Nov 2026:** approve production minimum-difficulty disabled and no-retargeting disabled; use the v32.1 retarget algorithm with ¼×–4× clamp.
-4. Review and approve BIP94/time-warp mitigation semantics.
-5. Approve the chain-specific script activation matrix.
-6. Approve final network identity values after collision checks.
-7. Approve genesis timestamp/message and output script after all dependent fields are fixed.
+1. Approve a numeric production `powLimit` and initial difficulty only after the candidate model, expected honest hash rate, attacker-cost assumptions and chain-stall risks are reviewed.
+2. Approve final network identity values after candidate collision checks; candidate generation and validation are authorised, not final activation.
+3. Approve the exact genesis timestamp/message and output-script construction after all dependent fields are fixed.
+4. Approve the final per-feature activation parameters after the v32.1 compatibility audit and test evidence are reviewed.
 
-No consensus or network identity parameter is final until the complete sheet is internally consistent, independently reviewed and approved. No public testnet or mainnet launch is authorised.
+Resolved by owner on 17 Nov 2026: genesis reward is permanently unspendable and included in scheduled issuance accounting; BIP94 is to be enabled from genesis subject to testing; established Bitcoin script features are to be active from the start subject to compatibility verification; candidate network identity and genesis commitment generation/verification are authorised. No production activation or public launch is authorised.
 
 
 ## H. Owner decision record — 16 November 2026
@@ -114,4 +117,17 @@ The owner explicitly approved the FREELY production retarget policy proposed in 
 - Production no-retargeting mode disabled.
 - Reuse pinned Bitcoin Core v32.1 retarget calculation semantics, implemented and tested with FREELY-specific parameters.
 
-This is a consensus-policy approval, not activation in runtime code. `powLimit`, genesis `nBits`, BIP94/time-warp mitigation, genesis construction, and final network identity remain unresolved. No public testnet or mainnet is authorised.
+This is a consensus-policy approval, not activation in runtime code. `powLimit`, genesis `nBits`, candidate script-feature compatibility, final network identity, and exact genesis fields remain subject to engineering validation and, where applicable, further owner approval. No public testnet or mainnet is authorised.
+
+
+## I. Owner decision record — 17 November 2026
+
+The owner explicitly approved the following bounded decisions and authorisations:
+
+- Genesis coinbase reward: permanently unspendable; the 50 FLY height-zero subsidy remains included in scheduled issuance accounting. Scheduled issuance is 20,999,999.9769 FLY; maximum spendable scheduled subsidy under this convention is 20,999,949.9769 FLY.
+- Proof of work: benchmark candidate `powLimit` / initial difficulty scenarios and present a recommendation. No numeric production value is approved yet.
+- Time-warp mitigation: enable BIP94 from genesis (`enforce_BIP94 = true`), subject to source audit and dedicated tests.
+- Script rules: established Bitcoin script features are intended to be active from the start, subject to pinned-v32.1 compatibility verification; future soft forks require controlled activation.
+- Network identity: generate and collision-check candidate identity values and generate/independently verify a candidate genesis commitment. Final production values and activation are not approved.
+
+These approvals authorise reversible documentation, candidate modelling, code review, tests and non-production tooling only. They do not authorise production parameter activation, public network exposure, mining deployment, paid services or launch.
