@@ -210,6 +210,8 @@ def validate(data: dict[str, Any]) -> list[str]:
             errors.append(f"consensus.{field} must be explicitly true or false")
         elif field in ("allow_min_difficulty_blocks", "no_retargeting") and value is not False:
             errors.append(f"consensus.{field} must remain false under the approved policy")
+        elif field == "bip94_enabled" and value is not True:
+            errors.append("consensus.bip94_enabled must be true under the owner-approved FREELY policy")
 
     activations = consensus.get("script_activation_heights")
     if activations is not None:
