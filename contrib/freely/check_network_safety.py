@@ -52,8 +52,8 @@ def at_path(data: dict[str, Any], path: str) -> Any:
 
 def validate(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
-    if data.get("schema_version") != 1:
-        errors.append("schema_version must be 1")
+    if type(data.get("schema_version")) is not int or data.get("schema_version") != 1:
+        errors.append("schema_version must be the integer 1")
     project = data.get("project")
     if not isinstance(project, dict):
         errors.append("project must be a JSON object")
