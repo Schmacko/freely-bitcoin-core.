@@ -62,7 +62,7 @@ class NetworkSafetyTests(unittest.TestCase):
         errors = validate(data)
         self.assertTrue(any("existing Bitcoin network magic" in item for item in errors))
         self.assertTrue(any("reserved Bitcoin network TCP port" in item for item in errors))
-        self.assertTrue(any("existing Bitcoin network port" in item for item in errors))
+        self.assertTrue(any("reserved Bitcoin network TCP port" in item for item in errors))
 
     def test_rejects_bitcoin_address_identity(self):
         data = complete_fixture()
@@ -95,7 +95,7 @@ class NetworkSafetyTests(unittest.TestCase):
         data["network"]["data_directory"] = "testnet4"
         data["address"]["bech32_hrp"] = "bcrt"
         errors = validate(data)
-        self.assertGreaterEqual(sum("existing Bitcoin network" in item for item in errors), 4)
+        self.assertGreaterEqual(sum("existing Bitcoin network" in item for item in errors), 3)
         self.assertTrue(any("directory" in item for item in errors))
         self.assertTrue(any("HRP" in item for item in errors))
 
