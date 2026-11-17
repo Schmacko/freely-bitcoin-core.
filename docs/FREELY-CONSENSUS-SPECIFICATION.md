@@ -315,7 +315,7 @@ The authorised next work is documentation reconciliation, deterministic modellin
 
 ### 12.7 Pinned-v32.1 script-flag source audit — 17 November 2026
 
-A targeted read of the pinned v32.1 fork's `src/validation.cpp` `GetBlockScriptFlags` and `src/consensus/params.h` confirms:
+A targeted read of the pinned v32.1 fork's `src/validation.cpp`, `src/pow.cpp`, `GetBlockScriptFlags` and `src/consensus/params.h` confirms:
 
 - `SCRIPT_VERIFY_P2SH`, `SCRIPT_VERIFY_WITNESS` and `SCRIPT_VERIFY_TAPROOT` are included unconditionally in block script flags, except for entries in `script_flag_exceptions`. FREELY should copy no Bitcoin mainnet historical exceptions.
 - DERSIG/BIP66, CLTV/BIP65 and CSV/BIP112 are height-controlled through the buried-deployment fields; candidate FREELY activation is height 1.
@@ -324,3 +324,13 @@ A targeted read of the pinned v32.1 fork's `src/validation.cpp` `GetBlockScriptF
 - `NeedsRedownload` also consults `SegwitHeight`; test witness data handling at the height-1 boundary.
 
 This is a source-level compatibility audit, not yet a runtime FREELY implementation or test pass. The candidate height values require dedicated before/at/after tests. The genesis block remains a dedicated construction path and is not treated as an ordinary height-1 block.
+
+
+### 12.8 BIP94 full rule contract
+
+BIP94 is not only a retarget-base selection. The pinned v32.1 implementation has two relevant behaviours when `enforce_BIP94` is true:
+
+1. **Period-start difficulty base:** at a retarget, use the first block of the previous difficulty period's `nBits`, not the last block's `nBits`.
+2. **Time-warp timestamp bound:** for a candidate block at a height divisible by the difficulty adjustment interval, except genesis, require `block.nTime >= previous_block.nTime - 600` seconds. The ordinary Median-Time-Past rule still applies.
+
+The production FREELY interval is 2,016 blocks, so the timestamp-boundary heights are 2,016, 4,032, 6,048, and so on. The C++ test in PR #6 checks period-start target selection using a 2,016-block ancestry. A separate functional regression uses regtest's 144-block interval to exercise the exact timestamp-validation branch at height 144: a timestamp 601 seconds earlier than the previous block is rejected with `time-timewarp-attack`, while the exact 600-second grace boundary is accepted. This regtest test is a code-path test, not a production-parameter test; a full FREELY runtime test remains pending until the production parameter object exists.
