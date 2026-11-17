@@ -12,9 +12,9 @@ MANIFEST = json.loads(Path(__file__).with_name("network-safety.json").read_text(
 def complete_fixture():
     data = copy.deepcopy(MANIFEST)
     data["network"].update({
-        "message_start": "fabfb5da",
-        "p2p_port": 18444,
-        "rpc_port": 18443,
+        "message_start": "deadbeef",
+        "p2p_port": 29444,
+        "rpc_port": 29443,
         "data_directory": "freely",
         "config_section": "freely",
     })
@@ -76,7 +76,7 @@ class NetworkSafetyTests(unittest.TestCase):
         })
         errors = validate(data)
         self.assertTrue(any("public_key_prefix" in item and "existing Bitcoin network" in item for item in errors))
-        self.assertTrue(any("script_prefix" in item and "Bitcoin mainnet" in item for item in errors))
+        self.assertTrue(any("script_prefix" in item and "existing Bitcoin network" in item for item in errors))
         self.assertTrue(any("collides with an existing Bitcoin network HRP" in item for item in errors))
 
     def test_rejects_bitcoin_extended_wallet_prefixes(self):
@@ -84,8 +84,8 @@ class NetworkSafetyTests(unittest.TestCase):
         data["address"]["base58_extended_public_key_prefix"] = "0488b21e"
         data["address"]["base58_extended_secret_key_prefix"] = "0488ade4"
         errors = validate(data)
-        self.assertTrue(any("extended_public_key_prefix" in item and "Bitcoin mainnet" in item for item in errors))
-        self.assertTrue(any("extended_secret_key_prefix" in item and "Bitcoin mainnet" in item for item in errors))
+        self.assertTrue(any("extended_public_key_prefix" in item and "existing Bitcoin network" in item for item in errors))
+        self.assertTrue(any("extended_secret_key_prefix" in item and "existing Bitcoin network" in item for item in errors))
 
     def test_rejects_testnet_and_regtest_identity_collisions(self):
         data = complete_fixture()
