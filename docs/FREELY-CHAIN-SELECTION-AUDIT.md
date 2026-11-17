@@ -1,9 +1,9 @@
 # FREELY chain-selection and consensus integration audit
 
-**Date:** 16 November 2026  
-**Source:** Bitcoin Core v32.1 fork, branch `freely/m1-consensus`  
-**Pinned upstream:** `f0de87f040621468b956f01f526a43a010310501`  
-**Status:** static source audit; no runtime code changes in this document.
+- **Date:** 16 November 2026
+- **Source:** Bitcoin Core v32.1 fork, branch `freely/m1-consensus`
+- **Pinned upstream:** `f0de87f040621468b956f01f526a43a010310501`
+- **Status:** static source audit; no runtime code changes in this document.
 
 ## Executive result
 
