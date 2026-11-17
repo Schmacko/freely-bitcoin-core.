@@ -248,4 +248,77 @@ BOOST_AUTO_TEST_CASE(freely_retarget_clamp_vectors)
     check_vector(4'838'401, 0x2001ffffU); // just above upper clamp
 }
 
+
+/* Exercise the FREELY-approved 2,016-block retarget boundary using a synthetic
+ * target. The fixture is not a FREELY production powLimit or genesis target.
+ */
+BOOST_AUTO_TEST_CASE(freely_retarget_boundary_uses_first_block_of_period)
+{
+    Consensus::Params consensus;
+    consensus.nPowTargetSpacing = 600;
+    consensus.nPowTargetTimespan = 1'209'600;
+    consensus.fPowAllowMinDifficultyBlocks = false;
+    consensus.fPowNoRetargeting = false;
+    consensus.enforce_BIP94 = false;
+
+    arith_uint256 pow_limit;
+    bool negative{false};
+    bool overflow{false};
+    pow_limit.SetCompact(0x207fffffU, &negative, &overflow);
+    BOOST_REQUIRE(!negative);
+    BOOST_REQUIRE(!overflow);
+    consensus.powLimit = ArithToUint256(pow_limit);
+
+    std::vector<CBlockIndex> period(2016);
+    for (int height = 0; height < static_cast<int>(period.size()); ++height) {
+        period[height].nHeight = height;
+        period[height].nBits = 0x1f7fffffU;
+        period[height].pprev = height == 0 ? nullptr : &period[height - 1];
+    }
+
+    // A 302,500-second span from height 0 gives 0x1f2002b5.
+    // Measuring from height 1 instead would clamp 301,500 seconds to
+    // 302,400 and produce 0x1f1fffff, so this catches an off-by-one ancestor.
+    period.front().nTime = 100'000;
+    period[1].nTime = 101'000;
+    period.back().nTime = 402'500;
+
+    CBlockHeader candidate;
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&period.back(), &candidate, consensus), 0x1f2002b5U);
+}
+
+BOOST_AUTO_TEST_CASE(freely_non_boundary_height_carries_forward_bits)
+{
+    Consensus::Params consensus;
+    consensus.nPowTargetSpacing = 600;
+    consensus.nPowTargetTimespan = 1'209'600;
+    consensus.fPowAllowMinDifficultyBlocks = false;
+    consensus.fPowNoRetargeting = false;
+    consensus.enforce_BIP94 = false;
+
+    CBlockIndex previous;
+    previous.nHeight = 2016;
+    previous.nBits = 0x1f2002b5U;
+    CBlockHeader candidate;
+
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&previous, &candidate, consensus), previous.nBits);
+}
+
+BOOST_AUTO_TEST_CASE(freely_derive_target_rejects_invalid_compact_values)
+{
+    arith_uint256 pow_limit;
+    bool negative{false};
+    bool overflow{false};
+    pow_limit.SetCompact(0x207fffffU, &negative, &overflow);
+    BOOST_REQUIRE(!negative);
+    BOOST_REQUIRE(!overflow);
+    const uint256 limit{ArithToUint256(pow_limit)};
+
+    BOOST_CHECK(DeriveTarget(0x1f7fffffU, limit).has_value());
+    BOOST_CHECK(!DeriveTarget(arith_uint256{1}.GetCompact(true), limit)); // negative
+    BOOST_CHECK(!DeriveTarget(0, limit)); // zero
+    BOOST_CHECK(!DeriveTarget(0x23000001U, limit)); // overflow
+    BOOST_CHECK(!DeriveTarget(0x2100ffffU, limit)); // above powLimit
+}
+
 BOOST_AUTO_TEST_SUITE_END()
