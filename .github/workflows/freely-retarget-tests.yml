@@ -7,6 +7,7 @@ on:
     paths:
       - "src/test/pow_tests.cpp"
       - "contrib/freely/check_retarget_vectors.py"
+      - "docs/FREELY-RETARGET-TEST-VECTORS.md"
       - ".github/workflows/freely-retarget-tests.yml"
   workflow_dispatch:
 
