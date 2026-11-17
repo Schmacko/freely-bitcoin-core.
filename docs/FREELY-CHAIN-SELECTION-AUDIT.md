@@ -1,25 +1,25 @@
 # FREELY chain-selection and consensus integration audit
 
-**Date:** 16 November 2026  
-**Source:** Bitcoin Core v32.1 fork, branch `freely/m1-consensus`  
-**Pinned upstream:** `f0de87f040621468b956f01f526a43a010310501`  
+**Date:** 16 November 2026
+**Source:** Bitcoin Core v32.1 fork, branch `freely/m1-consensus`
+**Pinned upstream:** `f0de87f040621468b956f01f526a43a010310501`
 **Status:** static source audit; no runtime code changes in this document.
 
 ## Executive result
 
-The existing fork contains useful production/test classification scaffolding and a passing targeted validation test on an earlier commit. It does not yet contain a FREELY chain type or a FREELY parameter object. A safe implementation requires coordinated changes across the chain-name enum, string conversion, command-line help, base parameters, chain factory, kernel parameters, genesis, consensus values and tests. Adding only a new enum entry is insufficient and would leave missing switch cases or unsafe fallbacks.
+The fork contains explicit production/test classification scaffolding. PR #8 now adds `ChainType::FREELY`, canonical name parsing/serialization and help registration, plus fail-closed guards in the base-parameter and consensus-parameter factories. The public startup selectors are covered by regression-test code and deliberately throw before global chain/config parameters can be selected. A FREELY parameter object, production network identity and genesis are still absent. This is selector scaffolding, not a runnable node; the remaining work spans base parameters, consensus, kernel parameters, network identity, genesis and tests.
 
 ## 1. Chain selector integration points
 
 | File | Existing integration | Required FREELY work |
 |---|---|---|
-| `src/util/chaintype.h` | `enum class ChainType` currently lists MAIN, TESTNET, SIGNET, REGTEST, TESTNET4 | Add FREELY only after final chain name and semantics are approved |
-| `src/util/chaintype.cpp` | `ChainTypeToString` and `ChainTypeFromString` map all current values | Add exact round-trip mapping, reject aliases unless deliberately specified |
-| `src/chainparamsbase.h` | `LIST_CHAIN_NAMES` advertises valid selectors | Add `freely` only when its factory path is complete |
-| `src/chainparamsbase.cpp` | `CreateBaseChainParams` maps chain to data-dir suffix and RPC port | Add unique FREELY data-dir suffix and approved RPC port; avoid collision |
-| `src/chainparams.cpp` | `CreateChainParams` dispatches to CChainParams factories | Add a dedicated FREELY factory; do not route FREELY through Main/TestNet |
-| `src/kernel/chainparams.h` | CChainParams declares network parameter factories and accessors | Add FREELY options/factory only if needed; preserve explicit production/test classification |
-| `src/kernel/chainparams.cpp` | Concrete network classes define consensus, magic, ports, genesis, seeds, address prefixes | Add a standalone FREELY class with no copied Bitcoin mainnet identity or chain-history assumptions |
+| `src/util/chaintype.h` | `ChainType::FREELY` is now present (PR #8) | Selector enum is implemented; retain exhaustive handling and compile/test verification |
+| `src/util/chaintype.cpp` | Canonical `freely` parser/serializer mapping is present (PR #8) | Preserve exact round-trip and noncanonical-name rejection tests |
+| `src/chainparamsbase.h` | `LIST_CHAIN_NAMES` now advertises `freely` (PR #8) | Keep the advertised selector fail-closed until approved base parameters exist |
+| `src/chainparamsbase.cpp` | `CreateBaseChainParams(FREELY)` deliberately throws (PR #8) | Replace the guard only with a reviewed unique data-dir suffix and approved RPC port |
+| `src/chainparams.cpp` | `CreateChainParams(FREELY)` deliberately throws (PR #8) | Add a dedicated FREELY factory only after consensus and identity decisions are approved; never route through MAIN/TESTNET |
+| `src/kernel/chainparams.h` | No FREELY parameter class or production instance exists | Add a dedicated class with explicit production classification after the blocked values are approved |
+| `src/kernel/chainparams.cpp` | No FREELY class, magic, genesis, seeds or address prefixes are assigned | Add an isolated FREELY class without copying Bitcoin mainnet identity or history assumptions |
 
 The selector is not complete until CLI parsing, config-section selection, base datadir/RPC parameters, full chain-parameter construction and RPC-reported chain name all agree.
 
@@ -140,7 +140,7 @@ The network identity should be frozen as one versioned sheet and tested as a set
 
 1. Finish the current CI verification on the current M1 PR head; avoid changing that head while its workflows run.
 2. Resolve the consensus decisions and freeze a reviewed parameter sheet.
-3. Implement chain selector and base parameters on a separate implementation branch.
+3. Extend PR #8's fail-closed selector with approved base parameters; keep the factory throwing until the required identity fields are reviewed.
 4. Implement the FREELY parameter factory with explicit production classification and no genesis shortcuts.
 5. Add chain-selection and startup guard tests.
 6. Implement the approved genesis and identity, then exact tests.
@@ -150,9 +150,9 @@ The network identity should be frozen as one versioned sheet and tested as a set
 
 ## 9. Current audit conclusion
 
-**Safe to prepare now:** selector integration patch structure, test matrix, source-level regression map and a decision sheet for the unresolved fields.
+**Safe to prepare now:** completion of the base-parameter/factory design, startup guard tests, the acceptance matrix and the decision sheet for unresolved fields. The selector enum, parser/serializer, help registration and fail-closed factory guards are already present in PR #8.
 
-**Not safe to activate yet:** `ChainType::FREELY`, network magic, ports, address prefixes, genesis, PoW limit, activation heights, minimum chainwork, assume-valid, seeds or any public network.
+**Not safe to activate yet:** a FREELY parameter object, network magic, ports, address prefixes, genesis, PoW limit, activation heights, minimum chainwork, assume-valid, seeds or any public network.
 
 No code changes or network launch are authorised by this audit.
 
@@ -169,19 +169,20 @@ The M1 production/test-classification work has been checked against the architec
 - src/init.cpp rejects -testactivationheight and -vbparams when IsProductionChain() is true.
 - -test=<option> remains REGTEST-only.
 - The REGTEST-only stale-fee-estimate exception remains scoped to REGTEST.
-- FREELY does not yet have a chain enum, factory, parameter object or runtime network identity.
+- PR #8 now supplies the FREELY chain enum, canonical parser/serializer and help entry; both parameter factories still fail closed, and no FREELY parameter object or runtime network identity exists.
 
 ### Chain-selection integration call-site checklist
 
-- [x] src/util/chaintype.h/.cpp: enum and string conversion identified.
-- [x] src/chainparamsbase.h/.cpp: selector list, data directory and RPC port identified.
-- [x] src/chainparams.cpp: parameter factory switch identified.
-- [x] src/kernel/chainparams.h/.cpp: kernel parameter class, classification and magic lookup identified.
+- [x] src/util/chaintype.h/.cpp: `ChainType::FREELY` and canonical string mapping added in PR #8.
+- [x] src/chainparamsbase.h/.cpp: `freely` help entry and fail-closed base factory guard added in PR #8.
+- [x] src/chainparams.cpp: fail-closed FREELY parameter-factory guard added in PR #8.
+- [x] src/test/chaintype_tests.cpp: selector-entrypoint fail-closed regression test added; current-head C++ execution is pending.
+- [x] src/kernel/chainparams.h/.cpp: kernel parameter class, classification and magic lookup integration points identified.
 - [x] src/init.cpp: startup setup, production overrides, REGTEST-only options and stale-fee-estimate guard inspected.
 - [x] Existing Bitcoin chain classification invariants and required regression coverage specified.
 - [x] Identity, genesis, deployment and history-dependent fields explicitly blocked until approved.
-- [ ] Runtime FREELY selector implementation and exhaustive compile/test audit.
-- [ ] Runtime FREELY factory and parameter isolation tests.
+- [ ] Current-head C++ compilation and test confirmation.
+- [ ] Runtime FREELY parameter object and network-isolation tests.
 - [ ] Full wallet/RPC/GUI/networking call-site regression after implementation.
 
 ### Audit conclusion
