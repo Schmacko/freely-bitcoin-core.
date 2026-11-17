@@ -10,6 +10,7 @@
 #include <util/chaintype.h>
 
 #include <cassert>
+#include <stdexcept>
 
 void SetupChainParamsBaseOptions(ArgsManager& argsman)
 {
@@ -50,6 +51,8 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
         return std::make_unique<CBaseChainParams>("signet", 38332);
     case ChainType::REGTEST:
         return std::make_unique<CBaseChainParams>("regtest", 18443);
+    case ChainType::FREELY:
+        throw std::runtime_error("FREELY network parameters are not finalized; refusing startup.");
     }
     assert(false);
 }
