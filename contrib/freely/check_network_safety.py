@@ -62,6 +62,23 @@ def at_path(data: dict[str, Any], path: str) -> Any:
     return value
 
 
+def decode_compact_target(compact: int) -> int | None:
+    """Decode Bitcoin's unsigned compact target; return None for invalid/zero targets."""
+    size = compact >> 24
+    word = compact & 0x007FFFFF
+    negative = word != 0 and (compact & 0x00800000) != 0
+    overflow = word != 0 and (
+        size > 34 or (word > 0xFF and size > 33) or (word > 0xFFFF and size > 32)
+    )
+    if negative or overflow:
+        return None
+    if size <= 3:
+        target = word >> (8 * (3 - size))
+    else:
+        target = word << (8 * (size - 3))
+    return target if target > 0 else None
+
+
 def validate(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     if type(data.get("schema_version")) is not int or data.get("schema_version") != 1:
@@ -165,6 +182,22 @@ def validate(data: dict[str, Any]) -> list[str]:
 
     if genesis.get("coinbase_spendable") is not None and not isinstance(genesis.get("coinbase_spendable"), bool):
         errors.append("genesis.coinbase_spendable must be explicitly true or false")
+
+    compact_value = genesis.get("n_bits")
+    pow_limit_value = genesis.get("pow_limit")
+    if (
+        isinstance(compact_value, str)
+        and re.fullmatch(r"0x[0-9a-fA-F]{1,8}", compact_value)
+        and int(compact_value, 16) <= 0xFFFFFFFF
+        and isinstance(pow_limit_value, str)
+        and re.fullmatch(r"0x[0-9a-fA-F]+", pow_limit_value)
+        and 0 < int(pow_limit_value, 16).bit_length() <= 256
+    ):
+        target = decode_compact_target(int(compact_value, 16))
+        if target is None:
+            errors.append("genesis.n_bits encodes a negative, zero, or overflowing compact target")
+        elif target > int(pow_limit_value, 16):
+            errors.append("genesis.n_bits target exceeds genesis.pow_limit")
 
     for field, expected in (("target_spacing_seconds", 600), ("retarget_interval", 2016)):
         value = consensus.get(field)
