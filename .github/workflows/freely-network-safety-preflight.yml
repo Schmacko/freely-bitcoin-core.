@@ -6,13 +6,6 @@ on:
       - 'contrib/freely/**'
       - 'docs/FREELY-NETWORK-SAFETY-PREFLIGHT.md'
       - '.github/workflows/freely-network-safety-preflight.yml'
-  push:
-    branches:
-      - 'freely/network-safety-preflight'
-    paths:
-      - 'contrib/freely/**'
-      - 'docs/FREELY-NETWORK-SAFETY-PREFLIGHT.md'
-      - '.github/workflows/freely-network-safety-preflight.yml'
 
 permissions:
   contents: read
