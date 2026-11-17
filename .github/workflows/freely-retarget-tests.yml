@@ -6,6 +6,7 @@ on:
       - freely/upstream-v32.1
     paths:
       - "src/test/pow_tests.cpp"
+      - "contrib/freely/check_retarget_vectors.py"
       - ".github/workflows/freely-retarget-tests.yml"
   workflow_dispatch:
 
@@ -31,6 +32,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
             build-essential cmake python3 libboost-dev libevent-dev
+
+      - name: Verify independent integer retarget vectors
+        run: python3 contrib/freely/check_retarget_vectors.py
 
       - name: Configure unit-test build
         run: |
