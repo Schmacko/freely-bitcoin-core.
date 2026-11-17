@@ -24,7 +24,7 @@ The validator uses only the Python standard library. Exit codes are:
 - FREELY / FLY project identity.
 - Presence of the network magic, P2P/RPC ports, data directory, address prefixes, genesis hash, genesis difficulty fields, genesis coinbase-spendability decision, BIP94 decision, and script activation matrix.
 - Format and basic range checks for those values.
-- Reuse of Bitcoin mainnet message magic, ports, data-directory name, Base58 prefixes, Bech32 HRP, or genesis hash.
+- Reuse of Bitcoin mainnet message magic, ports, data-directory name, Base58 address/secret/extended-key prefixes, Bech32 HRP, or genesis hash.
 - Distinct P2P and RPC ports.
 - Positive target spacing and retarget interval, and explicit booleans for min-difficulty and no-retargeting policy.
 
