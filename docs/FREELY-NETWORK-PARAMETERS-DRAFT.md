@@ -1,6 +1,6 @@
 # FREELY network parameters — provisional engineering draft
 
-**Status:** proposal only; not activated in code and not approved as final network identity.  
+**Status:** candidate-generation and validation authorised 17 November 2026; values remain provisional, not activated in code and not approved as final network identity.  
 **Date:** 15 November 2026  
 **Upstream baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`  
 **Purpose:** provide a concrete, reviewable starting point for the dedicated FREELY chain implementation while keeping launch-sensitive values visibly provisional.
@@ -57,11 +57,11 @@ Do not distribute addresses, private keys, wallet backups or software using thes
 | Target timespan | 1,209,600 seconds (14 days) | Derived from agreed spacing × interval |
 | Retarget interval | 2,016 blocks | Agreed |
 | PoW algorithm | SHA-256d | Agreed |
-| PoW limit | TBD | Requires difficulty/security analysis |
-| Genesis `nBits` | TBD | Must be consistent with selected PoW limit |
-| Retarget clamp and rounding | Upstream v32.1 baseline pending review | Must be tested explicitly |
-| Minimum-difficulty blocks | Candidate: disabled for production | Confirm against launch threat model |
-| No-retargeting | Disabled for production | Local development profile must remain separate |
+| PoW limit | TBD | Candidate modelling authorised; numeric production value not approved |
+| Genesis `nBits` | TBD | Must be consistent with selected PoW limit; not approved |
+| Retarget clamp and rounding | Upstream v32.1; ¼×–4× elapsed-time clamp | Owner-approved 16 Nov 2026; implementation tests pending |
+| Minimum-difficulty blocks | Disabled for production | Owner-approved; runtime parameter test pending |
+| No-retargeting | Disabled for production | Owner-approved; runtime parameter test pending |
 | Versionbits deployments | TBD | Do not copy Bitcoin activation schedules blindly |
 | Buried deployment heights | TBD | Review each upstream consensus rule |
 | Checkpoints | None initially | Only add independently verified FREELY checkpoints |
@@ -73,15 +73,15 @@ The 600-second target and 2,016-block interval imply a 14-day target timespan. T
 
 ## 4. Genesis block requirements
 
-The genesis block is not yet generated. Do not invent or hard-code a nonce, hash, Merkle root or timestamp.
+The owner has approved the height-zero 50 FLY genesis reward as permanently unspendable while remaining included in scheduled issuance accounting. The genesis block is not yet generated. Candidate generation and independent verification are authorised, but no candidate hash or field is final. Do not hard-code a nonce, hash, Merkle root or timestamp as a production value.
 
-Before generation, decide and document:
+Candidate generation must record and test:
 
-1. A durable genesis timestamp and neutral coinbase message.
-2. The exact genesis version and initial compact target.
-3. A provably unspendable genesis coinbase output (for example, a zero-value `OP_RETURN` commitment), so no founder receives spendable genesis funds.
-4. The proof-of-work limit and initial difficulty policy.
-5. A deterministic generator using Bitcoin Core's own serialization and hash functions.
+1. Candidate timestamp and neutral coinbase message (final wording remains subject to approval).
+2. Candidate genesis version and compact target, constrained by the still-unapproved `powLimit`.
+3. A permanently unspendable genesis output and explicit proof that the genesis coinbase is not spendable from the UTXO set.
+4. The approved monetary schedule and exact 50 FLY height-zero accounting treatment.
+5. A deterministic generator using Bitcoin Core's own serialization and hash functions, plus an independent second implementation/check.
 
 Required independent checks:
 
@@ -91,7 +91,14 @@ Required independent checks:
 - Add fixed test vectors and startup assertions.
 - Verify no genesis output is spendable and no premine is created.
 
-## 5. Development and test-network policy
+## 5. Approved consensus decisions — 17 November 2026
+
+- Genesis coinbase reward: unspendable permanently; included in scheduled issuance. Spendable scheduled subsidy total is 20,999,949.9769 FLY.
+- BIP94: enabled from genesis (`enforce_BIP94 = true`), subject to exact v32.1 source review and dedicated retarget/time-warp tests.
+- Script features: established Bitcoin rules are intended active from the start, subject to the activation matrix and compatibility tests. Future soft forks use controlled activation.
+- PoW candidate modelling and candidate network/genesis identity generation are authorised. Numeric production `powLimit`, initial difficulty, final identity values and final genesis fields are not approved.
+
+## 6. Development and test-network policy
 
 - The production chain selector `freely` must be a distinct chain type, not an alias of Bitcoin MAIN or REGTEST.
 - A private local test profile must be clearly separated from production consensus and network identity.
@@ -99,7 +106,7 @@ Required independent checks:
 - Never allow regtest-only controls (instant mining, mock time or test activation overrides) to affect FREELY production.
 - Keep all candidate ports and identifiers isolated from Bitcoin mainnet, testnet, testnet4, signet and regtest.
 
-## 6. Required implementation tests
+## 7. Required implementation tests
 
 - Chain selector parses as `freely` and round-trips to the same name.
 - FREELY data directory and RPC port are unique.
@@ -114,7 +121,7 @@ Required independent checks:
 - Retarget, invalid target, timestamp and proof-of-work boundary tests pass.
 - Two isolated local nodes can connect, validate blocks and reject a different chain's genesis.
 
-## 7. Security and launch caveats
+## 8. Security and launch caveats
 
 SHA-256d compatibility does not give FREELY Bitcoin's accumulated hashpower. A new low-hashrate chain may be vulnerable to majority-hash attacks, reorganizations, censorship and double-spends. A 600-second target does not solve this.
 
@@ -128,7 +135,7 @@ Before any public testnet or mainnet proposal, the project needs:
 
 No public launch, mining deployment, exchange listing, token sale or paid infrastructure is authorized by this document.
 
-## 8. Next engineering sequence
+## 9. Next engineering sequence
 
 1. Finish the production/test classification audit, including all direct MAIN-only and REGTEST-only startup checks.
 2. Add `ChainType::FREELY` and its string parsing/formatting.
@@ -139,9 +146,18 @@ No public launch, mining deployment, exchange listing, token sale or paid infras
 7. Run the complete relevant upstream test suites and platform CI.
 8. Keep all work in unmerged pull requests until review and explicit owner approval.
 
-## 9. References
+## 10. References
 
 - [Bitcoin Core v32.1 release notes](https://bitcoincore.org/en/releases/32.1/)
 - [Bitcoin Core v32.1 source tag](https://github.com/bitcoin/bitcoin/tree/v32.1)
 - [FREELY network architecture plan](https://github.com/Schmacko/freely-bitcoin-core./blob/freely/network-architecture/docs/FREELY-NETWORK-ARCHITECTURE.md)
 - [FREELY M1 test run](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/43662943218)
+
+
+## 11. Candidate identity review status — 17 November 2026
+
+The existing candidate sheet is authorised for static collision review only. A preliminary comparison against the built-in Bitcoin mainnet, testnet3, testnet4, signet (where its magic is known), and regtest identities shows the candidate values are distinct from the fixed Bitcoin values encoded in the current FREELY preflight validator: `FLY1` magic; P2P/RPC ports 19444/19443; Base58 prefixes 35/50/186; extended-key versions `04464c59`/`04464c5a`; Bech32 HRP `fly`; data-directory suffix `freely`. This is **not** a global cryptocurrency registry check, does not establish local port availability, and does not make the values final. Signet magic depends on its challenge and must be checked for the actual configured challenge. The candidate values must remain out of production runtime configuration until full validation and explicit final approval.
+
+## 12. Proof-of-work candidate modelling
+
+See [FREELY PoW Candidate Model](FREELY-POW-CANDIDATE-MODEL.md). The model translates candidate difficulty levels into expected SHA-256d work and expected block intervals at specified hashrates. It is a mathematical planning tool, not a live mining benchmark and not a security guarantee. A real recommendation requires a declared honest-hashrate assumption, a plausible attacker-hashrate/cost model, and a block-stall tolerance. No production `powLimit` or genesis `nBits` is selected by the model.
