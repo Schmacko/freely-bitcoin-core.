@@ -4,7 +4,7 @@
 **Created:** 16 November 2026  
 **Pinned source:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`  
 **Branch:** `freely/retarget-test-vectors`  
-**Policy:** owner-approved production retarget policy, 16 November 2026
+**Policy:** owner-approved production retarget policy (16 Nov 2026); BIP94 enabled from genesis by owner decision (17 Nov 2026)
 
 ## Purpose and scope
 
@@ -23,7 +23,7 @@ These vectors translate the approved production retarget policy into determinist
 | Upper clamp | 4,838,400 seconds | Target timespan × 4 |
 | Minimum-difficulty exception | Disabled | Approved for production |
 | No-retargeting | Disabled | Approved for production |
-| BIP94 | Disabled in this synthetic test | Still an unresolved FREELY owner decision |
+| BIP94 | Separate enabled/disabled comparison fixture | Owner-approved enabled from genesis; C++ validation pending |
 | Synthetic powLimit | compact `0x207fffff` | Test-only |
 | Synthetic previous `nBits` | `0x1f7fffff` | Test-only |
 
@@ -54,7 +54,7 @@ These outputs were independently calculated using integer arithmetic and compact
 Add tests in `src/test/pow_tests.cpp` (or a dedicated FREELY test file after chain type integration) that:
 
 - Construct `Consensus::Params` explicitly; do not obtain or mutate Bitcoin MAIN parameters as a proxy for FREELY.
-- Set the synthetic target timespan, target spacing, synthetic powLimit, `fPowNoRetargeting=false`, `fPowAllowMinDifficultyBlocks=false`, and `enforce_BIP94=false`.
+- Set the synthetic target timespan, target spacing, synthetic powLimit, `fPowNoRetargeting=false`, `fPowAllowMinDifficultyBlocks=false`, and `enforce_BIP94=false` for the baseline vectors.
 - Set `CBlockIndex::nBits` to `0x1f7fffff` and use first/last timestamps whose differences match each vector.
 - Assert exact equality with every expected compact `nBits` value above.
 - Test the one-second-below and one-second-above clamp cases to catch off-by-one errors.
@@ -62,7 +62,7 @@ Add tests in `src/test/pow_tests.cpp` (or a dedicated FREELY test file after cha
 - Verify that a non-boundary production height with minimum difficulty disabled carries forward the previous block's `nBits` through `GetNextWorkRequired`.
 - Test boundary selection separately with a linked `CBlockIndex` ancestry so the first retarget uses the correct period-start timestamp (height 0) and last-block timestamp (height 2015) for the block at height 2016.
 - Test compact-target negative, zero, overflow and above-powLimit rejection using the existing `DeriveTarget` / `CheckProofOfWork` interfaces.
-- Keep BIP94-specific expected vectors separate and do not mark them FREELY requirements until the owner decides whether to adopt BIP94.
+- Keep BIP94-specific expected vectors separate from baseline clamp vectors; FREELY's owner has approved BIP94 enabled from genesis, so the BIP94 regression test is now a required pre-activation gate.
 
 ## Boundary-height interpretation
 
@@ -99,7 +99,7 @@ The focused GitHub Actions workflow runs this checker before configuring and com
 
 - These vectors test the approved clamp/scaling policy and upstream algorithm semantics only.
 - They do not select a production `powLimit`, genesis `nBits`, nonce, genesis hash, network magic or ports.
-- They do not resolve BIP94/time-warp mitigation or timestamp/MTP policy.
+- They do not by themselves complete BIP94/time-warp mitigation or timestamp/MTP validation.
 - No production chain parameter may be activated from the synthetic fixture.
 - Before merging a C++ test PR: run targeted `pow_tests`, `validation_tests`, relevant full unit/functional suites, and current-head CI; inspect all failures.
 - Before runtime activation: require frozen production parameters, independent vector review and the standing PR merge gates.
@@ -134,3 +134,25 @@ targets beyond the five retarget arithmetic vectors:
 The Python checker additionally verifies a compact encode/decode round-trip and
 that encoding a zero target is rejected. These are validation fixtures only;
 they do not select or imply any production FREELY proof-of-work parameters.
+
+
+## Owner-approved BIP94 regression vector — 17 November 2026
+
+The owner approved BIP94 enabled from genesis, subject to implementation review and tests. Bitcoin Core v32.1's `CalculateNextWorkRequired` path uses the first block of the difficulty period as the difficulty base when `enforce_BIP94` is true. The test below isolates that behaviour.
+
+Synthetic fixture:
+- Target spacing: 600 seconds.
+- Target timespan: 1,209,600 seconds.
+- Period: 2,016 linked block indexes, heights 0 through 2,015.
+- Synthetic powLimit: compact `0x207fffff`.
+- First block of period nBits: `0x1f7fffff`.
+- Last block of period nBits: `0x1f3fffff`.
+- Elapsed time: exactly 1,209,600 seconds.
+- Minimum difficulty: disabled; no-retargeting: disabled.
+
+Expected results:
+- With `enforce_BIP94=true`, next target is `0x1f7fffff` (the first block's target).
+- With `enforce_BIP94=false`, next target is `0x1f3fffff` (the previous tip's target).
+- The outputs must differ, proving the test exercises the BIP94-specific branch.
+
+The C++ test `freely_bip94_uses_first_block_period_target` has been added to `src/test/pow_tests.cpp`. It is a synthetic algorithm test, not a FREELY production parameter or genesis target. The focused PoW workflow must pass on the new PR head before this behaviour is considered verified.
