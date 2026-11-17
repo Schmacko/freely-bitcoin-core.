@@ -88,6 +88,38 @@ class NetworkSafetyTests(unittest.TestCase):
         self.assertTrue(any("exactly 4 bytes" in item for item in errors))
         self.assertTrue(any("64 hex characters" in item for item in errors))
 
+    def test_rejects_malformed_sections_without_crashing(self):
+        data = complete_fixture()
+        data["project"] = []
+        data["network"] = "not-an-object"
+        data["consensus"] = None
+        errors = validate(data)
+        self.assertTrue(any("project must be a JSON object" in item for item in errors))
+        self.assertTrue(any("network must be a JSON object" in item for item in errors))
+        self.assertTrue(any("consensus must be a JSON object" in item for item in errors))
+
+    def test_enforces_approved_retarget_policy(self):
+        data = complete_fixture()
+        data["consensus"]["target_spacing_seconds"] = 300
+        data["consensus"]["retarget_interval"] = True
+        data["consensus"]["allow_min_difficulty_blocks"] = True
+        errors = validate(data)
+        self.assertTrue(any("target_spacing_seconds" in item for item in errors))
+        self.assertTrue(any("retarget_interval" in item for item in errors))
+        self.assertTrue(any("allow_min_difficulty_blocks must remain false" in item for item in errors))
+
+    def test_rejects_out_of_range_genesis_fields_and_activation_heights(self):
+        data = complete_fixture()
+        data["genesis"]["n_bits"] = "0x100000000"
+        data["genesis"]["pow_limit"] = "0x1" + "0" * 64
+        data["genesis"]["coinbase_spendable"] = 0
+        data["consensus"]["script_activation_heights"] = {"taproot": -1}
+        errors = validate(data)
+        self.assertTrue(any("unsigned 32-bit" in item for item in errors))
+        self.assertTrue(any("must not exceed 256 bits" in item for item in errors))
+        self.assertTrue(any("coinbase_spendable" in item for item in errors))
+        self.assertTrue(any("non-negative integer" in item for item in errors))
+
 
 if __name__ == "__main__":
     unittest.main()
