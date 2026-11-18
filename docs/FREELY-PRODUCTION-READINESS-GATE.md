@@ -1,0 +1,189 @@
+# FREELY production-readiness gate
+
+## Status and scope
+
+**Current status: BLOCKED — production readiness is not established.**
+
+This document defines the evidence required before FREELY can be considered ready for a public production network. It is an engineering gate, not authorization to launch. It deliberately separates work that can be completed now from owner-controlled decisions and from evidence that requires a functioning FREELY chain.
+
+The current repository does not contain finalized production network identity, numeric production proof-of-work parameters, final genesis commitment, or an approved script/soft-fork activation matrix. Production startup must therefore remain fail-closed.
+
+## Gate rules
+
+1. A gate is not complete because a document exists. It needs implementation evidence and passing tests.
+2. A workflow being queued, skipped, cancelled, or absent is not a pass.
+3. Evidence must identify the exact commit SHA tested.
+4. A test on Bitcoin regtest validates the test harness or upstream behavior; it does not prove FREELY production parameters or a live FREELY network.
+5. Synthetic fixtures are for testing validators only and must never be promoted into production configuration.
+6. No production launch, mining deployment, public RPC/P2P exposure, DNS seed publication, or genesis activation is authorized by this checklist.
+7. Any missing or ambiguous production parameter blocks the production gate.
+
+## Production gates and acceptance evidence
+
+### G0 — Owner-approved protocol parameters
+
+**Status: BLOCKED by owner decisions.**
+
+Required:
+- Numeric `powLimit` and genesis compact target (`nBits`), with documented security rationale and compact-target boundary tests.
+- Final four-byte P2P message magic, P2P and RPC ports, data-directory suffix, Base58/WIF/BIP32 prefixes and Bech32 HRP.
+- Final genesis timestamp/message, coinbase transaction, merkle root, header fields, nonce and independently recomputed genesis hash.
+- Exact script and soft-fork activation matrix, including heights/times and compatibility rationale.
+
+Acceptance:
+- Explicit owner approval recorded for each final value.
+- No collision with Bitcoin mainnet, testnet3, testnet4, signet (including challenge-derived magic) or regtest.
+- Independent calculation/reproduction of genesis and all consensus-critical values.
+- Manifest and C++ chain parameters agree byte-for-byte / value-for-value.
+
+### G1 — Consensus implementation
+
+Required:
+- Subsidy and halving schedule verified using integer base units only.
+- Retarget implementation and boundary rules verified against the approved 2,016-block / 1,209,600-second policy.
+- BIP94 enabled from genesis and first-block-of-period behavior tested.
+- Genesis coinbase remains unspendable; accounting documents scheduled versus spendable supply.
+- Chainwork, target validation, compact encoding, reorg and block validity behavior reviewed against Bitcoin Core v32.1.
+- No test-only override can alter production consensus.
+
+Acceptance:
+- Relevant C++ unit and functional tests pass on exact candidate commit.
+- Boundary, malformed-input, overflow and regression tests pass.
+- Independent source review finds no unresolved consensus-critical issue.
+
+### G2 — Network identity and chain selection
+
+Required:
+- Explicit FREELY chain selection; no fallback to MAIN or any other chain.
+- FREELY explicitly classified as production, not test.
+- Unique P2P magic, ports, data directory, address formats and Bech32 HRP.
+- `GetNetworkForMagic` registration and collision tests, including signet challenge-derived magic.
+- Wallet key/address encoders use the active FREELY chain parameters.
+
+Acceptance:
+- Automated source and runtime tests cover selection, serialization, magic mapping and collision cases.
+- Starting FREELY with missing or invalid parameters fails closed before network activity.
+- No silent MAIN defaults or Bitcoin mainnet identity leaks.
+
+### G3 — RPC and P2P security
+
+Required:
+- RPC binds to loopback by default; remote access requires explicit, documented operator configuration.
+- Authentication is mandatory for any non-loopback RPC listener; cookie/auth handling and file permissions are verified.
+- No wildcard public RPC listener in default configuration.
+- P2P listen/bind behavior, outbound peers, seed configuration, peer limits and bans are reviewed.
+- Firewall and port exposure guidance is documented.
+- Debug, profiling and unsafe test options cannot silently become production defaults.
+- Sensitive credentials and tokens are never logged.
+
+Acceptance:
+- Automated config/startup tests for loopback defaults, authentication, invalid credentials, bind addresses and unsafe combinations.
+- External security review of RPC/P2P threat model and configuration.
+- No critical/high unresolved findings.
+
+### G4 — Wallet safety and recovery
+
+Required:
+- Wallet creation, encryption, unlock/lock, backup, restore and rescan paths verified.
+- Descriptor and key import/export behavior reviewed for FREELY address parameters.
+- Transaction creation, fee handling, signing, broadcast and reorg recovery tested.
+- Wallet database corruption and interrupted shutdown/restart behavior tested.
+- Backup instructions explain seed/private-key custody and offline recovery.
+
+Acceptance:
+- Wallet-enabled build and relevant functional tests pass on exact commit.
+- Backup is restored successfully into a clean data directory in an isolated test.
+- No testnet/regtest/Bitcoin address-prefix leakage in FREELY wallet output.
+
+### G5 — Build, release and supply-chain integrity
+
+Required:
+- Reproducible documented build environment and pinned dependency/toolchain versions.
+- Linux build; supported platform builds; wallet-enabled and wallet-disabled configurations.
+- Compiler warnings, sanitizers, static analysis and dependency checks.
+- Release artifacts are traceable to signed/tagged source commits and checksums.
+- Release notes, upgrade/downgrade policy and data migration behavior documented.
+
+Acceptance:
+- Required CI matrix passes on exact release candidate SHA.
+- Release artifact checksums and source provenance are published.
+- No unreviewed or unexplained dependency changes.
+
+### G6 — Operations, observability and recovery
+
+Required:
+- Data-directory isolation, permissions, disk-space behavior and safe shutdown.
+- Logs expose useful operational errors without secrets.
+- Crash recovery, database verification, reindex and rescan procedures documented and tested.
+- Node health metrics and alert thresholds defined.
+- Backup, restore, incident response and upgrade/rollback runbooks prepared.
+- Resource requirements and expected bandwidth/storage are measured.
+
+Acceptance:
+- Repeatable operational test on isolated infrastructure.
+- Recovery from forced shutdown and corrupted test data demonstrated.
+- Operator runbooks independently reviewed.
+
+### G7 — Mining and economic/security assumptions
+
+Required:
+- Block template, coinbase construction, subsidy, fees and payout behavior verified.
+- Mining RPC/stratum/miner integration reviewed if provided.
+- Hashrate assumptions and low-hashrate attack exposure documented.
+- 51% attack, reorg, selfish mining, eclipse, double-spend and censorship risks assessed.
+- No implication that Bitcoin hashpower/security is inherited.
+
+Acceptance:
+- End-to-end mining and block acceptance tests on an isolated FREELY test network.
+- Independent security review of economic attack assumptions.
+- No production mining rollout before explicit owner approval.
+
+### G8 — Independent security review and launch authorization
+
+Required:
+- Independent review of consensus, networking, wallet, RPC, build/release and operations.
+- Threat model and findings register with severity, owner and remediation.
+- Critical/high findings resolved and retested.
+- Launch plan, monitoring, incident response and rollback plan.
+- Explicit owner authorization for production genesis/network activation and launch.
+
+Acceptance:
+- Written independent audit outcome.
+- All critical/high findings closed or explicitly risk-accepted by the owner.
+- Separate explicit launch authorization. This document does not provide it.
+
+## Evidence ledger template
+
+For every gate, record:
+- Gate ID and status: NOT STARTED / IN PROGRESS / BLOCKED / PASS.
+- Exact commit SHA tested.
+- Workflow URL and conclusion.
+- Test names and logs.
+- Reviewer and date.
+- Open findings and owner.
+- Whether the evidence is unit, functional, integration, operational or independent-audit evidence.
+
+A gate may be marked PASS only when all its acceptance evidence exists. Do not calculate production readiness by averaging incomplete gates: report the gate states and blockers.
+
+## Work that can proceed before owner decisions
+
+The following can be advanced without selecting production parameters:
+- Source audits for chain selection, RPC/P2P defaults, wallet chain-parameter use and unsafe test-option guards.
+- Test harnesses and negative tests for incomplete/invalid production configuration.
+- CI path coverage, reproducible build documentation, static analysis and dependency inventory.
+- Operational runbooks and backup/recovery test design.
+- Threat model and independent-audit preparation.
+- Release gate automation that refuses to pass while required evidence or owner-approved values are missing.
+
+## Current blockers
+
+1. Numeric production `powLimit` and genesis `nBits`.
+2. Final network identity values.
+3. Final genesis commitment.
+4. Exact script/soft-fork activation matrix.
+5. Exact-head build and test evidence; queued/cancelled CI is not evidence of a pass.
+6. Independent security review and explicit production launch approval.
+
+## Current conclusion
+
+FREELY can make real progress on engineering readiness now, but it is not safe to describe the project as production-ready. Keep production readiness **BLOCKED** until all gates above have evidence and all owner-controlled decisions have been approved. The objective is a verifiable release gate, not a cosmetic percentage.
