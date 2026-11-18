@@ -45,7 +45,7 @@ jobs:
         run: cmake --build build --target test_bitcoin --parallel 2
 
       - name: Run validation test suite
-        run: ctest --test-dir build --output-on-failure -R '^(validation_tests|pow_tests)
+        run: ctest --test-dir build --output-on-failure -R '^(validation_tests|pow_tests)$'
 
 
 
