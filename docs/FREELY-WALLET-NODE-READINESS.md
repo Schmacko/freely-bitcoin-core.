@@ -76,35 +76,34 @@ Report separately:
 
 Do not count documentation or test plans as completed runtime wallet/node functionality.
 
-
 ## First implementation increment: wallet-enabled regression CI
 
-A dedicated GitHub Actions workflow, `.github/workflows/freely-wallet-node-readiness.yml`, builds the fork with wallet support enabled and runs the existing Bitcoin Core v32.1 functional regression tests for:
+A dedicated GitHub Actions workflow, `.github/workflows/freely-wallet-node-readiness.yml`, builds the fork with wallet support enabled and runs existing Bitcoin Core v32.1 functional tests in isolated local-regtest fixtures.
 
+Coverage includes:
 - wallet backup and restore;
-- wallet encryption;
-- wallet startup and load-on-startup behaviour;
-- wallet creation;
-- basic wallet and transaction lifecycle;
-- exported watch-only wallet recovery;
-- descriptor creation and descriptor-wallet lifecycle;
-- descriptor import and rescan handling;
-- transaction creation and send lifecycle;
+- wallet encryption and startup;
+- wallet creation and basic wallet lifecycle;
+- exported watch-only recovery;
+- descriptor creation, import and rescan;
+- transaction creation and send;
 - wallet recovery across reorganisation;
-- multiwallet loading and isolation;
-- Taproot wallet address and signing compatibility.
+- multiwallet isolation;
+- Taproot compatibility;
+- keypool and hierarchical deterministic wallet behaviour;
+- blockchain and network RPC regression;
+- configuration, initialization and controlled-abort behaviour.
 
 This is an upstream compatibility gate using isolated local regtest fixtures. It is **not** a test of a live FREELY chain, production addresses, FREELY consensus parameters, or public network connectivity. The workflow does not deploy a node or expose RPC/P2P services.
 
-The workflow intentionally enables SQLite-backed wallet support, unlike the existing core-chain plumbing workflow which configures `ENABLE_WALLET=OFF`. It installs the documented Ubuntu build dependencies and builds the node/CLI before invoking the functional test runner.
+The workflow enables SQLite-backed wallet support, unlike the core-chain plumbing workflow which configures `ENABLE_WALLET=OFF`. It builds the node/CLI before invoking the functional test runner.
 
 ### Validation status
 
-- Workflow and test selection committed: pending GitHub Actions execution.
+- Expanded workflow committed: pending GitHub Actions execution.
 - Wallet-enabled C++ build: not yet verified.
 - Functional test results: not yet verified.
 - No FREELY-specific wallet address or production transaction support is claimed.
-
 
 ## Source audit: address and extended-key network separation
 
@@ -119,3 +118,39 @@ Reviewed against the pinned v32.1 implementation on 18 November 2026:
 **Implication:** the upstream wallet/address architecture is reusable without a FREELY-specific address encoder. The eventual FREELY parameter object must nevertheless provide unique, reviewed Base58 prefixes, extended-key prefixes, and Bech32 HRP before address generation or wallet interoperability can be enabled. No values are assigned by this audit.
 
 **Validation boundary:** existing `key_io_tests` exercise Bitcoin mainnet, testnet, signet, and regtest vectors. They cannot validate FREELY until FREELY parameters exist. Current wallet CI is upstream compatibility coverage only; it is not a FREELY address-format test.
+
+## Dependency review: pull-request integration order (18 November 2026)
+
+The live GitHub branch comparison and changed-file lists show the following integration relationships. All PRs remain drafts; this is a dependency assessment, not approval to merge.
+
+| PR | Branch / scope | Dependency and integration finding |
+|---|---|---|
+| #1 | `freely/m1-consensus` | Foundation for #8. Based directly on `freely/upstream-v32.1`. Contains shared `.github/workflows/ci.yml` and CI image changes. |
+| #8 | `freely/core-chain-implementation` | Correctly based on #1's current head. Comparison: 11 commits ahead, 0 behind. Must follow #1 in integration order. |
+| #11 | `freely/wallet-node-readiness` | Targets #8, but its recorded base is an older #8 commit. Current comparison is diverged: head has 2 workstream commits; current #8 has 3 commits beyond the common ancestor. Its changes are confined to the wallet workflow and this document, but refresh/rebase against current #8 before merge and rerun CI. |
+| #2 | `freely/consensus-specification` | Independent of code integration, but shares consensus/network specification documents and verifier script with #7. Reconcile duplicate edits before either is merged. |
+| #7 | `freely/network-architecture` | Overlaps #2 on `FREELY-CONSENSUS-SPECIFICATION.md`, `FREELY-NETWORK-ARCHITECTURE.md`, `FREELY-NETWORK-PARAMETERS-DRAFT.md`, and `verify-freely-consensus-spec.py`; also overlaps #3 on `FREELY-CHAIN-SELECTION-AUDIT.md`. Resolve by selecting a canonical source or rebasing/retargeting; do not merge both blindly. |
+| #3 | `freely/chain-selection-audit` | Documentation overlap with #7 on `FREELY-CHAIN-SELECTION-AUDIT.md`; reconcile content. |
+| #9 | `freely/ci-windows-safe` | Overlaps #1 on `.github/workflows/ci.yml` and `ci/test/00_setup_env_native_nowallet.sh`. Consolidate the Windows-safe checkout and push-trigger changes into one reviewed CI change; avoid duplicate competing merges. |
+| #6 | `freely/retarget-test-vectors` | Adds `src/test/pow_tests.cpp` and focused retarget/BIP94 coverage; currently separate from #1/#8. Validate against the same v32.1 base and integrate after reviewing consensus semantics. |
+| #10 | `freely/network-safety-preflight` | Separate tooling/docs workstream; no changed-file overlap with #1/#8/#11. Its production manifest intentionally remains unset and fail-closed. |
+| #4/#5 | PoW audit / retarget policy | Documentation-only workstreams; use them as review inputs for #6 and the eventual consensus implementation, not as independently activated production settings. |
+
+### Recommended integration sequence
+
+1. Review and resolve the shared CI changes between #1 and #9; preserve one canonical CI implementation.
+2. Complete #1 consensus and production-classification review, then integrate #1.
+3. Integrate #8 on top of #1 and rerun chain-selector/startup tests.
+4. Refresh #11 against the resulting #8 head; then run wallet-enabled build, wallet functional suite, RPC and node functional suite.
+5. Reconcile #2/#7/#3 overlapping documents before integrating the consensus/network design package.
+6. Review #4/#5 against #6's executable vectors; integrate retarget code only after BIP94/powLimit policy is formally resolved.
+7. Integrate #10 after its own validator tests pass; keep production identity values unset until explicit owner decisions.
+
+### CI and review gates
+
+- A branch being ahead/behind or GitHub reporting it mergeable does not establish technical merge readiness.
+- Require current-head focused workflow success and relevant general CI success.
+- Review complete diffs, upstream compatibility, test logs, conflicts and unresolved review threads.
+- Never merge production parameters or activate the network through a documentation/CI integration.
+- PR #11's wallet tests exercise upstream regtest behaviour only; no FREELY network test is claimed.
+
