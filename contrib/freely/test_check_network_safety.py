@@ -227,5 +227,38 @@ class NetworkSafetyTests(unittest.TestCase):
         self.assertTrue(any("non-negative integer" in item for item in errors))
 
 
+    def test_rejects_spendable_genesis_coinbase(self):
+        data = complete_fixture()
+        data["genesis"]["coinbase_spendable"] = True
+        self.assertTrue(any(
+            "coinbase_spendable must be false" in item for item in validate(data)
+        ))
+
+    def test_rejects_cross_role_bitcoin_base58_prefix_collision(self):
+        data = complete_fixture()
+        # 5 is Bitcoin mainnet's P2SH prefix, not a safe FREELY P2PKH prefix.
+        data["address"]["base58_public_key_prefix"] = 5
+        self.assertTrue(any(
+            "public_key_prefix" in item and "existing Bitcoin network prefix" in item
+            for item in validate(data)
+        ))
+
+    def test_rejects_duplicate_freely_address_and_extended_key_prefixes(self):
+        data = complete_fixture()
+        data["address"]["base58_script_prefix"] = data["address"]["base58_public_key_prefix"]
+        data["address"]["base58_extended_secret_key_prefix"] = data["address"]["base58_extended_public_key_prefix"]
+        errors = validate(data)
+        self.assertTrue(any("Base58 public-key, script, and secret-key prefixes must be distinct" in item for item in errors))
+        self.assertTrue(any("extended public and private key prefixes must be distinct" in item for item in errors))
+
+    def test_rejects_case_insensitive_bitcoin_data_directory_collision(self):
+        data = complete_fixture()
+        data["network"]["data_directory"] = "TESTNET3"
+        self.assertTrue(any(
+            "data_directory collides with an existing Bitcoin network directory" in item
+            for item in validate(data)
+        ))
+
+
 if __name__ == "__main__":
     unittest.main()
