@@ -55,7 +55,7 @@ Implications:
 - The current 50-coin initial subsidy already matches the agreed policy; do not add a redundant fork-specific subsidy implementation without a reason.
 - Tests must call the actual subsidy function with FREELY params and check the full boundary vectors and cumulative integer issuance.
 - Audit all `MAX_MONEY` / `MoneyRange` uses and wallet/RPC amount serialization before changing denomination or range constants.
-- The height-zero subsidy is mathematically part of scheduled issuance, but the conventional genesis coinbase output is unspendable. The project must decide and document whether genesis has a reward output and how spendable supply is reported.
+- Owner-approved accounting (17 November 2026): the height-zero 50 FLY subsidy remains included in scheduled issuance, while the genesis coinbase is permanently unspendable and excluded from spendable supply. The current candidate generator models a 50 FLY OP_RETURN output; its exact transaction and header commitment remain candidate-only until final genesis parameters are approved.
 
 ## 4. Consensus parameters that must be explicitly set
 
@@ -83,7 +83,7 @@ For an initial independent chain, unsupported AssumeUTXO, assume-valid, minimum-
 The current kernel source has a helper that builds the genesis coinbase and Merkle root. Its default timestamp and output key are Bitcoin's historical message/key. The source comment also documents the genesis output as unspendable because it was never inserted into the UTXO database.
 
 Required steps:
-1. Decide timestamp/message and coinbase output script, including whether a reward output is included.
+1. Finalise the timestamp/message and verify the candidate coinbase serialization against the owner-approved unspendable-genesis rule; do not make the genesis reward spendable.
 2. Decide genesis version, time, PoW limit and compact `nBits`.
 3. Generate nonce and block hash with the real serialization/hash code.
 4. Independently recompute txid, Merkle root, header hash and target comparison.
