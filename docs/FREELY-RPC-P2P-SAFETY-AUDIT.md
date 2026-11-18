@@ -92,7 +92,14 @@ Before this audit can be marked fully verified:
 | P2P default source audit | Documented; launch gate identified |
 | FREELY network magic | Not assigned; correctly absent |
 | FREELY production data directory | Not activated |
-| Binary-level fail-closed startup test | Pending |
+| Binary-level fail-closed startup test | Implemented; current-head CI queued |
 | Runtime RPC/P2P policy tests | Pending until FREELY parameter object exists |
 
 No production network identity, genesis block, DNS seed, public listener, or deployment is selected or activated by this work.
+
+
+## Startup regression hardening — 18 November 2026
+
+The binary-level `feature_freely_startup.py` test now invokes `bitcoind -chain=freely` without `-listen=0`. This is deliberate: Bitcoin Core v32.1's upstream `DEFAULT_LISTEN` is true, so the test verifies that FREELY's unresolved-parameter guard stops startup before the normal P2P listener path, rather than relying on a test-supplied setting that suppresses listening.
+
+The focused workflow was triggered for the updated PR #8 head `a20399d39086c75dc895442e78130fb95993c747` (run [44211275120](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44211275120)). The job was still queued at the latest inspection. This is implemented test coverage, not a verified runtime pass.
