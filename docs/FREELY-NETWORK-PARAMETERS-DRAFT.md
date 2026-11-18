@@ -5,6 +5,8 @@
 **Upstream baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`  
 **Purpose:** provide a concrete, reviewable starting point for the dedicated FREELY chain implementation while keeping launch-sensitive values visibly provisional.
 
+> **Revision note — 18 November 2026:** This document preserves the earlier provisional candidates for historical traceability. The current exact-value proposal is [FREELY Protocol Parameter Approval Package](FREELY-PROTOCOL-PARAMETER-APPROVAL.md). Where values differ, that approval package supersedes the candidate tables below. Neither document activates production parameters; explicit owner approval and implementation validation remain mandatory.
+
 ## 1. Fixed project decisions
 
 These values were already agreed for the project and are not provisional:
