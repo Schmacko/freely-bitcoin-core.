@@ -49,8 +49,12 @@ class NetworkSafetyTests(unittest.TestCase):
     def test_unconfigured_template_fails_closed(self):
         errors = validate(MANIFEST)
         self.assertTrue(any("network.message_start is unset" in item for item in errors))
-        self.assertTrue(any("genesis.coinbase_spendable is unset" in item for item in errors))
-        self.assertTrue(any("consensus.bip94_enabled is unset" in item for item in errors))
+        self.assertTrue(any("network.p2p_port is unset" in item for item in errors))
+        self.assertTrue(any("genesis.hash is unset" in item for item in errors))
+        self.assertIs(MANIFEST["genesis"]["coinbase_spendable"], False)
+        self.assertIs(MANIFEST["consensus"]["bip94_enabled"], True)
+        self.assertFalse(any("genesis.coinbase_spendable is unset" in item for item in errors))
+        self.assertFalse(any("consensus.bip94_enabled is unset" in item for item in errors))
 
     def test_complete_distinct_fixture_passes(self):
         self.assertEqual(validate(complete_fixture()), [])
