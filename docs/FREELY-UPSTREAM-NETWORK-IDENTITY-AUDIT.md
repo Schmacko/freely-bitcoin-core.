@@ -78,3 +78,8 @@ This script validates a manifest. It does not inspect the C++ binary or prove th
 5. Final network identity and genesis commitment.
 
 No production parameter, seed, deployment, public testnet or mainnet launch is authorized by this audit.
+
+
+### Data-directory path constraint
+
+The manifest's `network.data_directory` field is restricted to one portable path component (letters, digits, underscore and hyphen). It must not contain either POSIX or Windows path separators, drive syntax, UNC syntax, or dot segments. The preflight enforces this independent of the host operating system.
