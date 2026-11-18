@@ -39,7 +39,7 @@ def validate(data: Any) -> list[str]:
     if not isinstance(gates, list):
         errors.append("gates must be an array")
         return errors
-    ids = [g.get("id") for g in gates if isinstance(g, dict)]
+    ids = [g.get("id") for g in gates if isinstance(g, dict) and isinstance(g.get("id"), str)]
     if set(ids) != GATE_IDS or len(ids) != 9:
         errors.append("gates must contain each unique gate G0 through G8 exactly once")
 
@@ -48,11 +48,11 @@ def validate(data: Any) -> list[str]:
             errors.append("each gate must be a JSON object")
             continue
         gate_id = gate.get("id")
-        if gate_id not in GATE_IDS:
+        if not isinstance(gate_id, str) or gate_id not in GATE_IDS:
             errors.append(f"unknown gate id: {gate_id!r}")
             continue
         state = gate.get("status")
-        if state not in VALID_STATES:
+        if not isinstance(state, str) or state not in VALID_STATES:
             errors.append(f"{gate_id}: invalid status")
             continue
         if state != "PASS":
@@ -75,7 +75,8 @@ def validate(data: Any) -> list[str]:
         tests = evidence.get("tests")
         if not isinstance(tests, list) or not tests or any(not isinstance(x, str) or not x.strip() for x in tests):
             errors.append(f"{gate_id}: PASS requires a non-empty list of named tests")
-        if evidence.get("evidence_type") not in VALID_EVIDENCE_TYPES:
+        evidence_type = evidence.get("evidence_type")
+        if not isinstance(evidence_type, str) or evidence_type not in VALID_EVIDENCE_TYPES:
             errors.append(f"{gate_id}: invalid evidence_type")
         if not isinstance(evidence.get("reviewer"), str) or not evidence["reviewer"].strip():
             errors.append(f"{gate_id}: PASS requires a named reviewer")
