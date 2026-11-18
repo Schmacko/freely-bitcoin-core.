@@ -190,3 +190,43 @@ The M1 production/test-classification work has been checked against the architec
 The static chain-selection audit and implementation hand-off are complete. The remaining unchecked items are runtime implementation and integration tests, not missing audit documentation. This branch is therefore **100% complete as a static audit deliverable**, while FREELY runtime chain selection remains unimplemented and must be tracked in the core implementation roadmap.
 
 No candidate identity value, genesis field, port, magic, address prefix, PoW limit or activation height is approved by this audit.
+
+## 11. Direct source verification follow-up — 18 November 2026
+
+The following call sites were re-opened on the current PR #8 implementation branch at head `5f8fa282ea0675c41c2a5aa21db36d5e1bf47744`. This supplements the earlier static audit with direct source verification.
+
+### Verified selector and network-magic behavior
+
+- `src/chainparamsbase.cpp`: `CreateBaseChainParams` has an explicit `ChainType::FREELY` case that throws. There is no fallback to MAIN.
+- `src/chainparams.cpp`: `CreateChainParams` has an explicit `ChainType::FREELY` case that throws. There is no fallback to MAIN.
+- `src/kernel/chainparams.cpp`: `GetNetworkForMagic` currently obtains and compares only MAIN, TESTNET, TESTNET4, REGTEST and SIGNET message-start values. It has no FREELY case because no FREELY message magic or parameter object exists yet.
+- The FREELY mapping must be added to `GetNetworkForMagic` in the same reviewed change that introduces the approved FREELY message magic. Add a positive FREELY mapping test and negative collision/unknown-magic tests; do not insert a provisional magic value now.
+- The current signet magic is derived from its challenge at runtime. A future FREELY collision test must use the actual approved FREELY magic and compare against the configured signet challenge, not a guessed constant.
+
+### Verified production/test classification defaults
+
+- `src/kernel/chainparams.h`: `m_is_test_chain` and `m_is_production_chain` both default to false. Production status is therefore not inferred from the absence of test status.
+- `src/kernel/chainparams.cpp`: MAIN explicitly sets `m_is_production_chain = true`; TESTNET, TESTNET4, SIGNET and REGTEST explicitly set `m_is_test_chain = true`.
+- No FREELY parameter constructor exists, so FREELY is not yet classified at runtime. Its future production constructor must explicitly set `m_is_production_chain = true` and explicitly preserve `m_is_test_chain = false`. Add a test that asserts both properties.
+- `src/init.cpp`: `-testactivationheight` and `-vbparams` are rejected whenever `IsProductionChain()` is true. The generic `-test=<option>` override remains restricted to `ChainType::REGTEST`, and stale fee-estimate acceptance is also restricted to REGTEST.
+
+### Mainnet assumptions and safe interpretation
+
+- The `ChainType::MAIN` references used to construct default startup/help parameters are explicit Bitcoin defaults, not FREELY selection fallbacks. They must remain the defaults unless a separate product decision changes the default chain; FREELY must always be selected explicitly.
+- The chain-parameter factories are exhaustive for the currently declared chain types and explicitly reject FREELY. Preserve this fail-closed behavior until the complete FREELY parameter set is reviewed.
+- The kernel's MAIN constructor contains Bitcoin-history-specific script exceptions, activation heights/hashes, genesis, proof-of-work limit, chainwork/assume-valid, seeds, AssumeUTXO data and transaction-history estimates. These must not be inherited by a FREELY constructor.
+- The audit has not established that every `ChainType::MAIN` comparison across every source file is harmless. Before enabling FREELY, perform a repository-wide source search on the exact integration commit and review each occurrence in networking, RPC, wallet, GUI, tests and initialization. In particular, avoid changing a MAIN-only behavior to a broad non-test/production behavior without checking whether it is Bitcoin-specific.
+
+### Integration acceptance checklist
+
+- [x] Base-parameter factory has an explicit fail-closed FREELY case.
+- [x] Consensus-parameter factory has an explicit fail-closed FREELY case.
+- [x] Current network-magic mapping and missing FREELY mapping identified.
+- [x] Production/test classification defaults and explicit assignments verified.
+- [x] Production startup override guards and REGTEST-only overrides verified.
+- [ ] Repository-wide `ChainType::MAIN` call-site audit on the final integration commit.
+- [ ] FREELY production/test classification regression test after parameter class exists.
+- [ ] FREELY magic mapping and collision regression tests after magic is approved.
+- [ ] Current-head C++ tests pass.
+
+**Conclusion:** the reviewed selector paths fail closed rather than silently selecting Bitcoin MAIN. The main remaining selector integration gaps are the deliberately absent FREELY parameter class, network-magic registration and repository-wide call-site verification on the final integration commit. No production identity value is selected by this audit.
