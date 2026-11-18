@@ -50,6 +50,7 @@ REQUIRED_PATHS = (
     "genesis.n_bits",
     "genesis.pow_limit",
     "genesis.coinbase_spendable",
+    "consensus.target_timespan_seconds",
     "consensus.bip94_enabled",
     "consensus.script_activation_heights",
 )
@@ -188,10 +189,15 @@ def validate(data: dict[str, Any]) -> list[str]:
     for field in ("n_bits", "pow_limit"):
         value = genesis.get(field)
         if value is not None:
-            if not isinstance(value, str) or not re.fullmatch(r"0x[0-9a-fA-F]+", value) or int(value, 16) == 0:
-                errors.append(f"genesis.{field} must be a non-zero hexadecimal string such as '0x1d00ffff'")
-            elif field == "n_bits" and int(value, 16) > 0xFFFFFFFF:
-                errors.append("genesis.n_bits must fit in an unsigned 32-bit compact field")
+            if field == "n_bits":
+                valid_format = isinstance(value, str) and re.fullmatch(r"0x[0-9a-fA-F]{1,8}", value)
+            else:
+                valid_format = isinstance(value, str) and re.fullmatch(r"0x[0-9a-fA-F]+", value)
+            if not valid_format or int(value, 16) == 0:
+                if field == "n_bits":
+                    errors.append("genesis.n_bits must be a non-zero 32-bit compact value encoded as 1-8 hexadecimal digits with a 0x prefix")
+                else:
+                    errors.append("genesis.pow_limit must be a non-zero hexadecimal string such as '0x1d00ffff'")
             elif field == "pow_limit" and int(value, 16).bit_length() > 256:
                 errors.append("genesis.pow_limit must not exceed 256 bits")
 
@@ -217,7 +223,11 @@ def validate(data: dict[str, Any]) -> list[str]:
         elif target > int(pow_limit_value, 16):
             errors.append("genesis.n_bits target exceeds genesis.pow_limit")
 
-    for field, expected in (("target_spacing_seconds", 600), ("retarget_interval", 2016)):
+    for field, expected in (
+        ("target_spacing_seconds", 600),
+        ("target_timespan_seconds", 1_209_600),
+        ("retarget_interval", 2016),
+    ):
         value = consensus.get(field)
         if not isinstance(value, int) or isinstance(value, bool) or value != expected:
             errors.append(f"consensus.{field} must match the approved value {expected}")
