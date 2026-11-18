@@ -104,3 +104,18 @@ The workflow intentionally enables SQLite-backed wallet support, unlike the exis
 - Wallet-enabled C++ build: not yet verified.
 - Functional test results: not yet verified.
 - No FREELY-specific wallet address or production transaction support is claimed.
+
+
+## Source audit: address and extended-key network separation
+
+Reviewed against the pinned v32.1 implementation on 18 November 2026:
+
+- `src/key_io.cpp` builds Base58 P2PKH/P2SH addresses from the active `CChainParams` prefixes.
+- SegWit address encoding uses `CChainParams::Bech32HRP()`; decoding explicitly rejects a different HRP.
+- Private-key WIF encoding/decoding uses the active `SECRET_KEY` prefix.
+- Extended public and private key encoding/decoding use the active `EXT_PUBLIC_KEY` and `EXT_SECRET_KEY` prefixes.
+- Wallet address RPCs route through `EncodeDestination` and `DecodeDestination`, so they inherit the active chain parameters rather than hard-coding Bitcoin mainnet address formats.
+
+**Implication:** the upstream wallet/address architecture is reusable without a FREELY-specific address encoder. The eventual FREELY parameter object must nevertheless provide unique, reviewed Base58 prefixes, extended-key prefixes, and Bech32 HRP before address generation or wallet interoperability can be enabled. No values are assigned by this audit.
+
+**Validation boundary:** existing `key_io_tests` exercise Bitcoin mainnet, testnet, signet, and regtest vectors. They cannot validate FREELY until FREELY parameters exist. Current wallet CI is upstream compatibility coverage only; it is not a FREELY address-format test.
