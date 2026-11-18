@@ -259,6 +259,27 @@ class NetworkSafetyTests(unittest.TestCase):
             for item in validate(data)
         ))
 
+    def test_rejects_unapproved_or_missing_target_timespan(self):
+        data = complete_fixture()
+        data["consensus"]["target_timespan_seconds"] = 1_209_599
+        self.assertTrue(any(
+            "target_timespan_seconds must match the approved value 1209600" in item
+            for item in validate(data)
+        ))
+
+        del data["consensus"]["target_timespan_seconds"]
+        self.assertTrue(any(
+            "target_timespan_seconds must match the approved value 1209600" in item
+            for item in validate(data)
+        ))
+
+    def test_rejects_compact_n_bits_wider_than_32_bits_even_with_leading_zeroes(self):
+        data = complete_fixture()
+        data["genesis"]["n_bits"] = "0x000000001"
+        self.assertTrue(any(
+            "1-8 hexadecimal digits" in item for item in validate(data)
+        ))
+
 
 if __name__ == "__main__":
     unittest.main()
