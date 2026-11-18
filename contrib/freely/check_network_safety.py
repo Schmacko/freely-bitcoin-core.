@@ -131,8 +131,12 @@ def validate(data: dict[str, Any]) -> list[str]:
     if datadir is not None:
         if not isinstance(datadir, str) or not datadir.strip():
             errors.append("network.data_directory must be a non-empty relative directory name")
-        elif datadir.startswith("/") or datadir.startswith("\\\\") or re.match(r"^[A-Za-z]:[\\\\/]", datadir) or ".." in Path(datadir).parts:
-            errors.append("network.data_directory must not be absolute or traverse parent directories")
+        elif not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", datadir):
+            # This value is a single data-directory suffix, not an arbitrary path.
+            # Restricting it to one portable path component rejects POSIX and
+            # Windows separators, drive paths, UNC paths, dot segments and
+            # traversal regardless of the host running this validator.
+            errors.append("network.data_directory must not be absolute or traverse parent directories; use one safe directory name")
         elif datadir in {item["data_directory"] for item in BITCOIN_NETWORKS.values()}:
             errors.append("network.data_directory collides with an existing Bitcoin network directory")
     config_section = network.get("config_section")
