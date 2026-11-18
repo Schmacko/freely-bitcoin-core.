@@ -126,8 +126,8 @@ The live GitHub branch comparison and changed-file lists show the following inte
 | PR | Branch / scope | Dependency and integration finding |
 |---|---|---|
 | #1 | `freely/m1-consensus` | Foundation for #8. Based directly on `freely/upstream-v32.1`. Contains shared `.github/workflows/ci.yml` and CI image changes. |
-| #8 | `freely/core-chain-implementation` | Correctly based on #1's current head. Comparison: 11 commits ahead, 0 behind. Must follow #1 in integration order. |
-| #11 | `freely/wallet-node-readiness` | Targets #8, but its recorded base is an older #8 commit. Current comparison is diverged: head has 2 workstream commits; current #8 has 3 commits beyond the common ancestor. Its changes are confined to the wallet workflow and this document, but refresh/rebase against current #8 before merge and rerun CI. |
+| #8 | `freely/core-chain-implementation` | Correctly based on #1's current head. Current comparison: 12 commits ahead, 0 behind. Must follow #1 in integration order. |
+| #11 | `freely/wallet-node-readiness` | Targets the current #8 head `5f8fa282ea0675c41c2a5aa21db36d5e1bf47744`. Current comparison: PR #11 head `24800203855264f0b490ec80a602389754a0be81` is 5 commits ahead and 0 behind. Its two changed files (wallet readiness workflow and this document) do not overlap with PR #8. Recheck this relationship if #8 advances and rerun wallet CI on the resulting head. |
 | #2 | `freely/consensus-specification` | Independent of code integration, but shares consensus/network specification documents and verifier script with #7. Reconcile duplicate edits before either is merged. |
 | #7 | `freely/network-architecture` | Overlaps #2 on `FREELY-CONSENSUS-SPECIFICATION.md`, `FREELY-NETWORK-ARCHITECTURE.md`, `FREELY-NETWORK-PARAMETERS-DRAFT.md`, and `verify-freely-consensus-spec.py`; also overlaps #3 on `FREELY-CHAIN-SELECTION-AUDIT.md`. Resolve by selecting a canonical source or rebasing/retargeting; do not merge both blindly. |
 | #3 | `freely/chain-selection-audit` | Documentation overlap with #7 on `FREELY-CHAIN-SELECTION-AUDIT.md`; reconcile content. |
@@ -141,7 +141,7 @@ The live GitHub branch comparison and changed-file lists show the following inte
 1. Review and resolve the shared CI changes between #1 and #9; preserve one canonical CI implementation.
 2. Complete #1 consensus and production-classification review, then integrate #1.
 3. Integrate #8 on top of #1 and rerun chain-selector/startup tests.
-4. Refresh #11 against the resulting #8 head; then run wallet-enabled build, wallet functional suite, RPC and node functional suite.
+4. Verify #11 remains 0 behind / 5 ahead of the integrated #8 head; if #8 advances first, refresh #11 before running the wallet-enabled build, wallet functional suite, RPC and node functional suite.
 5. Reconcile #2/#7/#3 overlapping documents before integrating the consensus/network design package.
 6. Review #4/#5 against #6's executable vectors; integrate retarget code only after BIP94/powLimit policy is formally resolved.
 7. Integrate #10 after its own validator tests pass; keep production identity values unset until explicit owner decisions.
@@ -154,3 +154,8 @@ The live GitHub branch comparison and changed-file lists show the following inte
 - Never merge production parameters or activate the network through a documentation/CI integration.
 - PR #11's wallet tests exercise upstream regtest behaviour only; no FREELY network test is claimed.
 
+
+
+## Live branch comparison refresh — 18 November 2026
+
+The current GitHub compare endpoints show `freely/core-chain-implementation` at `5f8fa282ea0675c41c2a5aa21db36d5e1bf47744` and `freely/wallet-node-readiness` at `24800203855264f0b490ec80a602389754a0be81`. PR #11 is 5 commits ahead and 0 behind PR #8. The earlier note describing a diverged relationship is superseded. The wallet workflow remains queued; this graph comparison does not constitute a build or test pass.
