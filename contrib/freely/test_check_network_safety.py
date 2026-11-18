@@ -99,10 +99,32 @@ class NetworkSafetyTests(unittest.TestCase):
         self.assertTrue(any("directory" in item for item in errors))
         self.assertTrue(any("HRP" in item for item in errors))
 
-    def test_rejects_windows_absolute_data_directory(self):
+    def test_rejects_unsafe_data_directory_paths_on_all_platforms(self):
+        # The manifest field is a single directory suffix, not an arbitrary
+        # path. Validate Windows and POSIX forms identically on every runner.
+        for unsafe_path in (
+            "C:\\bitcoin",
+            "..\\bitcoin",
+            "\\\\server\\share",
+            "../bitcoin",
+            "/tmp/freely",
+            ".",
+            "..",
+            "nested/freely",
+            "nested\\freely",
+        ):
+            with self.subTest(data_directory=unsafe_path):
+                data = complete_fixture()
+                data["network"]["data_directory"] = unsafe_path
+                self.assertTrue(
+                    any("absolute or traverse parent directories" in item for item in validate(data)),
+                    msg=f"unsafe data directory was accepted: {unsafe_path!r}",
+                )
+
+    def test_accepts_single_safe_data_directory_name(self):
         data = complete_fixture()
-        data["network"]["data_directory"] = "C:\\bitcoin"
-        self.assertTrue(any("absolute or traverse parent directories" in item for item in validate(data)))
+        data["network"]["data_directory"] = "freely_node-1"
+        self.assertEqual(validate(data), [])
 
     def test_rejects_unsafe_or_wrong_config_section(self):
         data = complete_fixture()
