@@ -34,7 +34,8 @@ def complete_fixture():
     })
     data["consensus"].update({
         "bip94_enabled": True,
-        "script_activation_heights": {},
+        # A synthetic test-only entry proves the activation matrix is populated.
+        "script_activation_heights": {"synthetic_fixture_only": 0},
     })
     return data
 
@@ -285,6 +286,22 @@ class NetworkSafetyTests(unittest.TestCase):
         data["consensus"]["target_timespan_seconds"] = True
         self.assertTrue(any(
             "target_timespan_seconds must match the approved value 1209600" in item
+            for item in validate(data)
+        ))
+
+    def test_rejects_zero_genesis_hash(self):
+        data = complete_fixture()
+        data["genesis"]["hash"] = "00" * 32
+        self.assertTrue(any(
+            "genesis.hash must not be the all-zero hash" in item
+            for item in validate(data)
+        ))
+
+    def test_rejects_empty_script_activation_matrix(self):
+        data = complete_fixture()
+        data["consensus"]["script_activation_heights"] = {}
+        self.assertTrue(any(
+            "must contain at least one explicit activation entry" in item
             for item in validate(data)
         ))
 
