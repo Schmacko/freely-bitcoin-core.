@@ -146,7 +146,7 @@ def validate(data: dict[str, Any]) -> list[str]:
         errors.append("network.config_section must be the canonical 'freely' section name")
 
 
-    for field, forbidden in BITCOIN_BASE58_PREFIXES.items():
+    for field in BITCOIN_BASE58_PREFIXES:
         value = address.get(field)
         if value is not None:
             if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 255:
