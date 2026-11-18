@@ -6,22 +6,22 @@
     {
       "id": "G0",
       "name": "Owner-approved protocol parameters",
-      "status": "BLOCKED",
-      "owner_approvals": false,
+      "status": "IN_PROGRESS",
+      "owner_approvals": true,
       "evidence": null
     },
     {
       "id": "G1",
       "name": "Consensus implementation",
       "status": "IN_PROGRESS",
-      "owner_approvals": false,
+      "owner_approvals": true,
       "evidence": null
     },
     {
       "id": "G2",
       "name": "Network identity and chain selection",
-      "status": "BLOCKED",
-      "owner_approvals": false,
+      "status": "IN_PROGRESS",
+      "owner_approvals": true,
       "evidence": null
     },
     {
