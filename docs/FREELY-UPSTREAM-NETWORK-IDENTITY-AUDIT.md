@@ -71,11 +71,10 @@ This script validates a manifest. It does not inspect the C++ binary or prove th
 
 ## Remaining owner decisions
 
-1. Genesis coinbase spendability/accounting.
-2. Numeric `powLimit` and initial difficulty.
-3. BIP94/time-warp mitigation.
-4. Script and soft-fork activation matrix.
-5. Final network identity and genesis commitment.
+1. Numeric production `powLimit` and initial difficulty.
+2. Final network identity values after collision checks.
+3. Final genesis timestamp/message and block commitment.
+4. Exact script activation parameters after compatibility tests.
 
 No production parameter, seed, deployment, public testnet or mainnet launch is authorized by this audit.
 
