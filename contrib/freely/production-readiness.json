@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "project": "FREELY",
+  "release_candidate_sha": null,
+  "gates": [
+    {
+      "id": "G0",
+      "name": "Owner-approved protocol parameters",
+      "status": "BLOCKED",
+      "owner_approvals": false,
+      "evidence": null
+    },
+    {
+      "id": "G1",
+      "name": "Consensus implementation",
+      "status": "IN_PROGRESS",
+      "owner_approvals": false,
+      "evidence": null
+    },
+    {
+      "id": "G2",
+      "name": "Network identity and chain selection",
+      "status": "BLOCKED",
+      "owner_approvals": false,
+      "evidence": null
+    },
+    {
+      "id": "G3",
+      "name": "RPC and P2P security",
+      "status": "IN_PROGRESS",
+      "owner_approvals": false,
+      "evidence": null
+    },
+    {
+      "id": "G4",
+      "name": "Wallet safety and recovery",
+      "status": "NOT_STARTED",
+      "owner_approvals": false,
+      "evidence": null
+    },
+    {
+      "id": "G5",
+      "name": "Build, release and supply-chain integrity",
+      "status": "NOT_STARTED",
+      "owner_approvals": false,
+      "evidence": null
+    },
+    {
+      "id": "G6",
+      "name": "Operations, observability and recovery",
+      "status": "NOT_STARTED",
+      "owner_approvals": false,
+      "evidence": null
+    },
+    {
+      "id": "G7",
+      "name": "Mining and economic/security assumptions",
+      "status": "NOT_STARTED",
+      "owner_approvals": false,
+      "evidence": null
+    },
+    {
+      "id": "G8",
+      "name": "Independent security review and launch authorization",
+      "status": "BLOCKED",
+      "owner_approvals": false,
+      "independent_audit": false,
+      "launch_authorized": false,
+      "evidence": null
+    }
+  ]
+}
