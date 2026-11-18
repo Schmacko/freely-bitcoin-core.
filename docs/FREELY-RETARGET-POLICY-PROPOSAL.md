@@ -1,7 +1,8 @@
 # FREELY production retarget and minimum-difficulty policy
 
-**Date:** 16 November 2026  
-**Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`  
+**Date:** 16 November 2026
+
+**Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`
 **Status:** Owner-approved consensus policy (16 November 2026). This document records policy approval only; it does not activate parameters or change runtime code.
 
 ## 1. Decision summary
@@ -21,7 +22,7 @@ This proposal resolves the retarget/minimum-difficulty item using the existing B
 | No-retargeting mode | Disabled |
 | Retarget algorithm | v32.1 `GetNextWorkRequired` / `CalculateNextWorkRequired` semantics |
 | PoW limit | Not selected here; separate consensus decision |
-| BIP94 time-warp mitigation | Not selected here; separate consensus decision |
+| BIP94 time-warp mitigation | Enabled from genesis by separate owner approval on 17 November 2026; runtime integration and tests pending |
 
 The corresponding production parameter values are:
 
@@ -93,7 +94,7 @@ For local regtest, developers may use the upstream test-chain settings to make t
 4. Disabling minimum difficulty prevents individual delayed blocks from temporarily using the easiest permitted target.
 5. Keeping retargeting enabled allows difficulty to respond to sustained hash-rate changes.
 
-This is a conservative implementation choice, not a claim that the legacy retarget algorithm is immune to timestamp manipulation or time-warp attacks. The separate BIP94 decision must be reviewed before production consensus is frozen.
+This is a conservative implementation choice, not a claim that the legacy retarget algorithm is immune to timestamp manipulation or time-warp attacks. The owner separately approved BIP94 time-warp mitigation from genesis on 17 November 2026; PR #6 adds regression vectors, but runtime parameter integration and successful validation remain pending.
 
 ## 5. Required regression tests before runtime activation
 
@@ -140,7 +141,7 @@ This proposal does not choose:
 
 - numeric `powLimit`;
 - genesis `nBits`, nonce or hash;
-- BIP94 activation or time-warp mitigation policy;
+- Runtime implementation and test verification of the separately approved BIP94 policy;
 - any timestamp rule different from upstream v32.1;
 - minimum chainwork, checkpoints, assume-valid or seed values.
 
@@ -173,7 +174,7 @@ The project owner explicitly approved the production policy recorded in this pro
 
 The formal consensus specification and decision register record the same approval. This policy hand-off is complete.
 
-Still deliberately outside this approval: numeric powLimit, genesis nBits, BIP94/time-warp mitigation, timestamp deviations, genesis fields and network identity. The synthetic values in the retarget test-vector document are test fixtures only.
+Still deliberately outside this approval: numeric powLimit, genesis nBits, timestamp deviations, genesis fields and network identity. BIP94 time-warp mitigation was separately owner-approved from genesis on 17 November 2026 and is tracked in the consensus decision register, PR #2 and regression tests in PR #6. The runtime parameter and validation paths are not yet activated. The synthetic values in the retarget test-vector document are test fixtures only.
 
 ### Policy deliverable closure
 
@@ -186,3 +187,8 @@ Still deliberately outside this approval: numeric powLimit, genesis nBits, BIP94
 - [x] Runtime implementation, C++ test and release gates retained.
 
 **Retarget policy branch: 100% complete as an approved policy specification.** The separate C++ test-vector and runtime integration work remains tracked independently.
+
+
+## 10. Cross-document update — 18 November 2026
+
+The 16 November retarget approval remains unchanged: 600-second spacing, 2,016-block interval, 14-day target timespan, ¼×–4× clamp, production minimum-difficulty disabled and retargeting enabled. The later 17 November BIP94 approval is a separate consensus decision and must be carried into the eventual FREELY parameter object as `enforce_BIP94 = true`, subject to the existing v32.1 compatibility audit and passing C++/functional tests. No numeric `powLimit`, genesis `nBits`, network identity or production genesis is selected by this update.
