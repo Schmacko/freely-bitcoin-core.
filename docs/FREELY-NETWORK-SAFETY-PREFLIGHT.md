@@ -30,7 +30,8 @@ See [FREELY upstream network-identity audit](FREELY-UPSTREAM-NETWORK-IDENTITY-AU
 - Format and basic range checks for those values.
 - Reuse of Bitcoin mainnet message magic, ports, data-directory name, Base58 address/secret/extended-key prefixes, Bech32 HRP, or genesis hash.
 - Distinct P2P and RPC ports.
-- Positive target spacing and retarget interval, and explicit booleans for min-difficulty and no-retargeting policy.
+- Exact owner-approved target spacing (600 seconds), target timespan (1,209,600 seconds), and retarget interval (2,016 blocks), plus explicit booleans for min-difficulty, no-retargeting, and BIP94 policy.
+- A compact `nBits` field restricted to its unsigned 32-bit encoding width before compact-target decoding.
 
 ## Deliberate limitations
 
