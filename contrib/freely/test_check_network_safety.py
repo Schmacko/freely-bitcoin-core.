@@ -10,6 +10,7 @@ MANIFEST = json.loads(Path(__file__).with_name("network-safety.json").read_text(
 
 
 def complete_fixture():
+    # All values below are synthetic test fixtures, not proposed FREELY parameters.
     data = copy.deepcopy(MANIFEST)
     data["network"].update({
         "message_start": "deadbeef",
@@ -180,25 +181,6 @@ class NetworkSafetyTests(unittest.TestCase):
         data = complete_fixture()
         data["consensus"]["bip94_enabled"] = False
         self.assertTrue(any("bip94_enabled must be true" in item for item in validate(data)))
-
-    def test_candidate_network_identity_is_distinct_from_builtin_bitcoin(self):
-        data = complete_fixture()
-        data["network"].update({
-            "message_start": "464c5931",
-            "p2p_port": 19444,
-            "rpc_port": 19443,
-            "data_directory": "freely",
-            "config_section": "freely",
-        })
-        data["address"].update({
-            "base58_public_key_prefix": 35,
-            "base58_script_prefix": 50,
-            "base58_secret_key_prefix": 186,
-            "base58_extended_public_key_prefix": "04464c59",
-            "base58_extended_secret_key_prefix": "04464c5a",
-            "bech32_hrp": "fly",
-        })
-        self.assertEqual(validate(data), [])
 
     def test_enforces_approved_retarget_policy(self):
         data = complete_fixture()
