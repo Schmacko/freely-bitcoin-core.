@@ -280,6 +280,14 @@ class NetworkSafetyTests(unittest.TestCase):
             "1-8 hexadecimal digits" in item for item in validate(data)
         ))
 
+    def test_rejects_boolean_target_timespan(self):
+        data = complete_fixture()
+        data["consensus"]["target_timespan_seconds"] = True
+        self.assertTrue(any(
+            "target_timespan_seconds must match the approved value 1209600" in item
+            for item in validate(data)
+        ))
+
 
 if __name__ == "__main__":
     unittest.main()
