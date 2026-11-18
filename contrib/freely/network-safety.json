@@ -27,6 +27,7 @@
   },
   "consensus": {
     "target_spacing_seconds": 600,
+    "target_timespan_seconds": 1209600,
     "retarget_interval": 2016,
     "allow_min_difficulty_blocks": false,
     "no_retargeting": false,
