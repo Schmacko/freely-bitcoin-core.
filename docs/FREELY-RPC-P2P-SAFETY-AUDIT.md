@@ -92,7 +92,56 @@ Before this audit can be marked fully verified:
 | P2P default source audit | Documented; launch gate identified |
 | FREELY network magic | Not assigned; correctly absent |
 | FREELY production data directory | Not activated |
-| Binary-level fail-closed startup test | Pending |
+| Binary-level fail-closed startup test | Implemented; current-head CI queued |
 | Runtime RPC/P2P policy tests | Pending until FREELY parameter object exists |
 
 No production network identity, genesis block, DNS seed, public listener, or deployment is selected or activated by this work.
+
+
+## Startup regression hardening — 18 November 2026
+
+The binary-level `feature_freely_startup.py` test now invokes `bitcoind -chain=freely` without `-listen=0`. This is deliberate: Bitcoin Core v32.1's upstream `DEFAULT_LISTEN` is true, so the test verifies that FREELY's unresolved-parameter guard stops startup before the normal P2P listener path, rather than relying on a test-supplied setting that suppresses listening.
+
+The focused workflow was triggered for the updated PR #8 head `a20399d39086c75dc895442e78130fb95993c747` (run [44211275120](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44211275120)). The job was still queued at the latest inspection. This is implemented test coverage, not a verified runtime pass.
+
+
+## 8. Extended startup and exposure source audit — 18 November 2026
+
+This section records a fresh read of the current PR #8 source files (src/init.cpp, src/chainparams.cpp, src/chainparamsbase.cpp, src/chainparamsbase.h, src/net.cpp and src/rpc/server.cpp). It is a source audit, not a runtime test.
+
+### 8.1 Mainnet references in startup argument registration
+
+SetupServerArgs() constructs CreateBaseChainParams(ChainType::MAIN) and CreateChainParams(argsman, ChainType::MAIN) to populate upstream argument help/default descriptions. The active chain is selected later from args.GetChainType() in the normal startup path. These MAIN constructions are help/default metadata, not a fallback that silently changes a selected FREELY node into Bitcoin mainnet.
+
+The explicit FREELY cases in both chain factories throw. This remains the decisive guard: FREELY cannot obtain base or consensus parameters and therefore cannot proceed to normal node initialisation.
+
+### 8.2 Test-only startup overrides
+
+src/chainparams.cpp parses -testactivationheight and -vbparams through HandleDeploymentArgs(). The argument declarations in src/chainparamsbase.cpp mark these options DEBUG_ONLY; the M1 production-chain guard in src/init.cpp must also remain in place so a future production FREELY chain cannot be modified by test overrides merely because a debug build accepts the option.
+
+The -test=<option> handler in src/init.cpp explicitly rejects use unless chainparams.GetChainType() == ChainType::REGTEST. Preserve this restriction. FREELY must not inherit regtest's mockability or test-only consensus controls.
+
+### 8.3 RPC exposure findings
+
+The source declares loopback RPC bind defaults in its help text and documents that -rpcbind is ignored unless -rpcallowip is also supplied. This is a safe upstream default, but it is not a FREELY-specific enforcement mechanism. A future FREELY activation review must test the effective socket bindings, cookie authentication, allowlist and firewall assumptions. Never treat a documentation default as a substitute for a socket-level test.
+
+### 8.4 P2P exposure findings
+
+The source declares DEFAULT_LISTEN as true. It also has parameter interactions that disable discovery, onion listening and inbound I2P acceptance when listening is disabled. Those interactions are useful but do not make an unconfigured production chain safe automatically: explicit bind options and other network settings must be reviewed at activation time.
+
+The current test feature_freely_startup.py intentionally supplies only -chain=freely and leaves upstream listening defaults untouched. The expected fail-closed error must occur before P2P startup. The focused test run is still queued; no runtime pass is claimed.
+
+### 8.5 Network identity and peer discovery
+
+src/chainparamsbase.h includes freely in the accepted chain-name list, but the FREELY base-parameter factory throws and no FREELY port or data-directory suffix is defined. GetNetworkForMagic() must continue not to identify FREELY until an approved unique message-start value is supplied. No FREELY DNS seeds or fixed seeds are configured in this implementation stage.
+
+### 8.6 Required follow-up before parameter activation
+
+- Add chain-specific FREELY listener defaults and tests before constructing live FREELY parameters.
+- Test RPC sockets and P2P sockets at runtime, including explicit bind/allowlist adversarial cases.
+- Test the data-directory suffix and cookie path against every built-in chain.
+- Add FREELY message-start mapping only after owner approval and collision tests.
+- Add explicit tests that production FREELY rejects -testactivationheight, -vbparams and every regtest-only -test option.
+- Inspect every new ChainType switch when the selector evolves; keep FREELY cases exhaustive.
+
+Audit conclusion: no remaining inappropriate active-chain fallback to Bitcoin MAIN was identified in the inspected startup path. The remaining MAIN references in SetupServerArgs() are static help/default construction. This conclusion is limited to the inspected files and must not be described as a repository-wide exhaustive grep. Runtime RPC/P2P policy and network-identity tests remain blocked on approved FREELY parameters.
