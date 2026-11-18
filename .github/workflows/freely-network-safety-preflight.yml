@@ -5,6 +5,7 @@ on:
     paths:
       - 'contrib/freely/**'
       - 'docs/FREELY-NETWORK-SAFETY-PREFLIGHT.md'
+      - 'docs/FREELY-PRODUCTION-READINESS-GATE.md'
       - '.github/workflows/freely-network-safety-preflight.yml'
 
 permissions:
