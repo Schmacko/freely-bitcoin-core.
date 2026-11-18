@@ -6,6 +6,7 @@ on:
       - 'contrib/freely/**'
       - 'docs/FREELY-NETWORK-SAFETY-PREFLIGHT.md'
       - 'docs/FREELY-PRODUCTION-READINESS-GATE.md'
+      - 'docs/FREELY-RPC-P2P-SECURITY-AUDIT.md'
       - '.github/workflows/freely-network-safety-preflight.yml'
 
 permissions:
