@@ -49,3 +49,8 @@ Do not populate production values by guessing. In particular, the following rema
 5. Final network magic, ports, address prefixes, data directory, and genesis commitment.
 
 Until the complete, reviewed production configuration exists, FREELY startup must remain fail-closed.
+
+
+## Data-directory path safety
+
+The `network.data_directory` value is a single relative directory suffix, not an arbitrary path. The validator accepts a portable name containing letters, digits, underscores and hyphens, and rejects path separators, absolute paths, drive paths, UNC paths, dot segments and traversal. This is deliberately platform-independent so a manifest validated on Linux cannot become unsafe when used on Windows (or vice versa).
