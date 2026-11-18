@@ -6,6 +6,13 @@ on:
       - freely/upstream-v32.1
     paths:
       - "src/test/pow_tests.cpp"
+      - "src/pow.cpp"
+      - "src/pow.h"
+      - "src/validation.cpp"
+      - "src/validation.h"
+      - "src/consensus/params.h"
+      - "src/kernel/chainparams.cpp"
+      - "src/chainparams.cpp"
       - "test/functional/feature_bip94.py"
       - "contrib/freely/check_retarget_vectors.py"
       - "docs/FREELY-RETARGET-TEST-VECTORS.md"
