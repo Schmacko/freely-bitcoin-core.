@@ -57,6 +57,14 @@ class NetworkSafetyTests(unittest.TestCase):
         self.assertFalse(any("genesis.coinbase_spendable is unset" in item for item in errors))
         self.assertFalse(any("consensus.bip94_enabled is unset" in item for item in errors))
 
+    def test_rejects_missing_owner_approved_policy_fields(self):
+        data = complete_fixture()
+        data["genesis"]["coinbase_spendable"] = None
+        data["consensus"]["bip94_enabled"] = None
+        errors = validate(data)
+        self.assertTrue(any("genesis.coinbase_spendable is unset" in item for item in errors))
+        self.assertTrue(any("consensus.bip94_enabled is unset" in item for item in errors))
+
     def test_complete_distinct_fixture_passes(self):
         self.assertEqual(validate(complete_fixture()), [])
 
