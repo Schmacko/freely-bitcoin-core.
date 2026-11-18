@@ -23,7 +23,7 @@
     "hash": null,
     "n_bits": null,
     "pow_limit": null,
-    "coinbase_spendable": null
+    "coinbase_spendable": false
   },
   "consensus": {
     "target_spacing_seconds": 600,
@@ -31,7 +31,7 @@
     "retarget_interval": 2016,
     "allow_min_difficulty_blocks": false,
     "no_retargeting": false,
-    "bip94_enabled": null,
+    "bip94_enabled": true,
     "script_activation_heights": null
   }
 }
