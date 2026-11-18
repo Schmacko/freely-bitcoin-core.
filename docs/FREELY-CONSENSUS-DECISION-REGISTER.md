@@ -141,3 +141,10 @@ Targeted source inspection of `src/validation.cpp` confirms P2SH, witness and Ta
 ## K. BIP94 complete-rule clarification — 17 November 2026
 
 The BIP94 approval covers both the period-start retarget base and the time-warp timestamp bound. At candidate heights divisible by 2,016 (excluding genesis), the block timestamp must be at least the previous block timestamp minus 600 seconds and must still exceed median-time-past. PR #6 now adds (1) a C++ test for first-block-of-period target selection at a 2,016-block interval and (2) a regtest functional test at the test chain's 144-block interval that rejects a 601-second backward timestamp and accepts the exact 600-second boundary. CI and full FREELY runtime validation remain pending.
+
+
+## L. Exact protocol parameter proposals — 18 November 2026
+
+A consolidated exact-value proposal has been prepared in [FREELY-PROTOCOL-PARAMETER-APPROVAL.md](FREELY-PROTOCOL-PARAMETER-APPROVAL.md). It proposes (1) the Bitcoin difficulty-1 `powLimit` and matching genesis `nBits`, (2) a unique FREELY network identity, (3) a timestamped genesis coinbase/manifest commitment candidate, and (4) a height-1 script activation matrix compatible with Bitcoin Core v32.1.
+
+**Status: proposed only; no owner approval recorded.** No proposed value has been copied into FREELY production runtime parameters. The genesis nonce and final header hash remain outputs of a deterministic PoW search and are not fabricated. The owner must approve or amend the four proposals; approval still does not itself authorise launch or public network exposure.
