@@ -16,8 +16,12 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         self.stop_node(0)
+
+        # Deliberately do not pass -listen=0: upstream DEFAULT_LISTEN is true.
+        # If FREELY chain selection ever falls through to normal node startup,
+        # this test must catch the regression before P2P initialization.
         node.assert_start_raises_init_error(
-            extra_args=["-chain=freely", "-listen=0"],
+            extra_args=["-chain=freely"],
             expected_msg="FREELY network parameters are not finalized; refusing startup.",
             match=ErrorMatch.PARTIAL_REGEX,
         )
