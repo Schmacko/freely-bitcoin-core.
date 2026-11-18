@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import struct
 
 COIN = 100_000_000
@@ -133,15 +134,12 @@ def verify_genesis_header(
         raise ValueError("block time must fit in uint32")
     if not 0 <= nonce <= 0xFFFFFFFF:
         raise ValueError("nonce must fit in uint32")
-    if len(merkle_root) != 64:
-        raise ValueError("Merkle root must be exactly 32 bytes of hex")
-    if len(pow_limit_hex) != 64:
-        raise ValueError("powLimit must be exactly 32 bytes of hex")
-    try:
-        merkle_wire = bytes.fromhex(merkle_root)[::-1]
-        pow_limit = int(pow_limit_hex, 16)
-    except ValueError as exc:
-        raise ValueError("Merkle root and powLimit must be valid hexadecimal") from exc
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", merkle_root):
+        raise ValueError("Merkle root must be exactly 32 bytes of hexadecimal")
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", pow_limit_hex):
+        raise ValueError("powLimit must be exactly 32 bytes of hexadecimal")
+    merkle_wire = bytes.fromhex(merkle_root)[::-1]
+    pow_limit = int(pow_limit_hex, 16)
     target = decode_compact_target(bits)
     if target > pow_limit:
         raise ValueError("decoded nBits target exceeds the supplied powLimit")
@@ -182,6 +180,41 @@ def verify_synthetic_header_fixture(merkle_root: str) -> dict[str, str | int]:
             raise
     else:
         raise RuntimeError("synthetic invalid-nonce header unexpectedly passed proof of work")
+
+    # Reject malformed hex rather than allowing int()/bytes.fromhex() to
+    # silently accept whitespace or sign prefixes in operator-supplied input.
+    for invalid_merkle, invalid_limit in (
+        ("zz" * 32, synthetic_pow_limit),
+        (merkle_root, "+" + synthetic_pow_limit[1:]),
+        (merkle_root, " " + synthetic_pow_limit[1:]),
+    ):
+        try:
+            verify_genesis_header(
+                invalid_merkle, 1_700_000_000, 0x207FFFFF, 1, invalid_limit
+            )
+        except ValueError:
+            pass
+        else:
+            raise RuntimeError("malformed genesis header hex input unexpectedly passed")
+
+    # Compact targets that decode to zero, are negative, or overflow must fail.
+    for invalid_bits in (0x01000001, 0x20800001, 0x23010000):
+        try:
+            decode_compact_target(invalid_bits)
+        except ValueError:
+            pass
+        else:
+            raise RuntimeError(f"invalid compact target {invalid_bits:#010x} unexpectedly passed")
+
+    try:
+        verify_genesis_header(
+            merkle_root, 1_700_000_000, 0x207FFFFF, 1, "00" * 32
+        )
+    except ValueError as exc:
+        if "exceeds the supplied powLimit" not in str(exc):
+            raise
+    else:
+        raise RuntimeError("genesis target above powLimit unexpectedly passed")
     return result
 
 
