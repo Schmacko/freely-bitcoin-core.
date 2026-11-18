@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The preflight validator checks a machine-readable FREELY network manifest before production network parameters are finalized. It is intentionally fail-closed: the repository template contains unresolved values, so running the validator against that template must report **BLOCKED** until the owner-approved values are supplied.
+The preflight validator checks a machine-readable FREELY network manifest before production network parameters are finalized. It is intentionally fail-closed: the repository template records the two already approved policy decisions (genesis coinbase permanently unspendable; BIP94 enabled from genesis) while leaving production identity, genesis commitment, numeric proof-of-work parameters and activation values unset, so running the validator against that template must report **BLOCKED**.
 
 ## Run
 
