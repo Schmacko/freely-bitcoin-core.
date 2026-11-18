@@ -185,6 +185,8 @@ def validate(data: dict[str, Any]) -> list[str]:
             errors.append("genesis.hash must be a 32-byte hash encoded as 64 hex characters")
         elif genesis_hash.lower() == BITCOIN_GENESIS_HASH:
             errors.append("genesis.hash reuses Bitcoin mainnet genesis")
+        elif int(genesis_hash, 16) == 0:
+            errors.append("genesis.hash must not be the all-zero hash")
 
     for field in ("n_bits", "pow_limit"):
         value = genesis.get(field)
@@ -245,6 +247,8 @@ def validate(data: dict[str, Any]) -> list[str]:
     if activations is not None:
         if not isinstance(activations, dict):
             errors.append("consensus.script_activation_heights must be a JSON object")
+        elif not activations:
+            errors.append("consensus.script_activation_heights must contain at least one explicit activation entry")
         else:
             for deployment, height in activations.items():
                 if not isinstance(deployment, str) or not deployment:
