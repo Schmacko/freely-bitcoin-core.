@@ -13,6 +13,10 @@ on:
       - "src/rpc/**"
       - "src/wallet/**"
       - "test/functional/wallet_*.py"
+      - "test/functional/rpc_*.py"
+      - "test/functional/feature_config_args.py"
+      - "test/functional/feature_abortnode.py"
+      - "test/functional/feature_init.py"
       - "test/functional/test_framework/**"
       - "CMakeLists.txt"
       - ".github/workflows/freely-wallet-node-readiness.yml"
@@ -27,9 +31,9 @@ concurrency:
 
 jobs:
   wallet-functional-tests:
-    name: Wallet-enabled build and functional regression tests
+    name: Wallet-enabled build and wallet, RPC, node functional tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 150
     steps:
       - name: Check out FREELY fork
         uses: actions/checkout@v4
@@ -54,7 +58,7 @@ jobs:
       - name: Build node and CLI with wallet support
         run: cmake --build build --parallel 2
 
-      - name: Run wallet and node functional regression tests
+      - name: Run wallet, RPC, and node functional regression tests
         run: |
           python3 test/functional/test_runner.py \
             --jobs=2 \
@@ -72,4 +76,11 @@ jobs:
             wallet_send.py \
             wallet_reorgsrestore.py \
             wallet_multiwallet.py \
-            wallet_taproot.py
+            wallet_taproot.py \
+            wallet_keypool.py \
+            wallet_hd.py \
+            rpc_blockchain.py \
+            rpc_net.py \
+            feature_config_args.py \
+            feature_abortnode.py \
+            feature_init.py
