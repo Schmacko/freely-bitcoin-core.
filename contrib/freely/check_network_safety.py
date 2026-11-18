@@ -30,6 +30,8 @@ BITCOIN_EXTENDED_KEY_PREFIXES = {
     "base58_extended_public_key_prefix": {"0488b21e", "043587cf"},
     "base58_extended_secret_key_prefix": {"0488ade4", "04358394"},
 }
+ALL_BITCOIN_BASE58_PREFIXES = set().union(*BITCOIN_BASE58_PREFIXES.values())
+ALL_BITCOIN_EXTENDED_KEY_PREFIXES = set().union(*BITCOIN_EXTENDED_KEY_PREFIXES.values())
 BITCOIN_GENESIS_HASH = "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
 
 REQUIRED_PATHS = (
@@ -137,7 +139,7 @@ def validate(data: dict[str, Any]) -> list[str]:
             # Windows separators, drive paths, UNC paths, dot segments and
             # traversal regardless of the host running this validator.
             errors.append("network.data_directory must not be absolute or traverse parent directories; use one safe directory name")
-        elif datadir in {item["data_directory"] for item in BITCOIN_NETWORKS.values()}:
+        elif datadir.casefold() in {item["data_directory"].casefold() for item in BITCOIN_NETWORKS.values()}:
             errors.append("network.data_directory collides with an existing Bitcoin network directory")
     config_section = network.get("config_section")
     if config_section is not None and config_section != "freely":
@@ -149,16 +151,25 @@ def validate(data: dict[str, Any]) -> list[str]:
         if value is not None:
             if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 255:
                 errors.append(f"address.{field} must be an integer from 0 to 255")
-            elif value in forbidden:
+            elif value in ALL_BITCOIN_BASE58_PREFIXES:
                 errors.append(f"address.{field} collides with an existing Bitcoin network prefix")
+
+    base58_values = [address.get(field) for field in BITCOIN_BASE58_PREFIXES]
+    if all(type(value) is int for value in base58_values) and len(set(base58_values)) != len(base58_values):
+        errors.append("FREELY Base58 public-key, script, and secret-key prefixes must be distinct")
 
     for field in ("base58_extended_public_key_prefix", "base58_extended_secret_key_prefix"):
         value = address.get(field)
         if value is not None:
             if not isinstance(value, str) or not re.fullmatch(r"[0-9a-fA-F]{8}", value):
                 errors.append(f"address.{field} must be exactly 4 bytes encoded as 8 hex characters")
-            elif value.lower() in BITCOIN_EXTENDED_KEY_PREFIXES[field]:
+            elif value.lower() in ALL_BITCOIN_EXTENDED_KEY_PREFIXES:
                 errors.append(f"address.{field} collides with an existing Bitcoin network extended-key prefix")
+
+    extended_values = [address.get(field) for field in BITCOIN_EXTENDED_KEY_PREFIXES]
+    if all(isinstance(value, str) and re.fullmatch(r"[0-9a-fA-F]{8}", value) for value in extended_values):
+        if len({value.lower() for value in extended_values}) != len(extended_values):
+            errors.append("FREELY extended public and private key prefixes must be distinct")
 
     hrp = address.get("bech32_hrp")
     if hrp is not None:
@@ -184,8 +195,11 @@ def validate(data: dict[str, Any]) -> list[str]:
             elif field == "pow_limit" and int(value, 16).bit_length() > 256:
                 errors.append("genesis.pow_limit must not exceed 256 bits")
 
-    if genesis.get("coinbase_spendable") is not None and not isinstance(genesis.get("coinbase_spendable"), bool):
-        errors.append("genesis.coinbase_spendable must be explicitly true or false")
+    if genesis.get("coinbase_spendable") is not None:
+        if not isinstance(genesis.get("coinbase_spendable"), bool):
+            errors.append("genesis.coinbase_spendable must be explicitly true or false")
+        elif genesis.get("coinbase_spendable") is not False:
+            errors.append("genesis.coinbase_spendable must be false under the owner-approved FREELY genesis accounting")
 
     compact_value = genesis.get("n_bits")
     pow_limit_value = genesis.get("pow_limit")
