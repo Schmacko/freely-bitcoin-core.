@@ -42,11 +42,10 @@ The validator also decodes the genesis compact target and checks that it is posi
 
 Do not populate production values by guessing. In particular, the following remain owner-controlled:
 
-1. Genesis coinbase spendability/accounting.
-2. Numeric `powLimit` and initial difficulty.
-3. BIP94/time-warp mitigation.
-4. Script and soft-fork activation matrix.
-5. Final network magic, ports, address prefixes, data directory, and genesis commitment.
+1. Numeric production `powLimit` and initial difficulty, after the candidate model and security assumptions are reviewed.
+2. Final network identity values (message magic, ports, address prefixes, data-directory suffix and Bech32 HRP), after collision checks.
+3. Final genesis timestamp/message and block commitment, after the dependent consensus values are fixed.
+4. Exact runtime script activation parameters, after the v32.1 compatibility matrix and boundary tests are verified.
 
 Until the complete, reviewed production configuration exists, FREELY startup must remain fail-closed.
 
