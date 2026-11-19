@@ -34,6 +34,76 @@ ALL_BITCOIN_BASE58_PREFIXES = set().union(*BITCOIN_BASE58_PREFIXES.values())
 ALL_BITCOIN_EXTENDED_KEY_PREFIXES = set().union(*BITCOIN_EXTENDED_KEY_PREFIXES.values())
 BITCOIN_GENESIS_HASH = "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
 
+# Owner-approved values from docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md.
+# The genesis nonce and block hash are derived outputs and remain unset until
+# the approved candidate header has been mined and independently reproduced.
+APPROVED_VALUES = {
+    "network": {
+        "message_start": "fac3b7d1",
+        "p2p_port": 49444,
+        "rpc_port": 49445,
+        "data_directory": "freely",
+        "config_section": "freely",
+    },
+    "address": {
+        "base58_public_key_prefix": 55,
+        "base58_script_prefix": 117,
+        "base58_secret_key_prefix": 183,
+        "base58_extended_public_key_prefix": "04464c59",
+        "base58_extended_secret_key_prefix": "04666c79",
+        "bech32_hrp": "fly",
+    },
+    "genesis": {
+        "timestamp": 1794960000,
+        "version": 1,
+        "n_bits": "0x1d00ffff",
+        "pow_limit": "0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "coinbase_message": "FREELY FLY genesis 2026-11-18",
+        "coinbase_output_script": "6a12465245454c5920464c592047454e45534953",
+        "coinbase_spendable": False,
+    },
+    "consensus": {
+        "target_spacing_seconds": 600,
+        "target_timespan_seconds": 1209600,
+        "retarget_interval": 2016,
+        "retarget_min_timespan_seconds": 302400,
+        "retarget_max_timespan_seconds": 4838400,
+        "allow_min_difficulty_blocks": False,
+        "no_retargeting": False,
+        "bip94_enabled": True,
+        "script_activation_heights": {
+            "bip34": 1,
+            "bip65": 1,
+            "bip66": 1,
+            "csv": 1,
+            "segwit": 1,
+        },
+        "min_bip9_warning_height": 0,
+        "version_bits": {
+            "testdummy": {
+                "bit": 28,
+                "start_time": -2,
+                "timeout": 9223372036854775807,
+                "min_activation_height": 0,
+                "threshold": 1815,
+                "period": 2016,
+            },
+        },
+        "taproot_witness_v1": "verify using Bitcoin Core v32.1 script flags; no separate chain-parameter activation field",
+    },
+}
+
+
+def matches_approved(actual: Any, expected: Any) -> bool:
+    """Compare JSON values without Python's bool/int equality ambiguity."""
+    if isinstance(expected, dict):
+        return (
+            isinstance(actual, dict)
+            and all(key in actual and matches_approved(actual[key], value) for key, value in expected.items())
+        )
+    return type(actual) is type(expected) and actual == expected
+
+
 REQUIRED_PATHS = (
     "network.message_start",
     "network.p2p_port",
@@ -47,6 +117,7 @@ REQUIRED_PATHS = (
     "address.base58_extended_secret_key_prefix",
     "address.bech32_hrp",
     "genesis.hash",
+    "genesis.nonce",
     "genesis.n_bits",
     "genesis.pow_limit",
     "genesis.coinbase_spendable",
@@ -108,6 +179,11 @@ def validate(data: dict[str, Any]) -> list[str]:
     address = sections["address"]
     genesis = sections["genesis"]
     consensus = sections["consensus"]
+
+    for section, expected_values in APPROVED_VALUES.items():
+        for field, expected in expected_values.items():
+            if not matches_approved(sections[section].get(field), expected):
+                errors.append(f"{section}.{field} differs from the owner-approved protocol parameter baseline")
 
     magic = network.get("message_start")
     if magic is not None:
@@ -180,6 +256,12 @@ def validate(data: dict[str, Any]) -> list[str]:
             errors.append("address.bech32_hrp collides with an existing Bitcoin network HRP")
 
     genesis_hash = genesis.get("hash")
+    genesis_nonce = genesis.get("nonce")
+    if genesis_nonce is not None:
+        if not isinstance(genesis_nonce, int) or isinstance(genesis_nonce, bool) or not 0 <= genesis_nonce <= 0xFFFFFFFF:
+            errors.append("genesis.nonce must be an integer from 0 to 4294967295")
+    if (genesis_hash is None) != (genesis_nonce is None):
+        errors.append("genesis.hash and genesis.nonce must either both be unset or both be set")
     if genesis_hash is not None:
         if not isinstance(genesis_hash, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", genesis_hash):
             errors.append("genesis.hash must be a 32-byte hash encoded as 64 hex characters")
