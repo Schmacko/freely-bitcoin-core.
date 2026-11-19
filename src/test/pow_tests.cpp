@@ -233,7 +233,8 @@ BOOST_AUTO_TEST_CASE(freely_approved_pow_retarget_vectors)
             period[i].nBits = i == 0 ? 0x1c00ffff : last_bits;
         }
         period.back().nTime = 1'000'000 + elapsed;
-        return CalculateNextWorkRequired(&period.back(), period.front().GetBlockTime(), params);
+        CBlockHeader candidate;
+        return GetNextWorkRequired(&period.back(), &candidate, params);
     };
 
     // These vectors use the actual approved FREELY powLimit and the exact
@@ -265,7 +266,8 @@ BOOST_AUTO_TEST_CASE(freely_bip94_preserves_first_block_period_target)
             period[i].nBits = i == 0 ? 0x1c00ffff : 0x1b3fffc0;
         }
         period.back().nTime = 1'000'000 + 4'838'400;
-        return CalculateNextWorkRequired(&period.back(), period.front().GetBlockTime(), params);
+        CBlockHeader candidate;
+        return GetNextWorkRequired(&period.back(), &candidate, params);
     };
     BOOST_CHECK_EQUAL(with_bip94(), 0x1c03fffcU);
 }
