@@ -64,4 +64,3 @@ jobs:
 
       - name: Verify FREELY startup fails closed before network activation
         run: python3 build/test/functional/test_runner.py --jobs=1 feature_freely_startup.py
-        run: python3 build/test/functional/test_runner.py --jobs=1 feature_freely_startup.py
