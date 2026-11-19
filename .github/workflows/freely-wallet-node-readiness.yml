@@ -60,7 +60,7 @@ jobs:
 
       - name: Run wallet, RPC, and node functional regression tests
         run: |
-          python3 test/functional/test_runner.py \
+          python3 build/test/functional/test_runner.py \
             --jobs=2 \
             --combinedlogslen=100 \
             wallet_backup.py \
