@@ -1,12 +1,12 @@
 # FREELY proof-of-work candidate model
 
 **Date:** 17 November 2026  
-**Status:** owner-authorised analysis; no production parameter selected.  
+**Status:** historical scenario analysis; the owner approved powLimit and genesis nBits on 18 November 2026. This model remains mathematical analysis, not a live mining benchmark or security guarantee.  
 **Upstream reference:** Bitcoin Core v32.1 difficulty-1 target is used only as a mathematical normalization unit, not as a proposed FREELY network parameter.
 
 ## 1. Purpose and safety boundary
 
-The owner authorised benchmarking candidate powLimit and initial-difficulty scenarios, but explicitly did not approve a numeric production value. This document converts candidate difficulty levels into expected SHA-256d work, block intervals and probability estimates so the owner can compare assumptions.
+This model was prepared before the numeric PoW values were approved. The approved baseline is powLimit `00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff` and genesis nBits `0x1d00ffff`; see [FREELY-APPROVED-PROTOCOL-PARAMETERS.md](FREELY-APPROVED-PROTOCOL-PARAMETERS.md). The scenario calculations remain useful for understanding expected SHA-256d work, block intervals and hash-rate sensitivity, but they do not replace measured network hash rate or a security assessment.
 
 This is a deterministic mathematical model, **not a live mining benchmark**, a hashrate measurement, a security guarantee or a production parameter proposal. It does not select a genesis nBits, powLimit, launch date or mining deployment.
 
@@ -110,3 +110,8 @@ A target chosen solely to make the first block easy is not a security strategy. 
 - FREELY consensus decision register: FREELY-CONSENSUS-DECISION-REGISTER.md.
 
 No candidate in this document is a production setting. Do not hard-code any of these illustrative difficulty levels into FREELY runtime parameters.
+
+
+## 9. Owner approval update — 18 November 2026
+
+The numeric production `powLimit` and genesis `nBits` are now owner-approved as recorded in the authoritative protocol baseline. This document remains a mathematical model only. It does not establish honest hash rate, attacker cost, mining economics, chain security or expected public block intervals. FREELY does not inherit Bitcoin's accumulated SHA-256d hash power or security.
