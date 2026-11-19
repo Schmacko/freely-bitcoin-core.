@@ -58,7 +58,8 @@ def worker(worker_id: int, workers: int, start_nonce: int, chunk_size: int,
             raise ValueError("checkpoint does not match this exact search job/topology")
         nonce = int(state["next_nonce"])
         first_nonce = start_nonce + worker_id
-        if nonce < first_nonce or (nonce - first_nonce) % workers != 0:
+        if (nonce < first_nonce or nonce > MAX_U32 + workers
+                or (nonce - first_nonce) % workers != 0):
             raise ValueError("checkpoint next_nonce is outside this worker's nonce sequence")
     else:
         nonce = start_nonce + worker_id
