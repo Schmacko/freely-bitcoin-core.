@@ -55,3 +55,6 @@ Until the complete, reviewed production configuration exists, FREELY startup mus
 ## Data-directory path safety
 
 The `network.data_directory` value is a single relative directory suffix, not an arbitrary path. The validator accepts a portable name containing letters, digits, underscores and hyphens, and rejects path separators, absolute paths, drive paths, UNC paths, dot segments and traversal. This is deliberately platform-independent so a manifest validated on Linux cannot become unsafe when used on Windows (or vice versa).
+
+
+The current validator test suite also includes a regression fixture for the default signet magic `0a03cf40`. Non-default signet challenges are dynamic and require a separate runtime collision check; the static manifest validator does not claim to enumerate arbitrary challenge values.
