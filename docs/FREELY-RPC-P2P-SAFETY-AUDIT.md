@@ -161,6 +161,17 @@ The base-chain-parameter layer exposes only the approved CLI data-directory and 
 
 PR #13 adds the approved message magic to `GetNetworkForMagic()` and tests that it maps to `ChainType::FREELY`, while an unknown magic remains rejected. This does not enable a FREELY P2P listener, create production CChainParams, or launch a network.
 
-The focused core-chain workflow now includes `freely_genesis_tests` in its CTest filter. The exact PR #13 head `73560540e78fcc9b90754fd22aa33813e1c99ee3` has focused run [44542216803](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44542216803) and full CI [44542216899](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44542216899), both queued at the latest inspection. No C++ test pass is claimed for this branch yet.
+The focused core-chain workflow executes `chaintype_tests`, `freely_genesis_tests`, `validation_tests` and `pow_tests`. The chain-type suite now checks:
+- the approved FREELY magic maps to `ChainType::FREELY`;
+- an unknown magic is rejected;
+- all five built-in Bitcoin network magics still map to MAIN, TESTNET, TESTNET4, SIGNET and REGTEST respectively.
+
+The workflow was source-reviewed and repaired after three defects were found:
+- the CTest regular expression lacked its closing quote and end anchor;
+- the startup functional-test step was duplicated;
+- the source-tree functional runner was used even though CMake generates `build/test/config.ini`; the workflow now invokes `build/test/functional/test_runner.py`, matching the corrected wallet workflow.
+- shell commands were flattened to single lines to avoid fragile line-continuation escaping.
+
+The code/test revision immediately before this documentation-only refresh was `8574cd61d619be519d56b4277cb61197b32f5bbf`. The workflow file and C++ test source were fetched back from that exact revision and inspected. No focused workflow run was yet visible for that revision; no C++ build or test pass is claimed. The documentation update does not change code, but the resulting PR head still requires current-head CI before merge.
 
 Static identity collision checks include the pinned v32.1 default BIP325 signet magic. A custom `-signetchallenge` derives a different magic and must be checked at runtime before any future network activation.
