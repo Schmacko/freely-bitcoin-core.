@@ -330,7 +330,7 @@ def validate(data: dict[str, Any]) -> list[str]:
         if not isinstance(activations, dict):
             errors.append("consensus.script_activation_heights must be a JSON object")
         elif not activations:
-            errors.append("consensus.script_activation_heights must contain at least one explicit activation entry")
+            errors.append("consensus.script_activation_heights must be a non-empty object with explicit activation entries")
         else:
             for deployment, height in activations.items():
                 if not isinstance(deployment, str) or not deployment:
