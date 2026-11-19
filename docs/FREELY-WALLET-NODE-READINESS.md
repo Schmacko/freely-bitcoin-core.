@@ -127,7 +127,7 @@ The live GitHub branch comparison and changed-file lists show the following inte
 |---|---|---|
 | #1 | `freely/m1-consensus` | Foundation for #8. Based directly on `freely/upstream-v32.1`. Contains shared `.github/workflows/ci.yml` and CI image changes. |
 | #8 | `freely/core-chain-implementation` | Correctly based on #1's current head. Current comparison: 12 commits ahead, 0 behind. Must follow #1 in integration order. |
-| #11 | `freely/wallet-node-readiness` | Targets current #8 head `3078f79d6452dfccc9a1f4baeb0c0f3f1f635358`. Current comparison: PR #11 head `65c5e697414b75943eea2d8cd76cb756bc8d9981` is 9 commits ahead and 0 behind. Its two files (wallet workflow and this document) do not overlap PR #8. Wallet CI run `44537919886` is queued; no wallet-enabled build or functional test pass is verified. |
+| #11 | `freely/wallet-node-readiness` | Targets current #8 head `3078f79d6452dfccc9a1f4baeb0c0f3f1f635358`. PR #11 remains a child of #8. Use live PR metadata for its exact current head and ahead/behind count rather than freezing a value in this document. Its two files (wallet workflow and this document) do not overlap PR #8. Wallet CI run `44537919886` is queued; no wallet-enabled build or functional test pass is verified. |
 | #12 | `freely/reconciled-docs` | Consolidates the current consensus specification, architecture and source audit. PRs #2, #3 and #7 are closed unmerged and superseded by this canonical documentation branch. PR #12 head `c58b0b8772543b1dd417a04c5b703b7f78a095c7`; focused and full CI remain queued. |
 | #13 | `freely/network-magic-registration` | Child of #8; adds the approved message-magic lookup and a C++ regression test. Current head `73560540e78fcc9b90754fd22aa33813e1c99ee3`, 6 commits ahead / 0 behind #8. Focused and full CI queued. |
 | #2/#3/#7 | Superseded documentation branches | Closed unmerged; do not merge. PR #12 is the canonical reconciliation. |
@@ -167,7 +167,7 @@ All four protocol parameter proposal areas were approved on 18 November. The can
 
 Current branch graph:
 - PR #8: `3078f79d6452dfccc9a1f4baeb0c0f3f1f635358`.
-- PR #11: `65c5e697414b75943eea2d8cd76cb756bc8d9981`, 9 commits ahead / 0 behind PR #8.
+- PR #11 remains a child of PR #8; use live PR metadata for its exact current head and ahead/behind count.
 - PR #13: `73560540e78fcc9b90754fd22aa33813e1c99ee3`, 5 commits ahead / 0 behind PR #8; adds `GetNetworkForMagic` registration and expands the focused CTest filter to execute `freely_genesis_tests`.
 - PR #12 is the canonical documentation reconciliation; PRs #2, #3 and #7 are closed unmerged.
 
