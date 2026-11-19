@@ -1,6 +1,6 @@
 # FREELY network architecture plan (draft)
 
-- **Status:** design only; no runtime code or network identity is activated.
+- **Status:** design only; all four protocol parameter areas are owner-approved, but no runtime production parameters or network identity are activated.
 - **Pinned upstream:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`.
 - **Purpose:** define a safe implementation sequence for an independent FREELY UTXO chain while preserving Bitcoin's existing networks.
 
@@ -503,3 +503,12 @@ The older overlapping copies in PR #7 are not independent competing consensus au
 A documentation reconciliation does not authorize activation. Keep FREELY startup fail-closed until all blocked production values are approved, implemented and tested. Do not reuse Bitcoin mainnet history, seeds, chainwork, AssumeUTXO snapshots, genesis, activation exceptions or network identifiers. Do not expose public RPC/P2P, deploy miners, publish a testnet or launch mainnet without the separate approvals already required by the project.
 
 **Reconciliation status:** the approved policy and source-of-truth ownership are now explicit. Runtime implementation, current-head CI, security review and network activation remain separate incomplete phases.
+
+
+## 17. Owner-approved parameter baseline — 18 November 2026
+
+The four protocol proposal areas are approved. The authoritative values are recorded in [FREELY-APPROVED-PROTOCOL-PARAMETERS.md](FREELY-APPROVED-PROTOCOL-PARAMETERS.md). The approved identity is magic `fa c3 b7 d1`, P2P/RPC `49444/49445`, data directory `freely`, Base58 `55/117/183`, extended-key versions `04464c59/04666c79`, and Bech32 HRP `fly`. Approved PoW values are SHA-256d, powLimit `00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff`, genesis nBits `0x1d00ffff`, 600-second spacing, 2,016-block interval, 14-day timespan, 1/4–4x clamp, minimum difficulty disabled, no-retargeting disabled and BIP94 enabled from genesis.
+
+The approved genesis candidate uses timestamp 1,794,960,000, version 1, coinbase message `FREELY FLY genesis 2026-11-18`, and a 50 FLY permanently unspendable OP_RETURN output. The nonce and final block hash remain derived and unverified. Script activation is height 1 for BIP34, BIP65, BIP66, CSV and SegWit; Taproot/witness-v1 must follow the v32.1 script-flag architecture; TESTDUMMY remains NEVER_ACTIVE.
+
+This approval resolves parameter-selection gates but not implementation, C++ validation, independent security review or release readiness. The current runtime selector deliberately fails closed; there is still no complete FREELY `CChainParams` object, genesis commitment, network-magic dispatch integration or production/test functional validation. No public network or deployment is authorized.
