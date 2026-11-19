@@ -728,6 +728,14 @@ std::vector<int> CChainParams::GetAvailableSnapshotHeights() const
 
 std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
 {
+    // Owner-approved FREELY message magic. This only identifies the chain;
+    // consensus parameters and node startup remain fail-closed until genesis
+    // and CChainParams are independently verified.
+    constexpr MessageStartChars freely_message_start{0xfa, 0xc3, 0xb7, 0xd1};
+    if (std::ranges::equal(message, freely_message_start)) {
+        return ChainType::FREELY;
+    }
+
     const auto mainnet_msg = CChainParams::Main()->MessageStart();
     const auto testnet_msg = CChainParams::TestNet()->MessageStart();
     const auto testnet4_msg = CChainParams::TestNet4()->MessageStart();
