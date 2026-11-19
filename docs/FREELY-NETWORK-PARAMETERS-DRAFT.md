@@ -1,11 +1,11 @@
 # FREELY network parameters — provisional engineering draft
 
-**Status:** candidate-generation and validation authorised 17 November 2026; values remain provisional, not activated in code and not approved as final network identity.  
+**Status:** historical provisional draft; superseded on 18 November 2026 by the owner-approved baseline. Do not use its earlier candidate values as current parameters.  
 **Date:** 15 November 2026  
 **Upstream baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`  
 **Purpose:** provide a concrete, reviewable starting point for the dedicated FREELY chain implementation while keeping launch-sensitive values visibly provisional.
 
-> **Revision note — 18 November 2026:** This document preserves the earlier provisional candidates for historical traceability. The current exact-value proposal is [FREELY Protocol Parameter Approval Package](FREELY-PROTOCOL-PARAMETER-APPROVAL.md). Where values differ, that approval package supersedes the candidate tables below. Neither document activates production parameters; explicit owner approval and implementation validation remain mandatory.
+> **Revision note — 18 November 2026:** This document preserves the earlier provisional candidates for historical traceability. The current exact-value proposal is [FREELY approved protocol parameter baseline](FREELY-APPROVED-PROTOCOL-PARAMETERS.md). Where values differ, the approved baseline supersedes the historical candidate tables below. Approval authorizes implementation and verification, not production activation or launch.
 
 ## 1. Fixed project decisions
 
@@ -193,3 +193,10 @@ The generator `scripts/generate-freely-genesis-candidate.py`:
 The candidate generator now also accepts explicit `--time`, `--n-bits`, `--nonce` and `--pow-limit` inputs together. It serializes the 80-byte Bitcoin-style header, decodes compact target values with negative/zero/overflow checks, verifies target <= supplied powLimit, calculates SHA-256d and checks the header hash against the target. It emits the header bytes, candidate block hash and decoded target only when the proof-of-work check succeeds.
 
 A deterministic `--self-test-header` fixture exercises both a valid and invalid nonce using synthetic regtest-like test-only values (`nBits=0x207fffff`, synthetic `powLimit=7fff...ffff`, timestamp 1,700,000,000). The expected fixture hash is fixed in the script. These synthetic values are never selected as FREELY production parameters. The focused specification workflow now py-compiles the generator and runs both the candidate transaction self-check and the synthetic header/PoW fixture. Until CI executes successfully, this is implemented but unverified.
+
+
+## 14. Supersession record — 18 November 2026
+
+All four parameter areas were approved by the owner. The current exact values are maintained only in [FREELY-APPROVED-PROTOCOL-PARAMETERS.md](FREELY-APPROVED-PROTOCOL-PARAMETERS.md). Earlier candidate magic, ports, Base58 prefixes, PoW limit and genesis script in this historical draft are withdrawn and must not be copied into runtime configuration.
+
+The approved genesis nonce, transaction/Merkle commitment and final block hash remain to be generated and independently verified. No production genesis is activated by this document.
