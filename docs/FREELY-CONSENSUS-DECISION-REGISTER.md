@@ -117,7 +117,7 @@ The owner explicitly approved the FREELY production retarget policy proposed in 
 - Production no-retargeting mode disabled.
 - Reuse pinned Bitcoin Core v32.1 retarget calculation semantics, implemented and tested with FREELY-specific parameters.
 
-This is a consensus-policy approval, not activation in runtime code. `powLimit`, genesis `nBits`, candidate script-feature compatibility, final network identity, and exact genesis fields remain subject to engineering validation and, where applicable, further owner approval. No public testnet or mainnet is authorised.
+This is a consensus-policy approval, not activation in runtime code. All four parameter proposal areas, including numeric PoW values, network identity and the initial script matrix, were owner-approved on 18 November 2026. The derived genesis nonce/hash and C++/functional verification remain outstanding. No public testnet or mainnet is authorised.
 
 
 ## I. Owner decision record — 17 November 2026
