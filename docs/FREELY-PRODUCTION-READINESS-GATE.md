@@ -6,7 +6,7 @@
 
 This document defines the evidence required before FREELY can be considered ready for a public production network. It is an engineering gate, not authorization to launch. It deliberately separates work that can be completed now from owner-controlled decisions and from evidence that requires a functioning FREELY chain.
 
-The current repository does not contain finalized production network identity, numeric production proof-of-work parameters, final genesis commitment, or an approved script/soft-fork activation matrix. Production startup must therefore remain fail-closed.
+All four owner-controlled protocol parameter areas were explicitly approved on 18 November 2026 and are pinned in docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md and contrib/freely/network-safety.json. The approved PoW limit, genesis nBits, network identity, genesis candidate fields and activation matrix are no longer owner-decision blockers. The derived genesis nonce and final block hash remain uncomputed and require reproducible mining plus independent verification. Production startup must remain fail-closed until that commitment and the implementation/release evidence gates are complete.
 
 ## Gate rules
 
@@ -16,25 +16,35 @@ The current repository does not contain finalized production network identity, n
 4. A test on Bitcoin regtest validates the test harness or upstream behavior; it does not prove FREELY production parameters or a live FREELY network.
 5. Synthetic fixtures are for testing validators only and must never be promoted into production configuration.
 6. No production launch, mining deployment, public RPC/P2P exposure, DNS seed publication, or genesis activation is authorized by this checklist.
-7. Any missing or ambiguous production parameter blocks the production gate.
+7. Any missing or ambiguous consensus parameter, or any unverified derived genesis commitment, blocks the production gate.
 
 ## Production gates and acceptance evidence
 
 ### G0 — Owner-approved protocol parameters
 
-**Status: BLOCKED by owner decisions.**
+**Status: APPROVED — implementation and verification remain in progress.**
 
-Required:
-- Numeric `powLimit` and genesis compact target (`nBits`), with documented security rationale and compact-target boundary tests.
-- Final four-byte P2P message magic, P2P and RPC ports, data-directory suffix, Base58/WIF/BIP32 prefixes and Bech32 HRP.
-- Final genesis timestamp/message, coinbase transaction, merkle root, header fields, nonce and independently recomputed genesis hash.
-- Exact script and soft-fork activation matrix, including heights/times and compatibility rationale.
+The owner explicitly approved all four proposal areas on 18 November 2026. The canonical exact values are recorded in `docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md` and `contrib/freely/network-safety.json`.
+
+Already approved:
+- SHA-256d; `powLimit=00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff`; genesis `nBits=0x1d00ffff`.
+- 600-second spacing; 2,016-block retarget interval; 1,209,600-second timespan; 1/4–4× clamp; minimum-difficulty and no-retargeting disabled; BIP94 enabled from genesis.
+- P2P magic `fa c3 b7 d1`; P2P/RPC ports 49444/49445; `freely` data directory/config section; approved Base58/WIF/BIP32 prefixes and Bech32 HRP `fly`.
+- Genesis version 1, timestamp 1,794,960,000, approved coinbase message/output script, 50 FLY unspendable coinbase.
+- BIP34, BIP65, BIP66, CSV and SegWit at height 1; TESTDUMMY disabled with the approved version-bits settings.
+
+Remaining G0 evidence (derived, not owner-selected parameters):
+- Reproduce the approved coinbase transaction ID and Merkle root using Bitcoin Core C++ serialization/hash code.
+- Mine a nonce for the exact approved 80-byte genesis header, then independently recompute and verify the final block hash and proof of work.
+- Commit the nonce/hash and fixed header/PoW vectors to the manifest and C++ regression tests.
+- Verify manifest and eventual C++ chain parameters agree exactly; check custom signet challenge-derived magic collisions at runtime.
 
 Acceptance:
-- Explicit owner approval recorded for each final value.
-- No collision with Bitcoin mainnet, testnet3, testnet4, signet (including challenge-derived magic) or regtest.
-- Independent calculation/reproduction of genesis and all consensus-critical values.
-- Manifest and C++ chain parameters agree byte-for-byte / value-for-value.
+- The approved baseline is unchanged and machine-validated.
+- Genesis transaction/Merkle root are independently reproduced.
+- The mined nonce and final block hash are independently verified against the approved target.
+- No collision with built-in Bitcoin networks, including default/custom signet magic, is present.
+- Manifest and C++ chain parameters agree value-for-value.
 
 ### G1 — Consensus implementation
 
