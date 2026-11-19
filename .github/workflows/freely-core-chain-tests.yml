@@ -38,27 +38,16 @@ jobs:
           fetch-depth: 0
 
       - name: Install minimal build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y \\
-            build-essential cmake python3 libboost-dev libevent-dev
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential cmake python3 libboost-dev libevent-dev
 
       - name: Configure unit-test build
-        run: |
-          cmake -B build \\
-            -DENABLE_WALLET=OFF \\
-            -DENABLE_IPC=OFF \\
-            -DBUILD_GUI=OFF \\
-            -DBUILD_TESTS=ON
+        run: cmake -B build -DENABLE_WALLET=OFF -DENABLE_IPC=OFF -DBUILD_GUI=OFF -DBUILD_TESTS=ON
 
       - name: Build Bitcoin Core unit-test executable
         run: cmake --build build --target bitcoind bitcoin-cli test_bitcoin --parallel 2
 
       - name: Run FREELY chain type, genesis, monetary and PoW suites
-        run: |
-          ctest --test-dir build --output-on-failure \\
-            -R '^(chaintype_tests|freely_genesis_tests|validation_tests|pow_tests)$'
+        run: ctest --test-dir build --output-on-failure -R '^(chaintype_tests|freely_genesis_tests|validation_tests|pow_tests)$'
 
       - name: Verify FREELY startup fails closed before network activation
-        run: |
-          python3 build/test/functional/test_runner.py --jobs=1 feature_freely_startup.py
+        run: python3 build/test/functional/test_runner.py --jobs=1 feature_freely_startup.py
