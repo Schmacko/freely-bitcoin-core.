@@ -5,7 +5,7 @@
 """Focused unit tests for the standalone FREELY genesis nonce-search helper.
 
 Run from the repository root with:
-    python3 -m unittest test/lint/test_freely_genesis_nonce.py
+    python3 test/lint/test_freely_genesis_nonce.py
 """
 
 import hashlib
