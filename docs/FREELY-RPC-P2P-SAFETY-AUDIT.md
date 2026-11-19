@@ -9,7 +9,7 @@ This document records source-level findings. It does not claim that a FREELY nod
 
 ## 1. Executive findings
 
-- `-chain=freely` is registered by the chain selector, but both `CreateBaseChainParams(FREELY)` and `CreateChainParams(..., FREELY)` deliberately throw until production network and consensus parameters are finalised. The startup path therefore remains fail-closed.
+- `-chain=freely` is registered. `CreateBaseChainParams(FREELY)` now exposes the approved CLI data-directory/RPC identity; `CreateChainParams(..., FREELY)` still throws until the derived genesis commitment and CChainParams integration are verified. Full node startup therefore remains fail-closed.
 - The production-chain classification introduced in the M1 workstream is explicit. A future FREELY production parameter object must set `IsProductionChain() == true`, `IsTestChain() == false`, and `IsMockableChain() == false`. It must not inherit Bitcoin mainnet history-specific assumptions.
 - The Bitcoin CLI `-netinfo` chain-label switch previously omitted `ChainType::FREELY`; it now returns the explicit label `freely`.
 - The RPC bind help text and default describe loopback addresses (127.0.0.1 and ::1). A remote RPC listener requires explicit `-rpcallowip` and `-rpcbind` configuration. Do not add remote RPC defaults for FREELY.
@@ -37,7 +37,7 @@ Do not infer production status from `ChainType::MAIN`. Preserve the M1 guard in 
 
 ### 2.4 Network magic dispatch
 
-`GetNetworkForMagic()` currently recognises only the built-in Bitcoin network magics. It intentionally does not return FREELY while no approved FREELY message-start bytes exist. When network identity is approved, add the FREELY mapping and tests for all built-in identities plus FREELY; reject every collision. Do not guess a production magic.
+`GetNetworkForMagic()` now recognises the owner-approved FREELY magic `fa c3 b7 d1` on the dependent PR #13 branch. The mapping is a message-to-chain classification only; it does not construct FREELY CChainParams or enable P2P startup. The preflight checks collision against Bitcoin mainnet, testnet3, testnet4, regtest and default signet; custom signet challenges still require runtime collision validation.
 
 ## 3. RPC safety
 
@@ -67,7 +67,7 @@ The current fail-closed exception occurs before P2P initialisation; this is the 
 
 ## 5. Data-directory isolation
 
-The selected chain name is used by the base-parameter/config selection path to form a chain-specific data directory. The FREELY base-parameter factory currently throws, so no FREELY data directory is selected yet. Once approved parameters exist, retain a dedicated `freely` data-directory suffix and test that it cannot resolve to Bitcoin mainnet, testnet, signet or regtest storage.
+The selected chain name is used by the base-parameter/config selection path to form a chain-specific data directory. The base-parameter factory now returns the approved `freely` data-directory suffix and RPC port 49445 for CLI/config selection. Full node startup still stops in the consensus factory. The eventual CChainParams must preserve the separate identity and test the data directory against Bitcoin mainnet, testnet, signet and regtest storage.
 
 ## 6. Verification requirements
 
@@ -85,17 +85,17 @@ Before this audit can be marked fully verified:
 | Item | Status |
 |---|---|
 | FREELY selector registered | Implemented |
-| Base and consensus factories fail closed | Implemented |
+| Base factory exposes approved CLI identity; consensus factory remains fail-closed | Implemented |
 | Production-only deployment override guard | Implemented on M1 base |
 | CLI `-netinfo` FREELY label | Implemented; build pending |
 | RPC default source audit | Documented |
 | P2P default source audit | Documented; launch gate identified |
-| FREELY network magic | Not assigned; correctly absent |
-| FREELY production data directory | Not activated |
+| FREELY network magic | Owner-approved `fa c3 b7 d1`; lookup added in PR #13; CChainParams/P2P activation still gated |
+| FREELY base data directory | Approved suffix `freely` is available to CLI; full node activation remains blocked |
 | Binary-level fail-closed startup test | Implemented; current-head CI queued |
 | Runtime RPC/P2P policy tests | Pending until FREELY parameter object exists |
 
-No production network identity, genesis block, DNS seed, public listener, or deployment is selected or activated by this work.
+The production network identity values are owner-approved and recorded in the canonical parameter baseline, but no production CChainParams, verified genesis commitment, DNS seed, public listener, or deployment is activated by this work.
 
 
 ## Startup regression hardening — 18 November 2026
@@ -113,7 +113,7 @@ This section records a fresh read of the current PR #8 source files (src/init.cp
 
 SetupServerArgs() constructs CreateBaseChainParams(ChainType::MAIN) and CreateChainParams(argsman, ChainType::MAIN) to populate upstream argument help/default descriptions. The active chain is selected later from args.GetChainType() in the normal startup path. These MAIN constructions are help/default metadata, not a fallback that silently changes a selected FREELY node into Bitcoin mainnet.
 
-The explicit FREELY cases in both chain factories throw. This remains the decisive guard: FREELY cannot obtain base or consensus parameters and therefore cannot proceed to normal node initialisation.
+The FREELY base factory returns only the approved CLI identity; the FREELY consensus factory throws. The latter remains the decisive guard: bitcoind cannot obtain consensus parameters and cannot proceed to normal node initialisation.
 
 ### 8.2 Test-only startup overrides
 
@@ -133,15 +133,34 @@ The current test feature_freely_startup.py intentionally supplies only -chain=fr
 
 ### 8.5 Network identity and peer discovery
 
-src/chainparamsbase.h includes freely in the accepted chain-name list, but the FREELY base-parameter factory throws and no FREELY port or data-directory suffix is defined. GetNetworkForMagic() must continue not to identify FREELY until an approved unique message-start value is supplied. No FREELY DNS seeds or fixed seeds are configured in this implementation stage.
+src/chainparamsbase.h includes freely in the accepted chain-name list; the base factory exposes the approved RPC port 49445 and data-directory suffix `freely`. PR #13 adds `fa c3 b7 d1` to GetNetworkForMagic(). No FREELY DNS seeds or fixed seeds are configured in this implementation stage.
 
 ### 8.6 Required follow-up before parameter activation
 
 - Add chain-specific FREELY listener defaults and tests before constructing live FREELY parameters.
 - Test RPC sockets and P2P sockets at runtime, including explicit bind/allowlist adversarial cases.
 - Test the data-directory suffix and cookie path against every built-in chain.
-- Add FREELY message-start mapping only after owner approval and collision tests.
+- Keep the approved FREELY message-start mapping and static built-in collision tests; add runtime validation for custom signet challenge magic before any future network activation.
 - Add explicit tests that production FREELY rejects -testactivationheight, -vbparams and every regtest-only -test option.
 - Inspect every new ChainType switch when the selector evolves; keep FREELY cases exhaustive.
 
 Audit conclusion: no remaining inappropriate active-chain fallback to Bitcoin MAIN was identified in the inspected startup path. The remaining MAIN references in SetupServerArgs() are static help/default construction. This conclusion is limited to the inspected files and must not be described as a repository-wide exhaustive grep. Runtime RPC/P2P policy and network-identity tests remain blocked on approved FREELY parameters.
+
+
+## 9. Owner-approved identity and message-magic registration — 19 November 2026
+
+The owner approved the four protocol parameter proposal areas on 18 November. The canonical identity includes:
+- message magic `fa c3 b7 d1`;
+- P2P port 49444 and RPC port 49445;
+- data-directory/config section `freely`;
+- P2PKH 55, P2SH 117, WIF 183;
+- extended public/private versions `04464c59` / `04666c79`;
+- Bech32 HRP `fly`.
+
+The base-chain-parameter layer exposes only the approved CLI data-directory and RPC port. The consensus factory deliberately continues to throw until the approved genesis candidate's nonce/hash are mined and independently reproduced and the CChainParams implementation is reviewed.
+
+PR #13 adds the approved message magic to `GetNetworkForMagic()` and tests that it maps to `ChainType::FREELY`, while an unknown magic remains rejected. This does not enable a FREELY P2P listener, create production CChainParams, or launch a network.
+
+The focused core-chain workflow now includes `freely_genesis_tests` in its CTest filter. The exact PR #13 head `73560540e78fcc9b90754fd22aa33813e1c99ee3` has focused run [44542216803](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44542216803) and full CI [44542216899](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44542216899), both queued at the latest inspection. No C++ test pass is claimed for this branch yet.
+
+Static identity collision checks include the pinned v32.1 default BIP325 signet magic. A custom `-signetchallenge` derives a different magic and must be checked at runtime before any future network activation.
