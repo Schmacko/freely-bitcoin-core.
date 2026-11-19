@@ -50,7 +50,7 @@ Tests must also cover invalid compact targets (negative, zero, overflow, above p
 | Extended private key version | `0x04666c79` |
 | Bech32 HRP | `fly` |
 
-These values must be tested against all built-in Bitcoin network identities, including cross-role port collisions and the runtime signet magic derived from its challenge. Port selection in the dynamic/private range does not guarantee that a port is unused on a particular host. The extended-key versions are custom four-byte values; verify Base58Check round trips and wallet import/export behavior. Do not infer an official BIP44 coin type from these values; request a SLIP-0044 assignment separately if needed.
+These values must be tested against all built-in Bitcoin network identities, including default signet magic `0a03cf40`, cross-role port collisions and any custom signet magic derived from a configured challenge. Port selection in the dynamic/private range does not guarantee that a port is unused on a particular host. The extended-key versions are custom four-byte values; verify Base58Check round trips and wallet import/export behavior. Do not infer an official BIP44 coin type from these values; request a SLIP-0044 assignment separately if needed.
 
 ## 3. Genesis candidate
 
