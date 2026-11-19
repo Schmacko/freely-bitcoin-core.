@@ -44,17 +44,26 @@ BOOST_AUTO_TEST_CASE(unknown_chain_type_is_rejected)
     BOOST_CHECK(!ChainTypeFromString("FREELY").has_value());
 }
 
-BOOST_AUTO_TEST_CASE(freely_chain_startup_fails_closed_until_parameters_are_final)
+BOOST_AUTO_TEST_CASE(freely_approved_base_parameters_are_selected)
 {
-    BOOST_CHECK_THROW(CreateBaseChainParams(ChainType::FREELY), std::runtime_error);
+    const auto base{CreateBaseChainParams(ChainType::FREELY)};
+    BOOST_REQUIRE(base);
+    BOOST_CHECK_EQUAL(base->DataDir(), "freely");
+    BOOST_CHECK_EQUAL(base->RPCPort(), 49445);
+}
+
+BOOST_AUTO_TEST_CASE(freely_consensus_startup_remains_fail_closed_until_genesis_is_mined)
+{
     BOOST_CHECK_THROW(CreateChainParams(*m_node.args, ChainType::FREELY), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(freely_chain_selection_entrypoints_fail_closed)
+BOOST_AUTO_TEST_CASE(freely_chain_selection_sets_base_but_rejects_incomplete_consensus)
 {
-    // Exercise the same public selectors used during application startup.
-    // Both must fail before global chain parameters or config selection can be set.
-    BOOST_CHECK_THROW(SelectBaseParams(ChainType::FREELY), std::runtime_error);
+    // The approved data-directory and RPC identity are available to clients.
+    // Full node startup must still stop until the mined genesis commitment is fixed.
+    BOOST_CHECK_NO_THROW(SelectBaseParams(ChainType::FREELY));
+    BOOST_CHECK_EQUAL(BaseParams().DataDir(), "freely");
+    BOOST_CHECK_EQUAL(BaseParams().RPCPort(), 49445);
     BOOST_CHECK_THROW(SelectParams(ChainType::FREELY), std::runtime_error);
 }
 
