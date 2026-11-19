@@ -2,7 +2,7 @@
 """Validate the FREELY network-identity and consensus-parameter manifest.
 
 This is a preflight validator, not a replacement for Core's startup checks.
-It deliberately fails while owner-approved production parameters are unset.
+It deliberately fails while the derived genesis commitment and required production-readiness evidence are incomplete, even when all owner-approved parameters are populated.
 """
 from __future__ import annotations
 
