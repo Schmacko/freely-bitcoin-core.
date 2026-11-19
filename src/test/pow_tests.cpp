@@ -276,9 +276,9 @@ BOOST_AUTO_TEST_CASE(freely_retarget_boundary_uses_first_block_of_period)
         period[height].pprev = height == 0 ? nullptr : &period[height - 1];
     }
 
-    // A 302,500-second span from height 0 gives 0x1f2002b5.
+    // A 302,500-second span from height 0 gives 0x1d2002b5.
     // Measuring from height 1 instead would clamp 301,500 seconds to
-    // 302,400 and produce 0x1f1fffff, so this catches an off-by-one ancestor.
+    // 302,400 and produce 0x1d1fffff, so this catches an off-by-one ancestor.
     period.front().nTime = 100'000;
     period[1].nTime = 101'000;
     period.back().nTime = 402'500;
