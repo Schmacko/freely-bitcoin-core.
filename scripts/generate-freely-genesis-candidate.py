@@ -15,7 +15,11 @@ import struct
 
 COIN = 100_000_000
 GENESIS_REWARD = 50 * COIN
-DEFAULT_MESSAGE = "FREELY — Freedom Through Decentralisation"
+DEFAULT_MESSAGE = "FREELY FLY genesis 2026-11-18"
+APPROVED_GENESIS_TIMESTAMP = 1_794_960_000
+APPROVED_GENESIS_N_BITS = 0x1D00FFFF
+APPROVED_POW_LIMIT_HEX = "00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+APPROVED_OUTPUT_SCRIPT_HEX = "6a12465245454c5920464c592047454e45534953"
 BITCOIN_GENESIS_MESSAGE = b"The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 BITCOIN_GENESIS_PUBKEY = bytes.fromhex(
     "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"
@@ -169,11 +173,11 @@ def verify_synthetic_header_fixture(merkle_root: str) -> dict[str, str | int]:
     result = verify_genesis_header(
         merkle_root, 1_700_000_000, 0x207FFFFF, 1, synthetic_pow_limit
     )
-    if result["block_hash"] != "6801d3dee3797d9893f3568d2dba2bd3a8ecc729cea407ab91dd50598a02f01a":
+    if result["block_hash"] != "38a89fe8c366743fa74b485466c3b6da85cd417bf6ca132c244c0e0c57082125":
         raise RuntimeError("synthetic genesis header hash self-check failed")
     try:
         verify_genesis_header(
-            merkle_root, 1_700_000_000, 0x207FFFFF, 0, synthetic_pow_limit
+            merkle_root, 1_700_000_000, 0x207FFFFF, 2, synthetic_pow_limit
         )
     except ValueError as exc:
         if "does not satisfy proof of work" not in str(exc):
@@ -232,15 +236,15 @@ def verify_bitcoin_genesis_serialization() -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--message", default=DEFAULT_MESSAGE,
-                        help="candidate coinbase timestamp/message; final wording requires approval")
-    parser.add_argument("--time", type=int, default=None,
-                        help="optional candidate block timestamp as Unix seconds; not a final parameter")
-    parser.add_argument("--n-bits", type=lambda value: int(value, 0), default=None,
-                        help="optional compact target (for example 0x1d00ffff); candidate only")
+                        help="approved genesis coinbase message; an override creates a different candidate")
+    parser.add_argument("--time", type=int, default=APPROVED_GENESIS_TIMESTAMP,
+                        help="approved candidate block timestamp as Unix seconds; override only for a new candidate")
+    parser.add_argument("--n-bits", type=lambda value: int(value, 0), default=APPROVED_GENESIS_N_BITS,
+                        help="approved genesis compact target; override only for a new candidate")
     parser.add_argument("--nonce", type=int, default=None,
-                        help="optional candidate nonce; candidate only")
-    parser.add_argument("--pow-limit", default=None,
-                        help="optional 32-byte big-endian powLimit hex; candidate only")
+                        help="optional mined nonce; when supplied, the full header proof of work is checked")
+    parser.add_argument("--pow-limit", default=APPROVED_POW_LIMIT_HEX,
+                        help="approved 32-byte big-endian powLimit; override only for a new candidate")
     parser.add_argument("--self-test-header", action="store_true",
                         help="run a deterministic synthetic header/PoW fixture; selects no production values")
     args = parser.parse_args()
@@ -249,15 +253,20 @@ def main() -> int:
         parser.error("--message must not be empty")
     if args.time is not None and not 0 <= args.time <= 0xFFFFFFFF:
         parser.error("--time must fit in the unsigned 32-bit block-header timestamp")
-    header_args = (args.n_bits, args.nonce, args.pow_limit)
-    if any(value is not None for value in header_args) and not all(value is not None for value in header_args):
-        parser.error("--n-bits, --nonce and --pow-limit must be supplied together")
-    if args.self_test_header and any(value is not None for value in header_args):
-        parser.error("--self-test-header cannot be combined with explicit header inputs")
+    if args.self_test_header and args.nonce is not None:
+        parser.error("--self-test-header cannot be combined with an explicit nonce")
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", args.pow_limit):
+        parser.error("--pow-limit must be exactly 32 bytes of hexadecimal")
+    try:
+        approved_target = decode_compact_target(args.n_bits)
+    except ValueError as exc:
+        parser.error(str(exc))
+    if approved_target > int(args.pow_limit, 16):
+        parser.error("decoded nBits target exceeds the supplied powLimit")
 
     verify_bitcoin_genesis_serialization()
     timestamp = args.message.encode("utf-8")
-    output_script = b"\x6a"  # OP_RETURN: provably unspendable
+    output_script = bytes.fromhex(APPROVED_OUTPUT_SCRIPT_HEX)
     transaction = serialize_coinbase(timestamp, output_script)
     txid = display_hash(hash256(transaction))
     header_result = None
@@ -268,9 +277,7 @@ def main() -> int:
         header_time, header_bits, header_nonce = 1_700_000_000, 0x207FFFFF, 1
         header_pow_limit = "7f" + "ff" * 31
         header_result = verify_synthetic_header_fixture(txid)
-    elif all(value is not None for value in header_args):
-        if args.time is None:
-            parser.error("--time is required when explicit header inputs are supplied")
+    elif args.nonce is not None:
         try:
             header_result = verify_genesis_header(
                 txid, args.time, args.n_bits, args.nonce, args.pow_limit
@@ -279,7 +286,7 @@ def main() -> int:
             parser.error(str(exc))
 
     result = {
-        "status": "candidate_only_not_production",
+        "status": "approved_candidate_not_production",
         "message": args.message,
         "block_time_candidate_unix": args.time,
         "coinbase": {
@@ -310,7 +317,7 @@ def main() -> int:
             "pow_limit_hex": header_pow_limit,
             "header_verification": (
                 "synthetic_test_fixture_passed" if args.self_test_header else (
-                    "candidate_header_proof_of_work_passed" if header_result is not None else "not_run"
+                    "candidate_header_proof_of_work_passed" if header_result is not None else "not_run_nonce_unset"
                 )
             ),
         },
@@ -320,8 +327,9 @@ def main() -> int:
             "genesis_reward_spendable": False,
         },
         "warning": (
-            "Candidate transaction only. The message and optional time are not final; "
-            "powLimit, genesis nBits, nonce and full genesis block hash are unresolved."
+            "Approved genesis candidate fields are used by default. The nonce and final block hash "
+            "remain uncomputed; the transaction ID and Merkle root require independent reproduction "
+            "with Bitcoin Core's C++ serialization/hash implementation. CLI overrides create a new candidate."
         ),
     }
     print(json.dumps(result, indent=2, ensure_ascii=False))
