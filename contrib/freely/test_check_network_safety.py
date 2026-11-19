@@ -10,32 +10,12 @@ MANIFEST = json.loads(Path(__file__).with_name("network-safety.json").read_text(
 
 
 def complete_fixture():
-    # All values below are synthetic test fixtures, not proposed FREELY parameters.
+    # Only the derived genesis hash/nonce are synthetic. All approved protocol
+    # parameters remain exactly as specified in the owner-approved baseline.
     data = copy.deepcopy(MANIFEST)
-    data["network"].update({
-        "message_start": "deadbeef",
-        "p2p_port": 29444,
-        "rpc_port": 29443,
-        "data_directory": "freely_fixture",
-        "config_section": "freely",
-    })
-    data["address"].update({
-        "base58_public_key_prefix": 55,
-        "base58_script_prefix": 56,
-        "base58_secret_key_prefix": 57,
-        "base58_extended_public_key_prefix": "01020304",
-        "base58_extended_secret_key_prefix": "05060708",
-        "bech32_hrp": "flyfixture",
-    })
     data["genesis"].update({
         "hash": "11" * 32,
-        "n_bits": "0x207fffff",
-        "pow_limit": "0x7fffff" + "00" * 29,
-        "coinbase_spendable": False,
-    })
-    data["consensus"].update({
-        "bip94_enabled": True,
-        "script_activation_heights": {"synthetic_fixture_only": 0},
+        "nonce": 1,
     })
     return data
 
@@ -49,6 +29,7 @@ class NetworkSafetyTests(unittest.TestCase):
     def test_approved_template_fails_closed_only_on_unmined_genesis_commitment(self):
         errors = validate(MANIFEST)
         self.assertTrue(any("genesis.hash is unset" in item for item in errors))
+        self.assertTrue(any("genesis.nonce is unset" in item for item in errors))
         self.assertEqual(MANIFEST["network"]["message_start"], "fac3b7d1")
         self.assertEqual(MANIFEST["network"]["p2p_port"], 49444)
         self.assertEqual(MANIFEST["network"]["rpc_port"], 49445)
@@ -64,6 +45,48 @@ class NetworkSafetyTests(unittest.TestCase):
         errors = validate(data)
         self.assertTrue(any("genesis.coinbase_spendable is unset" in item for item in errors))
         self.assertTrue(any("consensus.bip94_enabled is unset" in item for item in errors))
+
+
+    def test_rejects_mutation_of_owner_approved_parameter_values(self):
+        mutations = (
+            ("network", "message_start", "deadbeef"),
+            ("network", "p2p_port", 49446),
+            ("network", "rpc_port", 49447),
+            ("address", "base58_public_key_prefix", 56),
+            ("address", "base58_script_prefix", 118),
+            ("address", "base58_secret_key_prefix", 184),
+            ("address", "bech32_hrp", "flytest"),
+            ("genesis", "timestamp", 1794960001),
+            ("genesis", "coinbase_message", "unapproved message"),
+            ("genesis", "coinbase_output_script", "6a00"),
+            ("consensus", "retarget_min_timespan_seconds", 302399),
+            ("consensus", "retarget_max_timespan_seconds", 4838401),
+            ("consensus", "script_activation_heights", {"bip34": 2}),
+        )
+        for section, field, value in mutations:
+            with self.subTest(section=section, field=field):
+                data = complete_fixture()
+                data[section][field] = value
+                self.assertTrue(
+                    any("owner-approved protocol parameter baseline" in item for item in validate(data)),
+                    f"{section}.{field} mutation unexpectedly passed",
+                )
+
+    def test_rejects_partial_genesis_commitment(self):
+        data = complete_fixture()
+        data["genesis"]["nonce"] = None
+        self.assertTrue(any("hash and genesis.nonce" in item for item in validate(data)))
+        data = complete_fixture()
+        data["genesis"]["hash"] = None
+        self.assertTrue(any("genesis.hash is unset" in item for item in validate(data)))
+        self.assertTrue(any("hash and genesis.nonce" in item for item in validate(data)))
+
+    def test_rejects_invalid_genesis_nonce(self):
+        for nonce in (True, -1, 0x100000000, "1"):
+            with self.subTest(nonce=nonce):
+                data = complete_fixture()
+                data["genesis"]["nonce"] = nonce
+                self.assertTrue(any("genesis.nonce must be an integer" in item for item in validate(data)))
 
     def test_complete_distinct_fixture_passes(self):
         self.assertEqual(validate(complete_fixture()), [])
