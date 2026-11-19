@@ -15,6 +15,7 @@ on:
       - "src/util/chaintype.cpp"
       - "src/util/chaintype.h"
       - "src/test/chaintype_tests.cpp"
+      - "src/test/freely_genesis_tests.cpp"
       - "src/test/CMakeLists.txt"
       - ".github/workflows/freely-core-chain-tests.yml"
   workflow_dispatch:
@@ -53,10 +54,14 @@ jobs:
       - name: Build Bitcoin Core unit-test executable
         run: cmake --build build --target bitcoind bitcoin-cli test_bitcoin --parallel 2
 
-      - name: Run FREELY chain type, monetary and PoW suites
+      - name: Run FREELY chain type, genesis, monetary and PoW suites
         run: |
           ctest --test-dir build --output-on-failure \
-            -R '^(chaintype_tests|validation_tests|pow_tests)$'
+            -R '^(chaintype_tests|freely_genesis_tests|validation_tests|pow_tests)
+
+      - name: Verify FREELY startup fails closed before network activation
+        run: python3 test/functional/test_runner.py --jobs=1 feature_freely_startup.py
+
 
       - name: Verify FREELY startup fails closed before network activation
         run: python3 test/functional/test_runner.py --jobs=1 feature_freely_startup.py
