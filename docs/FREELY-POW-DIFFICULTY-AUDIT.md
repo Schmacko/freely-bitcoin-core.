@@ -1,8 +1,8 @@
 # FREELY proof-of-work and difficulty-adjustment source audit
 
-**Date:** 16 November 2026  
-**Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`  
-**Branch:** `freely/pow-difficulty-audit`  
+**Date:** 16 November 2026
+**Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`
+**Branch:** `freely/pow-difficulty-audit`
 **Status:** documentation-only source audit; no runtime code changes and no consensus parameters selected.
 
 ## 1. Executive result
