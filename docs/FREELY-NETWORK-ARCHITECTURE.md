@@ -22,7 +22,7 @@ Add an explicit FREELY chain type rather than aliasing an existing Bitcoin chain
 - `ChainType::FREELY` for the eventual FREELY production network.
 - Consider a separate `ChainType::FREELY_TEST` only if a persistent public test network is approved. A private local development/regtest profile should remain clearly separate from production consensus and network identity.
 
-The final names and whether a separate public test chain is needed remain open decisions. Never make FREELY an alias for `MAIN` or `REGTEST`.
+The FREELY production name and data-directory suffix `freely` are approved. Whether a separate public test chain is needed remains an open owner decision. Never make FREELY an alias for `MAIN` or `REGTEST`.
 
 The following upstream surfaces must be updated consistently:
 
@@ -203,7 +203,7 @@ The earlier targeted M1 validation success remains valid for its own tested revi
 
 ### Current implementation boundary
 
-The next source-level chain-selection patch is still gated on a complete, internally consistent network-parameter specification. The candidate P2P magic, ports, address prefixes and extended-key versions in `FREELY-NETWORK-PARAMETERS-DRAFT.md` remain proposals only. PoW limit, genesis target, activation policy, retarget edge cases and genesis transaction/header data remain unresolved. Do not expose a selectable production chain until those are defined and tested.
+The source-level chain-selection patch can now use the owner-approved identity and consensus baseline in `FREELY-APPROVED-PROTOCOL-PARAMETERS.md`. The approved PoW limit, genesis target, message magic, ports, prefixes and activation matrix are no longer open parameter choices. The derived genesis transaction/Merkle commitment and nonce/hash, runtime integration and exact-head tests remain outstanding. Do not expose a selectable production chain until those gates pass.
 
 
 ## 12. Progress update — 16 November 2026 (consensus specification)
@@ -215,9 +215,9 @@ A separate documentation branch, `freely/consensus-specification`, now contains 
 - Specification commit: `41f418e9f1fc662f66b83a4da4b5040d0a9c2cee`.
 - Arithmetic check commit: `1b5a830ae5c4f805f45e3459ce77ee4efd7201ec`.
 
-The specification formalizes the agreed integer subsidy formula, boundary vectors, issuance ceiling, reward/fee rule and test contract. It also highlights an accounting point that must be settled before genesis implementation: a conventional unspendable genesis coinbase means the height-zero 50 FLY is included in scheduled subsidy arithmetic but is not spendable. Under that convention, the spendable subsidy total would be 20,999,949.9769 FLY, not 20,999,999.9769 FLY.
+The specification formalizes the agreed integer subsidy formula, boundary vectors, issuance ceiling, reward/fee rule and test contract. It also highlights an accounting point that must be settled before genesis implementation: a conventional unspendable genesis coinbase means the height-zero 50 FLY is included in scheduled subsidy arithmetic but is not spendable. The owner approved the permanently unspendable genesis output convention; scheduled issuance remains 20,999,999.9769 FLY and the spendable subsidy total under that convention is 20,999,949.9769 FLY.
 
-The proof-of-work limit, genesis target, retarget edge behaviour, minimum-difficulty policy, time-warp mitigation, activation matrix and genesis details remain unresolved. No consensus code or network identity has been activated by this documentation work.
+The proof-of-work limit, genesis target, retarget policy, BIP94, network identity and initial activation matrix were owner-approved on 18 November 2026. The derived genesis commitment, implementation, source compatibility tests and independent security review remain incomplete. No production consensus object is selected by this documentation work.
 
 The Windows checkout and no-wallet image failures were reproduced in CI logs and are now addressed in draft PR #9. The revised workflow is queued for current-head validation; do not infer CI success from this documentation commit.
 
@@ -464,14 +464,13 @@ This section is authoritative where it supersedes earlier historical status stat
 
 ### 17.2 Still blocked pending owner approval
 
-The following remain unresolved and must not be populated in executable production parameters:
-- Numeric FREELY `powLimit` and genesis compact target `nBits`.
-- Final P2P magic, P2P/RPC ports, address/WIF/BIP32 prefixes and Bech32 HRP.
-- Final genesis transaction/header commitment and nonce.
-- Exact script/soft-fork activation matrix and activation heights.
-- Any public test-chain identity or public network launch settings.
+The following implementation/launch gates remain; do not confuse them with unapproved parameter choices:
+- Generate and independently verify the genesis transaction ID, Merkle root, nonce and block hash.
+- Implement the approved network magic/ports/address prefixes/HRP in the dedicated C++ parameter object and network dispatch.
+- Verify the approved script activation matrix against pinned v32.1 and add exact-head C++/functional tests.
+- Decide separately whether a public test-chain identity is needed; no public testnet/mainnet or launch settings are authorized.
 
-Candidate generation and deterministic verification are authorised as engineering work, but candidate values are not final approvals.
+The approved candidate values are final parameter selections for implementation. Derived genesis outputs still require deterministic generation and independent verification; this approval does not activate or launch the production chain.
 
 ### 17.3 Canonical source-of-truth documents and branches
 
