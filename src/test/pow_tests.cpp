@@ -210,4 +210,62 @@ BOOST_AUTO_TEST_CASE(ChainParams_SIGNET_sanity)
     sanity_check_chainparams(*m_node.args, ChainType::SIGNET);
 }
 
+BOOST_AUTO_TEST_CASE(freely_approved_pow_retarget_vectors)
+{
+    auto calculate = [](int64_t elapsed, bool bip94 = true, uint32_t last_bits = 0x1c00ffff) {
+        Consensus::Params params{};
+        params.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
+        params.nPowTargetTimespan = 1'209'600;
+        params.nPowTargetSpacing = 600;
+        params.fPowAllowMinDifficultyBlocks = false;
+        params.enforce_BIP94 = bip94;
+        params.fPowNoRetargeting = false;
+
+        // Model the completed interval [height 0, height 2015]. BIP94
+        // deliberately reads the first block's nBits, not the final block's.
+        std::vector<CBlockIndex> period(2016);
+        for (int i = 0; i < 2016; ++i) {
+            period[i].nHeight = i;
+            period[i].pprev = i == 0 ? nullptr : &period[i - 1];
+            period[i].nTime = 1'000'000;
+            period[i].nBits = i == 0 ? 0x1c00ffff : last_bits;
+        }
+        period.back().nTime = 1'000'000 + elapsed;
+        return CalculateNextWorkRequired(&period.back(), period.front().GetBlockTime(), params);
+    };
+
+    // These vectors use the actual approved FREELY powLimit and the exact
+    // production 2016-block / 1,209,600-second adjustment parameters.
+    BOOST_CHECK_EQUAL(calculate(302'399), 0x1b3fffc0U);
+    BOOST_CHECK_EQUAL(calculate(302'400), 0x1b3fffc0U);
+    BOOST_CHECK_EQUAL(calculate(1'209'600), 0x1c00ffffU);
+    BOOST_CHECK_EQUAL(calculate(4'838'400), 0x1c03fffcU);
+    BOOST_CHECK_EQUAL(calculate(4'838'401), 0x1c03fffcU);
+}
+
+BOOST_AUTO_TEST_CASE(freely_bip94_preserves_first_block_period_target)
+{
+    // Simulate a last block that has a harder target than the first block.
+    // BIP94 must base the retarget on the first block's target.
+    const auto with_bip94 = [&] {
+        Consensus::Params params{};
+        params.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
+        params.nPowTargetTimespan = 1'209'600;
+        params.nPowTargetSpacing = 600;
+        params.fPowAllowMinDifficultyBlocks = false;
+        params.enforce_BIP94 = true;
+        params.fPowNoRetargeting = false;
+        std::vector<CBlockIndex> period(2016);
+        for (int i = 0; i < 2016; ++i) {
+            period[i].nHeight = i;
+            period[i].pprev = i == 0 ? nullptr : &period[i - 1];
+            period[i].nTime = 1'000'000;
+            period[i].nBits = i == 0 ? 0x1c00ffff : 0x1b3fffc0;
+        }
+        period.back().nTime = 1'000'000 + 4'838'400;
+        return CalculateNextWorkRequired(&period.back(), period.front().GetBlockTime(), params);
+    };
+    BOOST_CHECK_EQUAL(with_bip94(), 0x1c03fffcU);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
