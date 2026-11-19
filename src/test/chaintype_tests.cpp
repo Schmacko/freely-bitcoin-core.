@@ -67,4 +67,15 @@ BOOST_AUTO_TEST_CASE(freely_chain_selection_sets_base_but_rejects_incomplete_con
     BOOST_CHECK_THROW(SelectParams(ChainType::FREELY), std::runtime_error);
 }
 
+BOOST_AUTO_TEST_CASE(freely_message_magic_maps_to_freely_chain_type)
+{
+    constexpr MessageStartChars freely_message_start{0xfa, 0xc3, 0xb7, 0xd1};
+    const auto network = GetNetworkForMagic(freely_message_start);
+    BOOST_REQUIRE(network.has_value());
+    BOOST_CHECK(*network == ChainType::FREELY);
+
+    constexpr MessageStartChars unknown_message_start{0xde, 0xad, 0xbe, 0xef};
+    BOOST_CHECK(!GetNetworkForMagic(unknown_message_start).has_value());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
