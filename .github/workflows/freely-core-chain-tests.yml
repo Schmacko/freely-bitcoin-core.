@@ -55,13 +55,10 @@ jobs:
         run: cmake --build build --target bitcoind bitcoin-cli test_bitcoin --parallel 2
 
       - name: Run FREELY chain type, genesis, monetary and PoW suites
-        run: |
-          ctest --test-dir build --output-on-failure \
-            -R '^(chaintype_tests|freely_genesis_tests|validation_tests|pow_tests)
+        run: ctest --test-dir build --output-on-failure -R '^(chaintype_tests|freely_genesis_tests|validation_tests|pow_tests)
 
-      - name: Verify FREELY startup fails closed before network activation
-        run: python3 build/test/functional/test_runner.py --jobs=1 feature_freely_startup.py
-
+      - name: Test restartable genesis nonce-search helper
+        run: python3 test/lint/test_freely_genesis_nonce.py
 
       - name: Verify FREELY startup fails closed before network activation
         run: python3 build/test/functional/test_runner.py --jobs=1 feature_freely_startup.py
