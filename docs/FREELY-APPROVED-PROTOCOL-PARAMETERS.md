@@ -20,7 +20,7 @@
 | No-retargeting | Disabled |
 | BIP94 | Enabled from genesis |
 
-The proposed initial target equals powLimit. This is a maximum target, not a security guarantee. At this target the expected work per block is approximately 2^32 hashes. Low total honest SHA-256d hashpower remains vulnerable to majority-hashrate attacks, regardless of correct difficulty adjustment.
+The approved genesis target decoded from nBits=0x1d00ffff is slightly harder (smaller) than the approved powLimit. The compact target is valid and does not exceed the maximum permitted target; the difference is approximately 0.0015259%. This is a maximum-target boundary, not a security guarantee. Expected work per block at the genesis target is approximately 2^32 hashes. Low total honest SHA-256d hashpower remains vulnerable to majority-hashrate attacks, regardless of correct difficulty adjustment.
 
 Retarget test vectors use previous compact target `0x1c00ffff`:
 
