@@ -77,6 +77,11 @@ class NetworkSafetyTests(unittest.TestCase):
         self.assertTrue(any("existing Bitcoin network magic" in item for item in errors))
         self.assertTrue(any("reserved Bitcoin network TCP port" in item for item in errors))
 
+    def test_rejects_default_signet_magic_collision(self):
+        data = complete_fixture()
+        data["network"]["message_start"] = "0a03cf40"
+        self.assertTrue(any("existing Bitcoin network magic" in item for item in validate(data)))
+
     def test_rejects_bitcoin_address_identity(self):
         data = complete_fixture()
         data["address"].update({
