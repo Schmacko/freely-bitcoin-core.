@@ -8,6 +8,7 @@ on:
       - "test/functional/feature_freely_startup.py"
       - "src/bitcoin-cli.cpp"
       - "src/chainparams.cpp"
+      - "src/kernel/chainparams.cpp"
       - "src/chainparamsbase.cpp"
       - "src/chainparamsbase.h"
       - "src/util/chaintype.cpp"
