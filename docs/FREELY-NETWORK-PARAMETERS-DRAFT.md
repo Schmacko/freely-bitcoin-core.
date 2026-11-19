@@ -59,8 +59,8 @@ Do not distribute addresses, private keys, wallet backups or software using thes
 | Target timespan | 1,209,600 seconds (14 days) | Derived from agreed spacing × interval |
 | Retarget interval | 2,016 blocks | Agreed |
 | PoW algorithm | SHA-256d | Agreed |
-| PoW limit | TBD | Candidate modelling authorised; numeric production value not approved |
-| Genesis `nBits` | TBD | Must be consistent with selected PoW limit; not approved |
+| PoW limit | See approved baseline: `00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff` | Owner-approved 18 Nov; historical draft table superseded |
+| Genesis `nBits` | `0x1d00ffff` | Owner-approved 18 Nov; derived genesis commitment still pending |
 | Retarget clamp and rounding | Upstream v32.1; ¼×–4× elapsed-time clamp | Owner-approved 16 Nov 2026; implementation tests pending |
 | Minimum-difficulty blocks | Disabled for production | Owner-approved; runtime parameter test pending |
 | No-retargeting | Disabled for production | Owner-approved; runtime parameter test pending |
@@ -80,7 +80,7 @@ The owner has approved the height-zero 50 FLY genesis reward as permanently unsp
 Candidate generation must record and test:
 
 1. Candidate timestamp and neutral coinbase message (final wording remains subject to approval).
-2. Candidate genesis version and compact target, constrained by the still-unapproved `powLimit`.
+2. Candidate genesis version and compact target, constrained by the owner-approved `powLimit`; final nonce/hash remain derived outputs.
 3. A permanently unspendable genesis output and explicit proof that the genesis coinbase is not spendable from the UTXO set.
 4. The approved monetary schedule and exact 50 FLY height-zero accounting treatment.
 5. A deterministic generator using Bitcoin Core's own serialization and hash functions, plus an independent second implementation/check.
@@ -98,7 +98,7 @@ Required independent checks:
 - Genesis coinbase reward: unspendable permanently; included in scheduled issuance. Spendable scheduled subsidy total is 20,999,949.9769 FLY.
 - BIP94: enabled from genesis (`enforce_BIP94 = true`), subject to exact v32.1 source review and dedicated retarget/time-warp tests.
 - Script features: established Bitcoin rules are intended active from the start, subject to the activation matrix and compatibility tests. Future soft forks use controlled activation.
-- PoW candidate modelling and candidate network/genesis identity generation are authorised. Numeric production `powLimit`, initial difficulty, final identity values and final genesis fields are not approved.
+- Numeric production `powLimit`, genesis `nBits`, network identity and initial activation matrix were approved on 18 November 2026. This draft is historical; use the canonical approved baseline. The nonce/hash remain to be derived and independently verified.
 
 ## 6. Development and test-network policy
 
