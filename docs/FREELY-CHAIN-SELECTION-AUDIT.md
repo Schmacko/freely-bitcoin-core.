@@ -93,7 +93,7 @@ Required steps:
 
 ## 6. Network identity
 
-Candidate values in the parameter draft are not approved. Before use, verify:
+The earlier draft candidates were superseded by the owner-approved baseline. Before runtime use, verify the approved values against source and test vectors:
 - 4-byte P2P message-start collision resistance and encoding;
 - P2P, RPC and Tor port availability/collision;
 - data-directory suffix and config-section name;
