@@ -52,11 +52,11 @@ jobs:
             -DENABLE_WALLET=ON \
             -DENABLE_IPC=OFF \
             -DBUILD_GUI=OFF \
-            -DBUILD_TESTS=OFF \
+            -DBUILD_TESTS=ON \
             -DWITH_ZMQ=OFF
 
       - name: Build node and CLI with wallet support
-        run: cmake --build build --parallel 2
+        run: cmake --build build --target bitcoind bitcoin-cli --parallel 2
 
       - name: Run wallet, RPC, and node functional regression tests
         run: |
