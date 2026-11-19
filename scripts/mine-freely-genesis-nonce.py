@@ -39,7 +39,9 @@ def decode_compact(bits: int) -> int:
 
 
 def atomic_json(path: Path, value: dict) -> None:
-    temporary = path.with_suffix(path.suffix + ".tmp")
+    # Include the process ID so simultaneous workers cannot clobber the same
+    # temporary file when more than one worker discovers a valid nonce.
+    temporary = path.with_suffix(path.suffix + f".tmp.{os.getpid()}")
     temporary.write_text(json.dumps(value, sort_keys=True) + "\n", encoding="utf-8")
     os.replace(temporary, path)
 
