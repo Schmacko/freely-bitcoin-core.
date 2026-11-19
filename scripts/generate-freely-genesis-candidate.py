@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Generate a reproducible FREELY genesis coinbase candidate (not a full block).
+"""Generate and verify the owner-approved FREELY genesis candidate.
 
-The script validates its transaction serializer against Bitcoin's known genesis
-coinbase txid, then emits a candidate FREELY coinbase txid/Merkle root. It does
-not select block time, powLimit, nBits, nonce, or a production genesis hash.
+The script uses the approved transaction, timestamp, compact target and powLimit
+to emit the candidate coinbase txid/Merkle root. An optional nonce is checked
+against the complete 80-byte header proof of work. It does not mine a nonce or
+activate production chain parameters; those remain explicit engineering gates.
 """
 from __future__ import annotations
 
