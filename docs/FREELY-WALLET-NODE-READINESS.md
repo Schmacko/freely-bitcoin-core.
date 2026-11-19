@@ -6,8 +6,8 @@ Workstream opened against the current core-chain implementation branch. This is 
 
 ## Safety boundary
 
-- Keep `-chain=freely` fail-closed until the owner-approved production consensus and network parameters are implemented.
-- Do not assign FREELY address prefixes, Bech32 HRP, ports, message magic, genesis, powLimit, seeds, or activation heights in this workstream.
+- Keep `-chain=freely` fail-closed until the derived genesis nonce/hash are mined and independently verified, the FREELY CChainParams integration is complete, and release evidence gates pass. All four parameter areas are owner-approved; the canonical values are in `docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md`.
+- Do not invent or duplicate parameter values in this workstream. Consume the owner-approved network/address/PoW/activation baseline from `docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md`; do not add DNS seeds or activate the network.
 - Do not expose RPC or P2P services publicly, deploy nodes, mine on a public network, or launch a testnet/mainnet.
 - Use Bitcoin Core's existing regtest only as a local test harness. Regtest is not FREELY.
 - Preserve Bitcoin Core v32.1 wallet, descriptor, key-management, transaction, persistence, and RPC architecture unless a demonstrated FREELY-specific incompatibility requires a minimal change.
@@ -33,13 +33,13 @@ The v32.1 source tree already contains the wallet initialization interface, wall
 ### WN-3: Wallet compatibility
 - Retain descriptor-wallet architecture and existing key derivation/storage implementation.
 - Audit address encoding, network parameters, extended key prefixes, message signing, URI handling, and output-type defaults.
-- Keep FREELY address/key encodings disabled until their values are approved.
+- Although address/key values are approved, keep FREELY encodings disabled until CChainParams integration, genesis verification, Base58/Bech32 round trips, and wallet tests pass.
 - Review wallet encryption, backup, restore, descriptor import/export, and keypool behaviour.
 
 ### WN-4: Transaction lifecycle
 - Exercise transaction construction, fee estimation, coin selection, signing, broadcast, confirmation, replacement, and reorg handling using local regtest fixtures.
 - Confirm wallet amounts use integer satoshi/base-unit semantics and reject out-of-range values.
-- FREELY-specific transaction tests must wait for approved consensus parameters and an operational chain.
+- FREELY-specific transaction tests must wait for CChainParams integration and a verified genesis commitment; local Bitcoin regtest remains only a harness, not a FREELY network.
 
 ### WN-5: Persistence, recovery, and safety
 - Test wallet database creation, clean shutdown, restart, backup, restore, corruption handling, and rescan behaviour.
@@ -54,7 +54,7 @@ The v32.1 source tree already contains the wallet initialization interface, wall
 ## Initial acceptance gates
 
 1. Existing upstream wallet and node tests remain intact.
-2. FREELY chain selection remains fail-closed while production parameters are unresolved.
+2. FREELY chain selection remains fail-closed until the derived genesis commitment is verified and CChainParams/runtime integration passes.
 3. No Bitcoin mainnet address or network identity is accepted as a FREELY identity by accident.
 4. Local regtest tests are explicitly labelled as harness tests, never as FREELY network tests.
 5. RPC defaults remain local-only and no public listener is introduced.
@@ -63,7 +63,7 @@ The v32.1 source tree already contains the wallet initialization interface, wall
 
 ## Dependencies and owner decisions
 
-The workstream can progress on source audits, node lifecycle safety, RPC test design, wallet persistence/recovery tests, and upstream compatibility. FREELY address generation, transaction validation against a live FREELY chain, mining rewards, and production wallet interoperability depend on the unresolved genesis, powLimit, activation matrix, and network identity decisions.
+The workstream can progress on source audits, node lifecycle safety, RPC test design, wallet persistence/recovery tests, and upstream compatibility. FREELY address generation, transaction validation against a live FREELY chain, mining rewards, and production wallet interoperability depend on the CChainParams implementation, independently mined/verified genesis nonce and hash, and successful FREELY-specific encoding/consensus tests. The powLimit, genesis nBits, network identity, and activation matrix are approved, not open owner decisions.
 
 ## Progress reporting
 
@@ -115,7 +115,7 @@ Reviewed against the pinned v32.1 implementation on 18 November 2026:
 - Extended public and private key encoding/decoding use the active `EXT_PUBLIC_KEY` and `EXT_SECRET_KEY` prefixes.
 - Wallet address RPCs route through `EncodeDestination` and `DecodeDestination`, so they inherit the active chain parameters rather than hard-coding Bitcoin mainnet address formats.
 
-**Implication:** the upstream wallet/address architecture is reusable without a FREELY-specific address encoder. The eventual FREELY parameter object must nevertheless provide unique, reviewed Base58 prefixes, extended-key prefixes, and Bech32 HRP before address generation or wallet interoperability can be enabled. No values are assigned by this audit.
+**Implication:** the upstream wallet/address architecture is reusable without a FREELY-specific address encoder. The approved FREELY parameter object must use the unique Base58 prefixes, extended-key versions, and Bech32 HRP recorded in the canonical approved-parameter document. This source audit does not itself enable FREELY address generation.
 
 **Validation boundary:** existing `key_io_tests` exercise Bitcoin mainnet, testnet, signet, and regtest vectors. They cannot validate FREELY until FREELY parameters exist. Current wallet CI is upstream compatibility coverage only; it is not a FREELY address-format test.
 
@@ -127,14 +127,14 @@ The live GitHub branch comparison and changed-file lists show the following inte
 |---|---|---|
 | #1 | `freely/m1-consensus` | Foundation for #8. Based directly on `freely/upstream-v32.1`. Contains shared `.github/workflows/ci.yml` and CI image changes. |
 | #8 | `freely/core-chain-implementation` | Correctly based on #1's current head. Current comparison: 12 commits ahead, 0 behind. Must follow #1 in integration order. |
-| #11 | `freely/wallet-node-readiness` | Targets the current #8 head `5f8fa282ea0675c41c2a5aa21db36d5e1bf47744`. Current comparison: PR #11 head `24800203855264f0b490ec80a602389754a0be81` is 5 commits ahead and 0 behind. Its two changed files (wallet readiness workflow and this document) do not overlap with PR #8. Recheck this relationship if #8 advances and rerun wallet CI on the resulting head. |
-| #2 | `freely/consensus-specification` | Independent of code integration, but shares consensus/network specification documents and verifier script with #7. Reconcile duplicate edits before either is merged. |
-| #7 | `freely/network-architecture` | Overlaps #2 on `FREELY-CONSENSUS-SPECIFICATION.md`, `FREELY-NETWORK-ARCHITECTURE.md`, `FREELY-NETWORK-PARAMETERS-DRAFT.md`, and `verify-freely-consensus-spec.py`; also overlaps #3 on `FREELY-CHAIN-SELECTION-AUDIT.md`. Resolve by selecting a canonical source or rebasing/retargeting; do not merge both blindly. |
-| #3 | `freely/chain-selection-audit` | Documentation overlap with #7 on `FREELY-CHAIN-SELECTION-AUDIT.md`; reconcile content. |
+| #11 | `freely/wallet-node-readiness` | Targets current #8 head `3078f79d6452dfccc9a1f4baeb0c0f3f1f635358`. Current comparison: PR #11 head `65c5e697414b75943eea2d8cd76cb756bc8d9981` is 9 commits ahead and 0 behind. Its two files (wallet workflow and this document) do not overlap PR #8. Wallet CI run `44537919886` is queued; no wallet-enabled build or functional test pass is verified. |
+| #12 | `freely/reconciled-docs` | Consolidates the current consensus specification, architecture and source audit. PRs #2, #3 and #7 are closed unmerged and superseded by this canonical documentation branch. PR #12 head `c58b0b8772543b1dd417a04c5b703b7f78a095c7`; focused and full CI remain queued. |
+| #13 | `freely/network-magic-registration` | Child of #8; adds the approved message-magic lookup and a C++ regression test. Current head `73560540e78fcc9b90754fd22aa33813e1c99ee3`, 5 commits ahead / 0 behind #8. Focused and full CI queued. |
+| #2/#3/#7 | Superseded documentation branches | Closed unmerged; do not merge. PR #12 is the canonical reconciliation. |
 | #9 | `freely/ci-windows-safe` | Overlaps #1 on `.github/workflows/ci.yml` and `ci/test/00_setup_env_native_nowallet.sh`. Consolidate the Windows-safe checkout and push-trigger changes into one reviewed CI change; avoid duplicate competing merges. |
 | #6 | `freely/retarget-test-vectors` | Adds `src/test/pow_tests.cpp` and focused retarget/BIP94 coverage; currently separate from #1/#8. Validate against the same v32.1 base and integrate after reviewing consensus semantics. |
-| #10 | `freely/network-safety-preflight` | Separate tooling/docs workstream; no changed-file overlap with #1/#8/#11. Its production manifest intentionally remains unset and fail-closed. |
-| #4/#5 | PoW audit / retarget policy | Documentation-only workstreams; use them as review inputs for #6 and the eventual consensus implementation, not as independently activated production settings. |
+| #10 | `freely/network-safety-preflight` | Independent fail-closed preflight. Approved values are now pinned exactly; only the derived genesis hash/nonce and release evidence remain incomplete. Head `fcf736b5102f9889e3a93dfe238fa138dc54c6d8`; 43 Python test methods are written, but the exact-head workflow is queued. |
+| #4/#5 | PoW audit / retarget policy | Documentation workstreams recording the owner-approved PoW policy; use them with #6's executable vectors for C++ integration and review. Approval does not itself activate a network. |
 
 ### Recommended integration sequence
 
@@ -159,3 +159,21 @@ The live GitHub branch comparison and changed-file lists show the following inte
 ## Live branch comparison refresh — 18 November 2026
 
 The current GitHub compare endpoints show `freely/core-chain-implementation` at `5f8fa282ea0675c41c2a5aa21db36d5e1bf47744` and `freely/wallet-node-readiness` at `24800203855264f0b490ec80a602389754a0be81`. PR #11 is 5 commits ahead and 0 behind PR #8. The earlier note describing a diverged relationship is superseded. The wallet workflow remains queued; this graph comparison does not constitute a build or test pass.
+
+
+## Live dependency and approval refresh — 19 November 2026
+
+All four protocol parameter proposal areas were approved on 18 November. The canonical values are recorded in `docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md`; the implementation preflight now checks exact values and exact activation/version-bits maps. The remaining genesis values are derived outputs: nonce and block hash must be mined/reproduced, not selected by another owner vote.
+
+Current branch graph:
+- PR #8: `3078f79d6452dfccc9a1f4baeb0c0f3f1f635358`.
+- PR #11: `65c5e697414b75943eea2d8cd76cb756bc8d9981`, 9 commits ahead / 0 behind PR #8.
+- PR #13: `73560540e78fcc9b90754fd22aa33813e1c99ee3`, 5 commits ahead / 0 behind PR #8; adds `GetNetworkForMagic` registration and expands the focused CTest filter to execute `freely_genesis_tests`.
+- PR #12 is the canonical documentation reconciliation; PRs #2, #3 and #7 are closed unmerged.
+
+Current wallet/node workflow:
+- Focused wallet/node run [44537919886](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44537919886): queued.
+- Full CI run [44537919781](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44537919781): queued.
+- Wallet-enabled C++ build and functional tests remain unverified.
+
+The wallet workstream remains upstream-compatibility testing on local regtest only. No FREELY node is selectable, no public RPC/P2P service is exposed, and no launch/deployment is authorized.
