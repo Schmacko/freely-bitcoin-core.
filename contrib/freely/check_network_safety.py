@@ -17,8 +17,8 @@ BITCOIN_NETWORKS = {
     "main": {"message_start": "f9beb4d9", "p2p_port": 8333, "rpc_port": 8332, "data_directory": "", "bech32_hrp": "bc"},
     "testnet3": {"message_start": "0b110907", "p2p_port": 18333, "rpc_port": 18332, "data_directory": "testnet3", "bech32_hrp": "tb"},
     "testnet4": {"message_start": "1c163f28", "p2p_port": 48333, "rpc_port": 48332, "data_directory": "testnet4", "bech32_hrp": "tb"},
-    # Signet magic is challenge-derived; ports and HRP are fixed.
-    "signet": {"message_start": None, "p2p_port": 38333, "rpc_port": 38332, "data_directory": "signet", "bech32_hrp": "tb"},
+    # Default BIP325 signet challenge magic; custom challenges derive a different magic and require runtime collision validation.
+    "signet": {"message_start": "0a03cf40", "p2p_port": 38333, "rpc_port": 38332, "data_directory": "signet", "bech32_hrp": "tb"},
     "regtest": {"message_start": "fabfb5da", "p2p_port": 18444, "rpc_port": 18443, "data_directory": "regtest", "bech32_hrp": "bcrt"},
 }
 BITCOIN_BASE58_PREFIXES = {
