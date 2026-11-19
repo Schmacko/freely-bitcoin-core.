@@ -78,4 +78,19 @@ BOOST_AUTO_TEST_CASE(freely_message_magic_maps_to_freely_chain_type)
     BOOST_CHECK(!GetNetworkForMagic(unknown_message_start).has_value());
 }
 
+BOOST_AUTO_TEST_CASE(all_builtin_message_magics_keep_their_chain_type)
+{
+    const auto mainnet{CChainParams::Main()};
+    const auto testnet{CChainParams::TestNet()};
+    const auto testnet4{CChainParams::TestNet4()};
+    const auto signet{CChainParams::SigNet()};
+    const auto regtest{CChainParams::RegTest()};
+
+    BOOST_CHECK(GetNetworkForMagic(mainnet->MessageStart()) == ChainType::MAIN);
+    BOOST_CHECK(GetNetworkForMagic(testnet->MessageStart()) == ChainType::TESTNET);
+    BOOST_CHECK(GetNetworkForMagic(testnet4->MessageStart()) == ChainType::TESTNET4);
+    BOOST_CHECK(GetNetworkForMagic(signet->MessageStart()) == ChainType::SIGNET);
+    BOOST_CHECK(GetNetworkForMagic(regtest->MessageStart()) == ChainType::REGTEST);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
