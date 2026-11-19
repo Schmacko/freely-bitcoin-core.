@@ -99,7 +99,8 @@ def matches_approved(actual: Any, expected: Any) -> bool:
     if isinstance(expected, dict):
         return (
             isinstance(actual, dict)
-            and all(key in actual and matches_approved(actual[key], value) for key, value in expected.items())
+            and set(actual) == set(expected)
+            and all(matches_approved(actual[key], value) for key, value in expected.items())
         )
     return type(actual) is type(expected) and actual == expected
 
