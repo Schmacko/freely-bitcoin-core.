@@ -7,7 +7,7 @@
 
 ## Executive result
 
-The fork contains explicit production/test classification scaffolding. PR #8 now adds `ChainType::FREELY`, canonical name parsing/serialization and help registration, plus fail-closed guards in the base-parameter and consensus-parameter factories. The public startup selectors are covered by regression-test code and deliberately throw before global chain/config parameters can be selected. A FREELY parameter object, production network identity and genesis are still absent. This is selector scaffolding, not a runnable node; the remaining work spans base parameters, consensus, kernel parameters, network identity, genesis and tests.
+The fork contains explicit production/test classification scaffolding. PR #8 now adds `ChainType::FREELY`, canonical name parsing/serialization and help registration, plus fail-closed guards in the base-parameter and consensus-parameter factories. The public startup selectors are covered by regression-test code and deliberately throw before global chain/config parameters can be selected. The owner has now approved the production network identity and consensus parameter baseline, but a FREELY parameter object and verified genesis commitment are still absent. This is selector scaffolding, not a runnable node; remaining work spans kernel parameters, network-magic dispatch, genesis integration and tests.
 
 ## 1. Chain selector integration points
 
@@ -230,3 +230,10 @@ The following call sites were re-opened on the current PR #8 implementation bran
 - [ ] Current-head C++ tests pass.
 
 **Conclusion:** the reviewed selector paths fail closed rather than silently selecting Bitcoin MAIN. The main remaining selector integration gaps are the deliberately absent FREELY parameter class, network-magic registration and repository-wide call-site verification on the final integration commit. No production identity value is selected by this audit.
+
+
+## 12. Owner-approved identity and consensus values — 18 November 2026
+
+The approved exact values are maintained in [FREELY-APPROVED-PROTOCOL-PARAMETERS.md](FREELY-APPROVED-PROTOCOL-PARAMETERS.md). The approved network magic is `fa c3 b7 d1`; P2P/RPC ports are 49444/49445; Base58 prefixes are 55/117/183; extended-key versions are `04464c59/04666c79`; and Bech32 HRP is `fly`. PoW and genesis values are also approved as recorded in that baseline.
+
+This audit's source finding remains unchanged: `GetNetworkForMagic` does not yet map FREELY, and the full FREELY consensus factory still throws. The next implementation must add the approved magic to kernel network lookup, test collisions against every built-in network including configured signet, instantiate a dedicated production parameter object, and retain fail-closed startup until the derived genesis nonce/hash and full regression evidence are verified. No Bitcoin MAIN historical checkpoints, assume-valid values, chainwork or activation exceptions may be copied.
