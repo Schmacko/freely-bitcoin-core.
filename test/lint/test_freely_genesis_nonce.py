@@ -72,6 +72,18 @@ class GenesisNonceSearchTest(unittest.TestCase):
             self.assertEqual(result["block_hash"], digest[::-1].hex())
             self.assertLessEqual(int.from_bytes(digest, "little"), target)
 
+    def test_worker_refuses_checkpoint_beyond_nonce_space(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            checkpoint = Path(temporary) / "worker-000.json"
+            checkpoint.write_text(json.dumps({
+                "job_id": "expected-job", "worker_id": 0,
+                "workers": 1, "chunk_size": 1,
+                "next_nonce": MINER.MAX_U32 + 2,
+            }), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "nonce sequence"):
+                MINER.worker(0, 1, 0, 1, bytes(76), 1, "expected-job",
+                             temporary, StopFlag())
+
     def test_worker_refuses_misaligned_checkpoint_nonce(self):
         with tempfile.TemporaryDirectory() as temporary:
             checkpoint = Path(temporary) / "worker-001.json"
