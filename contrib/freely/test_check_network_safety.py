@@ -72,6 +72,22 @@ class NetworkSafetyTests(unittest.TestCase):
                     f"{section}.{field} mutation unexpectedly passed",
                 )
 
+    def test_rejects_unapproved_activation_or_version_bits_entries(self):
+        data = complete_fixture()
+        data["consensus"]["script_activation_heights"]["taproot"] = 1
+        self.assertTrue(any("owner-approved protocol parameter baseline" in item for item in validate(data)))
+
+        data = complete_fixture()
+        data["consensus"]["version_bits"]["experimental"] = {
+            "bit": 27,
+            "start_time": -2,
+            "timeout": 9223372036854775807,
+            "min_activation_height": 0,
+            "threshold": 1815,
+            "period": 2016,
+        }
+        self.assertTrue(any("owner-approved protocol parameter baseline" in item for item in validate(data)))
+
     def test_rejects_partial_genesis_commitment(self):
         data = complete_fixture()
         data["genesis"]["nonce"] = None
