@@ -38,7 +38,7 @@ See [FREELY upstream network-identity audit](FREELY-UPSTREAM-NETWORK-IDENTITY-AU
 
 A passing result is a manifest consistency check, **not** proof that the C++ chain parameters consume the manifest, that the genesis block is correctly constructed, or that a node is safe to launch. It does not compile or execute Bitcoin Core. Those require separate implementation, integration tests, and code review.
 
-The validator also decodes the genesis compact target and checks that it is positive, non-negative, non-overflowing, and no greater than the declared `powLimit`. Signet message magic is challenge-derived, so its runtime value must also be checked against FREELY when the signet challenge is known. The test fixture uses synthetic values solely to test the validator. They are not proposed FREELY production parameters and must never be copied into production configuration.
+The validator also decodes the genesis compact target and checks that it is positive, non-negative, non-overflowing, and no greater than the declared `powLimit`. The default BIP325 signet challenge derives message magic `0a03cf40`, which the validator checks statically. A non-default `-signetchallenge` derives a different value and must be collision-checked at runtime when that custom challenge is configured. The test fixture uses synthetic values solely to test the validator. They are not proposed FREELY production parameters and must never be copied into production configuration.
 
 ## Owner decisions still required
 
