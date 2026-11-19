@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - freely/m1-consensus
+      - freely/core-chain-implementation
     paths:
       - "test/functional/feature_freely_startup.py"
       - "src/bitcoin-cli.cpp"
