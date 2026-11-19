@@ -87,15 +87,15 @@ The project owner has approved the following production policy, based on the ded
 - Reuse Bitcoin Core v32.1 `GetNextWorkRequired` / `CalculateNextWorkRequired` semantics, including upstream integer arithmetic and compact-target handling, subject to FREELY-specific parameters and tests.
 - At non-boundary heights, retain the previous block's `nBits`. At a retarget boundary, use the upstream v32.1 period timestamp selection and clamp/scale procedure. The exact code path and vectors must be confirmed by implementation tests before activation.
 
-This approval resolves the production retarget/clamp/minimum-difficulty/no-retargeting policy. Separately, on 17 November 2026 the owner approved enabling BIP94 from genesis, subject to source review and dedicated tests. A numeric `powLimit`, genesis `nBits`, genesis fields and final network identity values remain unapproved.
+The production retarget/clamp/minimum-difficulty/no-retargeting policy and BIP94 from genesis were approved. On 18 November 2026 the owner also approved the numeric `powLimit`, genesis `nBits`, genesis candidate fields, network identity and initial script activation matrix. The derived nonce/hash and exact-head C++/functional verification remain outstanding.
 
-### Still unresolved — consensus-critical
+### Remaining implementation and derived-output gates
 
-1. Numeric `powLimit` and initial difficulty: candidate modelling is authorised; no production number is approved.
-2. Genesis `nBits`, which must encode a target no easier than the selected `powLimit`.
-3. BIP94 is owner-approved from genesis; exact v32.1 semantics and tests remain an implementation gate.
-4. Timestamp validity constraints and median-time-past behaviour; preserve upstream rules unless a deliberate change is specified.
-5. Compact target decoding, overflow and negative-target rejection vectors must be fixed in the implementation test contract.
+1. Derive the genesis transaction ID, Merkle root, nonce and block hash from the approved candidate using pinned Core serialization and independent reproduction.
+2. Implement and test the approved network identity, PoW parameters and activation matrix without exposing a selectable production chain prematurely.
+3. Verify exact v32.1 BIP94 and script-flag semantics with C++ and functional regression tests.
+4. Preserve upstream timestamp validity and median-time-past rules unless a separately reviewed change is approved.
+5. Complete compact-target negative/zero/overflow/above-limit tests and exact retarget-boundary vectors.
 
 Do not copy Bitcoin mainnet's proof-of-work limit or special difficulty flags by default. Do not invent these values merely to make a node compile.
 
@@ -191,7 +191,7 @@ These choices should be reviewed together as a single consensus parameter sheet.
 ## 9. Implementation sequence
 
 1. Keep the currently monitored M1 PR unchanged until its CI runs reach terminal states.
-2. Review this specification and resolve the open decisions.
+2. Review the approved parameter baseline, derive the genesis commitment, and close the implementation/test gates.
 3. Implement a separate, narrowly scoped chain-type and base-parameter patch only when its identity and production/test classification are safe.
 4. Implement FREELY consensus parameters, genesis and tests in a separate patch.
 5. Run targeted validation tests, the full upstream test suite, platform CI and sanitizers.
@@ -226,7 +226,7 @@ See [FREELY consensus decision register](FREELY-CONSENSUS-DECISION-REGISTER.md) 
 
 The FREELY consensus specification package is complete as an **implementation contract and decision-controlled draft**. Every consensus domain required before implementation is identified, its known rules are stated, its unresolved choices are explicitly registered, and the required tests and activation gates are defined.
 
-**Specification coverage: 100% (document deliverable). Consensus freeze: not complete.** A complete specification can identify a blocked owner decision without inventing a value. It is not safe to claim the production consensus is frozen while those decisions remain open.
+**Specification coverage: 100% (document deliverable). Parameter selection: owner-approved. Consensus freeze: not complete until the derived genesis commitment is independently verified and exact-head C++/functional tests pass.**
 
 ### 12.2 Authoritative parameter status
 
@@ -237,7 +237,7 @@ The FREELY consensus specification package is complete as an **implementation co
 | Initial subsidy | 50 FLY | Approved |
 | Halving | Every 210,000 blocks; integer right shift | Approved |
 | Scheduled issuance | 20,999,999.9769 FLY | Arithmetic verified |
-| Genesis spendability | Conventional unspendable genesis recommended | Owner confirmation pending |
+| Genesis spendability | Permanently unspendable OP_RETURN output; height-zero subsidy remains in scheduled issuance | Owner-approved; implementation/test verification pending |
 | PoW hash | SHA-256d | Approved |
 | Target spacing | 600 seconds | Approved |
 | Retarget interval | 2,016 blocks | Approved |
@@ -246,12 +246,12 @@ The FREELY consensus specification package is complete as an **implementation co
 | Minimum difficulty | Disabled in production | Owner-approved |
 | No-retargeting | Disabled in production | Owner-approved |
 | Retarget algorithm | Pinned v32.1 integer/compact-target semantics | Owner-approved |
-| Numeric powLimit | Not selected | Owner decision pending |
-| Genesis nBits and genesis commitment | Not selected | Depends on powLimit/genesis decisions |
-| BIP94/time-warp mitigation | Not selected | Owner decision pending |
+| Numeric powLimit | `00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff` | Owner-approved 18 Nov 2026 |
+| Genesis nBits and genesis commitment | `0x1d00ffff`; nonce/hash derived | nBits owner-approved; commitment generation and verification pending |
+| BIP94/time-warp mitigation | Enabled from genesis | Owner-approved; exact-head tests pending |
 | Timestamp/MTP | Preserve v32.1 unless a reviewed change is approved | Baseline rule |
-| Script/soft-fork activation matrix | Required matrix and test format defined; individual activation states open | Owner decision pending |
-| Chain/network identity | Fields and collision requirements enumerated | Owner decision pending |
+| Script/soft-fork activation matrix | BIP34/BIP65/BIP66/CSV/SegWit at height 1; TESTDUMMY NEVER_ACTIVE; Taproot/witness-v1 via v32.1 flags | Owner-approved 18 Nov; compatibility tests pending |
+| Chain/network identity | Magic `fa c3 b7 d1`, ports 49444/49445, prefixes 55/117/183, xpub/xprv `04464c59/04666c79`, HRP `fly` | Owner-approved 18 Nov; runtime integration pending |
 | Chain-history shortcuts | No Bitcoin history-specific assumptions copied | Approved safety rule |
 
 ### 12.3 Exact monetary boundary correction
@@ -266,7 +266,7 @@ All tests and cumulative issuance calculations MUST use integer base units. The 
 
 ### 12.4 Retarget test contract cross-reference
 
-The approved policy is covered by the dedicated deterministic vector contract in FREELY-RETARGET-TEST-VECTORS.md. That document specifies exact lower/upper clamp and normal-period compact-target expectations, one-second boundary cases, first retarget at candidate height 2,016 using timestamps at heights 0 and 2,015, non-boundary carry-forward, compact target negative/zero/overflow/above-limit rejection, and separate BIP94 vectors pending a decision.
+The approved policy is covered by the dedicated deterministic vector contract in FREELY-RETARGET-TEST-VECTORS.md. It specifies lower/upper clamp and normal-period compact-target expectations, one-second boundary cases, first retarget at candidate height 2,016 using timestamps at heights 0 and 2,015, non-boundary carry-forward, compact-target rejection and BIP94 period-start-target vectors. Current-head C++ execution remains pending.
 
 The synthetic test powLimit and nBits are fixtures only, never FREELY production values.
 
@@ -285,7 +285,7 @@ Before a FREELY parameter object is frozen, the implementation decision sheet mu
 | Tests | Before/at/after activation and invalid-block cases |
 | Approval | Owner decision and independent review reference |
 
-No Bitcoin MAIN activation height, hash, exception or deployment timestamp is presumed valid for FREELY. The matrix is a required deliverable; its individual consensus values remain open until reviewed.
+No Bitcoin MAIN activation hash, exception or deployment timestamp is presumed valid for FREELY. The initial matrix values are owner-approved as listed in section 14; implementation must verify each against v32.1 and test before production selection.
 
 ### 12.6 Final pre-implementation gates
 
