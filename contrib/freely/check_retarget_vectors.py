@@ -10,8 +10,8 @@ RETARGET_INTERVAL = 2_016
 TARGET_TIMESPAN = TARGET_SPACING * RETARGET_INTERVAL
 MIN_TIMESPAN = TARGET_TIMESPAN // 4
 MAX_TIMESPAN = TARGET_TIMESPAN * 4
-SYNTHETIC_POW_LIMIT_COMPACT = 0x207FFFFF
-SYNTHETIC_PREVIOUS_BITS = 0x1F7FFFFF
+SYNTHETIC_POW_LIMIT_COMPACT = 0x1E7FFFFF
+SYNTHETIC_PREVIOUS_BITS = 0x1D7FFFFF
 
 
 def decode_compact(compact: int) -> int:
@@ -89,11 +89,11 @@ def main() -> None:
         raise AssertionError("zero target unexpectedly encoded")
 
     vectors = (
-        (302_399, 0x1F1FFFFF),
-        (302_400, 0x1F1FFFFF),
-        (1_209_600, 0x1F7FFFFF),
-        (4_838_400, 0x2001FFFF),
-        (4_838_401, 0x2001FFFF),
+        (302_399, 0x1D1FFFFF),
+        (302_400, 0x1D1FFFFF),
+        (1_209_600, 0x1D7FFFFF),
+        (4_838_400, 0x1E01FFFF),
+        (4_838_401, 0x1E01FFFF),
     )
     for elapsed, expected in vectors:
         actual = calculate_next_bits(elapsed)
@@ -105,8 +105,8 @@ def main() -> None:
     # to height 2,015. Measuring from height 1 is the deliberate off-by-one trap.
     correct_period_bits = calculate_next_bits(402_500 - 100_000)
     wrong_ancestor_bits = calculate_next_bits(402_500 - 101_000)
-    assert correct_period_bits == 0x1F2002B5
-    assert wrong_ancestor_bits == 0x1F1FFFFF
+    assert correct_period_bits == 0x1D2002B5
+    assert wrong_ancestor_bits == 0x1D1FFFFF
     assert correct_period_bits != wrong_ancestor_bits
 
     print("FREELY synthetic retarget vectors: PASS (5 clamp/scaling cases + 2,016-block boundary)")
