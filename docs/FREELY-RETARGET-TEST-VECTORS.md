@@ -10,7 +10,7 @@
 
 These vectors translate the approved production retarget policy into deterministic expected values for tests of Bitcoin Core v32.1 `CalculateNextWorkRequired`. They use a deliberately synthetic, self-contained parameter set so the arithmetic can be tested before FREELY's production `powLimit`, genesis `nBits` and genesis block are chosen.
 
-**The synthetic values below are not proposed FREELY production parameters.** They must not be copied into a FREELY chain-parameter object or used to mine/deploy a network.
+**The synthetic values below are not proposed FREELY production parameters.** They must not be copied into a FREELY chain-parameter object or used to mine/deploy a network. The compact targets are deliberately bounded so the largest intermediate multiplication in Bitcoin Core's 256-bit `arith_uint256` retarget implementation remains within 256 bits; this keeps the independent Python vectors and the actual C++ arithmetic equivalent.
 
 ## Fixed policy inputs
 
@@ -24,8 +24,8 @@ These vectors translate the approved production retarget policy into determinist
 | Minimum-difficulty exception | Disabled | Approved for production |
 | No-retargeting | Disabled | Approved for production |
 | BIP94 | Separate enabled/disabled comparison fixture | Owner-approved enabled from genesis; C++ validation pending |
-| Synthetic powLimit | compact `0x207fffff` | Test-only |
-| Synthetic previous `nBits` | `0x1f7fffff` | Test-only |
+| Synthetic powLimit | compact `0x1e7fffff` | Test-only |
+| Synthetic previous `nBits` | `0x1d7fffff` | Test-only |
 
 ## Exact expected vectors
 
@@ -33,19 +33,19 @@ The v32.1 algorithm calculates:
 
 1. `actual_timespan = last_block_time - first_block_time`.
 2. Clamp it to [302,400, 4,838,400].
-3. Decode previous `nBits = 0x1f7fffff` into the integer target.
+3. Decode previous `nBits = 0x1d7fffff` into the integer target.
 4. Multiply the target by the clamped timespan.
 5. Divide by 1,209,600 using integer arithmetic.
-6. Cap at synthetic `powLimit = 0x207fffff`.
+6. Cap at synthetic `powLimit = 0x1e7fffff`.
 7. Encode the result using Bitcoin compact-target encoding.
 
 | Case | Supplied elapsed seconds | Clamped seconds | Expected compact `nBits` |
 |---|---:|---:|---:|
-| Just below lower clamp | 302,399 | 302,400 | `0x1f1fffff` |
-| Exactly lower clamp | 302,400 | 302,400 | `0x1f1fffff` |
-| Normal target period | 1,209,600 | 1,209,600 | `0x1f7fffff` |
-| Exactly upper clamp | 4,838,400 | 4,838,400 | `0x2001ffff` |
-| Just above upper clamp | 4,838,401 | 4,838,400 | `0x2001ffff` |
+| Just below lower clamp | 302,399 | 302,400 | `0x1d1fffff` |
+| Exactly lower clamp | 302,400 | 302,400 | `0x1d1fffff` |
+| Normal target period | 1,209,600 | 1,209,600 | `0x1d7fffff` |
+| Exactly upper clamp | 4,838,400 | 4,838,400 | `0x1e01ffff` |
+| Just above upper clamp | 4,838,401 | 4,838,400 | `0x1e01ffff` |
 
 These outputs were independently calculated using integer arithmetic and compact-target encode/decode logic. They are fixed regression expectations, not values recomputed by calling the C++ function under test.
 
@@ -55,7 +55,7 @@ Add tests in `src/test/pow_tests.cpp` (or a dedicated FREELY test file after cha
 
 - Construct `Consensus::Params` explicitly; do not obtain or mutate Bitcoin MAIN parameters as a proxy for FREELY.
 - Set the synthetic target timespan, target spacing, synthetic powLimit, `fPowNoRetargeting=false`, `fPowAllowMinDifficultyBlocks=false`, and `enforce_BIP94=false` for the baseline vectors.
-- Set `CBlockIndex::nBits` to `0x1f7fffff` and use first/last timestamps whose differences match each vector.
+- Set `CBlockIndex::nBits` to `0x1d7fffff` and use first/last timestamps whose differences match each vector.
 - Assert exact equality with every expected compact `nBits` value above.
 - Test the one-second-below and one-second-above clamp cases to catch off-by-one errors.
 - Verify that when no-retargeting is enabled in a separate test-only parameter instance, `CalculateNextWorkRequired` returns the prior `nBits` unchanged; this is a generic upstream algorithm test, not a FREELY production setting.
@@ -106,7 +106,7 @@ The focused GitHub Actions workflow runs this checker before configuring and com
 
 ## Independent arithmetic check
 
-For synthetic previous target `T = decode_compact(0x1f7fffff)`, the unrounded mathematical target before compact encoding is:
+For synthetic previous target `T = decode_compact(0x1d7fffff)`, the unrounded mathematical target before compact encoding is:
 
 - Lower clamp: `T × 302400 / 1209600 = T / 4`.
 - Normal period: `T × 1209600 / 1209600 = T`.
@@ -144,15 +144,15 @@ Synthetic fixture:
 - Target spacing: 600 seconds.
 - Target timespan: 1,209,600 seconds.
 - Period: 2,016 linked block indexes, heights 0 through 2,015.
-- Synthetic powLimit: compact `0x207fffff`.
-- First block of period nBits: `0x1f7fffff`.
-- Last block of period nBits: `0x1f3fffff`.
+- Synthetic powLimit: compact `0x1e7fffff`.
+- First block of period nBits: `0x1d7fffff`.
+- Last block of period nBits: `0x1d3fffff`.
 - Elapsed time: exactly 1,209,600 seconds.
 - Minimum difficulty: disabled; no-retargeting: disabled.
 
 Expected results:
-- With `enforce_BIP94=true`, next target is `0x1f7fffff` (the first block's target).
-- With `enforce_BIP94=false`, next target is `0x1f3fffff` (the previous tip's target).
+- With `enforce_BIP94=true`, next target is `0x1d7fffff` (the first block's target).
+- With `enforce_BIP94=false`, next target is `0x1d3fffff` (the previous tip's target).
 - The outputs must differ, proving the test exercises the BIP94-specific branch.
 
 The C++ test `freely_bip94_uses_first_block_period_target` has been added to `src/test/pow_tests.cpp`. A functional test `test/functional/feature_bip94.py` uses regtest's 144-block interval to reject a boundary block 601 seconds earlier than its parent and accept the exact 600-second grace boundary. The production FREELY interval remains 2,016 blocks; the regtest test validates the same conditional code path but is not a production-parameter test. Both tests are synthetic/non-production tests and must pass CI before BIP94 is considered verified.
