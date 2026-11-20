@@ -17,6 +17,7 @@ on:
       - "test/functional/feature_config_args.py"
       - "test/functional/feature_abortnode.py"
       - "test/functional/feature_init.py"
+      - "test/functional/feature_freely_startup.py"
       - "test/functional/test_framework/**"
       - "CMakeLists.txt"
       - ".github/workflows/freely-wallet-node-readiness.yml"
@@ -83,4 +84,5 @@ jobs:
             rpc_net.py \
             feature_config_args.py \
             feature_abortnode.py \
-            feature_init.py
+            feature_init.py \
+            feature_freely_startup.py
