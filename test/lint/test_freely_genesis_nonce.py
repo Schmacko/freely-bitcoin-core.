@@ -13,6 +13,7 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import struct
 import unittest
 
 
