@@ -280,6 +280,7 @@ BASE_SCRIPTS = [
     'feature_freely_development_startup.py',
     'feature_freely_offline_startup.py',
     'feature_freely_loopback_network.py',
+    'feature_bip94.py',
     'feature_blocksxor.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
