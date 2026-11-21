@@ -5,7 +5,7 @@
 """Verify two FREELY nodes can connect over loopback only."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error, sync_blocks, sync_mempools
 
 
 GENESIS_HASH = "0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78"
@@ -64,6 +64,29 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
             peers = node.getpeerinfo()
             assert_equal(len(peers), 1)
             assert_equal(peers[0]["addr"].startswith("127.0.0.1:"), True)
+
+        # Exercise real block propagation between the two isolated nodes.
+        # The first node mines 101 blocks so its initial coinbase outputs have
+        # reached maturity before funding a wallet transaction.
+        miner = self.nodes[0]
+        receiver = self.nodes[1]
+        mining_address = miner.getnewaddress()
+        miner.generatetoaddress(101, mining_address)
+        sync_blocks(self.nodes)
+        assert_equal(receiver.getblockcount(), 101)
+
+        # Exercise transaction relay, mempool synchronization, block
+        # propagation, and confirmation on the receiving node.
+        destination = receiver.getnewaddress()
+        txid = miner.sendtoaddress(destination, 1)
+        sync_mempools(self.nodes)
+        assert_equal(txid in receiver.getrawmempool(), True)
+
+        confirmation_hash = miner.generatetoaddress(1, miner.getnewaddress())[0]
+        sync_blocks(self.nodes)
+        assert_equal(receiver.getblockhash(102), confirmation_hash)
+        confirmed_block = receiver.getblock(confirmation_hash, 2)
+        assert_equal(any(tx["txid"] == txid for tx in confirmed_block["tx"]), True)
 
 
 if __name__ == "__main__":
