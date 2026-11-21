@@ -2,7 +2,7 @@
 # Copyright (c) 2026 The FREELY developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Verify FREELY cannot start before its consensus and network parameters exist."""
+"""Verify FREELY production startup remains disabled pending explicit launch authorization."""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
@@ -24,7 +24,7 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
             # The functional framework initializes a regtest=1 config. Disable
             # that inherited setting before selecting the FREELY chain.
             extra_args=["-regtest=0", "-chain=freely"],
-            expected_msg="FREELY consensus and genesis parameters are not finalized; refusing startup.",
+            expected_msg="FREELY production startup is disabled pending explicit launch authorization.",
             match=ErrorMatch.PARTIAL_REGEX,
         )
 

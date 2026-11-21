@@ -151,7 +151,21 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
     case ChainType::SIGNET: {
         auto opts = CChainParams::SigNetOptions{};
         ReadSigNetArgs(args, opts);
-        return CChainParams::SigNet(opts);
+        auto params = CChainParams::SigNet(opts);
+        const auto detected_network = GetNetworkForMagic(params->MessageStart());
+        if (detected_network && *detected_network != ChainType::SIGNET) {
+            throw std::runtime_error("Custom signet message magic collides with a reserved built-in network magic.");
+        }
+        if (detected_network && *detected_network == ChainType::SIGNET) {
+            // A custom challenge can collide with the default signet's 4-byte
+            // message start. That is a distinct network identity collision even
+            // though GetNetworkForMagic necessarily labels both as SIGNET.
+            const auto default_signet = CChainParams::SigNet();
+            if (params->GetConsensus().signet_challenge != default_signet->GetConsensus().signet_challenge) {
+                throw std::runtime_error("Custom signet message magic collides with the default signet network magic.");
+            }
+        }
+        return params;
     }
     case ChainType::REGTEST: {
         auto opts = CChainParams::RegTestOptions{};
@@ -159,7 +173,9 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         return CChainParams::RegTest(opts);
     }
     case ChainType::FREELY:
-        throw std::runtime_error("FREELY consensus and genesis parameters are not finalized; refusing startup.");
+        // Candidate parameters are available for tests, but production startup
+        // remains disabled until the owner explicitly authorizes network activation.
+        throw std::runtime_error("FREELY production startup is disabled pending explicit launch authorization.");
     }
     assert(false);
 }

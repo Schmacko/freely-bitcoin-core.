@@ -1,0 +1,80 @@
+name: FREELY candidate chain parameter tests
+
+on:
+  push:
+    branches:
+      - freely/chainparams-candidate-integration
+    paths:
+      - "src/chainparams.cpp"
+      - "src/chainparamsbase.cpp"
+      - "src/kernel/chainparams.cpp"
+      - "src/kernel/chainparams.h"
+      - "src/pow.cpp"
+      - "src/validation.cpp"
+      - "src/test/chaintype_tests.cpp"
+      - "src/test/freely_genesis_tests.cpp"
+      - "src/test/pow_tests.cpp"
+      - "test/functional/feature_freely_startup.py"
+      - "test/lint/test_freely_genesis_nonce.py"
+      - "src/test/CMakeLists.txt"
+      - ".github/workflows/freely-chainparams-candidate-tests.yml"
+  pull_request:
+    branches:
+      - freely/genesis-and-network-code
+    paths:
+      - "src/chainparams.cpp"
+      - "src/chainparamsbase.cpp"
+      - "src/kernel/chainparams.cpp"
+      - "src/kernel/chainparams.h"
+      - "src/pow.cpp"
+      - "src/validation.cpp"
+      - "src/test/chaintype_tests.cpp"
+      - "src/test/freely_genesis_tests.cpp"
+      - "src/test/pow_tests.cpp"
+      - "test/functional/feature_freely_startup.py"
+      - "test/lint/test_freely_genesis_nonce.py"
+      - "src/test/CMakeLists.txt"
+      - ".github/workflows/freely-chainparams-candidate-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate-tests:
+    name: Build and test FREELY candidate parameters
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install minimal build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            build-essential cmake python3 libboost-dev libevent-dev
+
+      - name: Configure unit-test build
+        run: |
+          cmake -B build \
+            -DENABLE_WALLET=OFF \
+            -DENABLE_IPC=OFF \
+            -DBUILD_GUI=OFF \
+            -DBUILD_TESTS=ON
+
+      - name: Build node, CLI and unit-test executable
+        run: cmake --build build --target bitcoind bitcoin-cli test_bitcoin --parallel 2
+
+      - name: Run FREELY parameter, genesis, PoW and validation suites
+        run: |
+          ctest --test-dir build --output-on-failure \
+            -R '^(chaintype_tests|freely_genesis_tests|pow_tests|validation_tests)$'
+
+      - name: Run independent Python genesis header regression
+        run: python3 test/lint/test_freely_genesis_nonce.py
+
+      - name: Verify FREELY production startup remains fail-closed
+        run: python3 build/test/functional/test_runner.py --jobs=1 feature_freely_startup.py
