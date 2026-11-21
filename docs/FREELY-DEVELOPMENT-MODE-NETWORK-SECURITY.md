@@ -108,3 +108,19 @@ Implementation commits:
 - `e0fa6a1373a13bd38956a5deeb767d45c9189b31`: add focused security workflow.
 
 The latest exact-head workflow is queued; no compile or functional-test pass is claimed for these additions yet. These tests do not activate production parameters or expose a public network.
+
+
+## 8. Expanded C++ startup-guard coverage — 21 November 2026
+
+Two table-driven C++ regression tests were added to `chaintype_tests`:
+
+- `freely_loopback_private_mode_rejects_peer_and_overlay_configuration` verifies that configured addnode/seednode peers, proxies, onion/I2P/Tor services, Tor credentials, and remote RPC allowlists cannot be used in loopback-private mode.
+- `freely_loopback_private_mode_rejects_external_discovery_and_listener_overrides` verifies that address discovery, DNS seeding, NAT-PMP, UPnP and onion listening cannot be re-enabled, and that disabling the required P2P listener is rejected.
+
+These tests exercise `CreateChainParams` directly with isolated `ArgsManager` instances. They complement the functional startup tests and run in the existing `chaintype_tests` target. The focused workflow path filter now includes `src/test/chaintype_tests.cpp`, ensuring future changes to these guards trigger the security workflow.
+
+Commits:
+- `d257fc2d31144cb91b3feb543c236b3fd063a39f`: add private-mode peer/overlay and discovery guard tests.
+- `ba1c0a85716d8a102a5db93dafc0a4ada6b8898b`: trigger focused security CI for chain-type test changes.
+
+The new exact-head workflow has not yet completed. No build or test pass is claimed for these additions.
