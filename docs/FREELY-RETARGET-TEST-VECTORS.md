@@ -1,9 +1,9 @@
 # FREELY retarget implementation — deterministic test vectors
 
-**Status:** engineering test contract; not runtime consensus code  
-**Created:** 16 November 2026  
-**Pinned source:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`  
-**Branch:** `freely/retarget-test-vectors`  
+**Status:** engineering test contract; not runtime consensus code
+**Created:** 16 November 2026
+**Pinned source:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`
+**Branch:** `freely/retarget-test-vectors`
 **Policy:** owner-approved production retarget policy (16 Nov 2026); BIP94 enabled from genesis by owner decision (17 Nov 2026)
 
 ## Purpose and scope
