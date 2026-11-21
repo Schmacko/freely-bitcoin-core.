@@ -1182,13 +1182,13 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         }
     }
 
-    // Prevent setting deployment parameters on mainnet.
-    if (chainparams.GetChainType() == ChainType::MAIN) {
+    // Prevent test-only deployment overrides on production networks.
+    if (chainparams.IsProductionChain()) {
         if (args.IsArgSet("-testactivationheight")) {
-            return InitError(_("The -testactivationheight option may not be used on mainnet."));
+            return InitError(_("The -testactivationheight option may not be used on production networks."));
         }
         if (args.IsArgSet("-vbparams")) {
-            return InitError(_("The -vbparams option may not be used on mainnet."));
+            return InitError(_("The -vbparams option may not be used on production networks."));
         }
     }
 
