@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
+import re
 import subprocess
 import sys
 import shlex
@@ -24,7 +25,9 @@ def main():
     num_procs = int(run(["nproc"], stdout=subprocess.PIPE).stdout)
     build_dir = "ci_build"
 
-    run([
+    cmake_version_output = run(["cmake", "--version"], stdout=subprocess.PIPE, text=True).stdout
+    cmake_version = re.search(r"cmake version (\d+)\.(\d+)", cmake_version_output)
+    cmake_args = [
         "cmake",
         "-B",
         build_dir,
@@ -42,7 +45,11 @@ def main():
         "--preset=dev-mode",
         # Tolerate unused (member) functions in intermediate commits in a pull request
         "-DCMAKE_CXX_FLAGS=-Wno-error=unused-member-function -Wno-error=unused-function",
-    ])
+    ]
+    if cmake_version and (int(cmake_version.group(1)), int(cmake_version.group(2))) >= (4, 2):
+        # CMake 4.2 promotes legacy non-target directives to developer warnings.
+        cmake_args.append("-Wno-error=non-target-directive")
+    run(cmake_args)
 
     if run(["cmake", "--build", build_dir, "-j", str(num_procs)], check=False).returncode != 0:
         print("Build failure. Verbose build follows.")
