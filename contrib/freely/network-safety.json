@@ -53,7 +53,7 @@
       "testdummy": {
         "bit": 28,
         "start_time": -2,
-        "timeout": 9223372036854776000,
+        "timeout": 9223372036854775807,
         "min_activation_height": 0,
         "threshold": 1815,
         "period": 2016
