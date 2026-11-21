@@ -72,7 +72,7 @@ class ProductionReadinessTests(unittest.TestCase):
         self.assertTrue(any("PASS requires an evidence object" in item for item in validate(self.data)))
 
     def test_pass_requires_valid_release_sha(self):
-        gate = mark_pass(self.data, "G1")
+        mark_pass(self.data, "G1")
         self.data["release_candidate_sha"] = "not-a-commit"
         self.assertTrue(any("release_candidate_sha must be null or" in item for item in validate(self.data)))
 
