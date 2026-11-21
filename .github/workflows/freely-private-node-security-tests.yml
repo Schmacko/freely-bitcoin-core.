@@ -15,6 +15,7 @@ on:
       - "test/functional/feature_freely_offline_startup.py"
       - "test/functional/feature_freely_loopback_network.py"
       - "test/functional/test_runner.py"
+      - "docs/FREELY-DEVELOPMENT-MODE-NETWORK-SECURITY.md"
       - ".github/workflows/freely-private-node-security-tests.yml"
   pull_request:
     branches:
