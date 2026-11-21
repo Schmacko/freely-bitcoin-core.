@@ -53,7 +53,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
         return std::make_unique<CBaseChainParams>("regtest", 18443);
     case ChainType::FREELY:
         // These approved base settings are safe to expose to clients while
-        // consensus/genesis construction remains fail-closed in CreateChainParams.
+        // normal chain selection remains fail-closed pending owner authorization.
         return std::make_unique<CBaseChainParams>("freely", 49445);
     }
     assert(false);

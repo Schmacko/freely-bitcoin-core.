@@ -19,8 +19,9 @@ BOOST_FIXTURE_TEST_SUITE(freely_genesis_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(approved_genesis_coinbase_transaction_and_merkle_root)
 {
-    // This fixes the approved coinbase transaction only. It does not invent a
-    // genesis nonce/hash or make the FREELY production chain selectable.
+    // This independently fixes the approved coinbase transaction and Merkle
+    // root. The mined block nonce/hash are verified in chaintype_tests; normal
+    // production chain selection remains disabled until explicit authorization.
     constexpr char MESSAGE[] = "FREELY FLY genesis 2026-11-18";
     const std::vector<unsigned char> payload{
         'F', 'R', 'E', 'E', 'L', 'Y', ' ', 'F', 'L', 'Y', ' ', 'G', 'E', 'N', 'E', 'S', 'I', 'S',
