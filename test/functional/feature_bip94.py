@@ -20,6 +20,7 @@ class BIP94TimewarpTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         assert_equal(node.getblockchaininfo()["chain"], "regtest")
+        assert_equal(node.getblockcount(), 0)
         tip_hash = int(node.getbestblockhash(), 16)
         genesis = node.getblockheader(node.getbestblockhash())
         genesis_time = genesis["time"]
