@@ -21,6 +21,28 @@
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, BasicTestingSetup)
 
+
+BOOST_AUTO_TEST_CASE(chain_test_classification)
+{
+    const auto main = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto testnet = CreateChainParams(*m_node.args, ChainType::TESTNET);
+    const auto testnet4 = CreateChainParams(*m_node.args, ChainType::TESTNET4);
+    const auto signet = CreateChainParams(*m_node.args, ChainType::SIGNET);
+    const auto regtest = CreateChainParams(*m_node.args, ChainType::REGTEST);
+
+    BOOST_CHECK(!main->IsTestChain());
+    BOOST_CHECK(main->IsProductionChain());
+    BOOST_CHECK(testnet->IsTestChain());
+    BOOST_CHECK(!testnet->IsProductionChain());
+    BOOST_CHECK(testnet4->IsTestChain());
+    BOOST_CHECK(!testnet4->IsProductionChain());
+    BOOST_CHECK(signet->IsTestChain());
+    BOOST_CHECK(!signet->IsProductionChain());
+    BOOST_CHECK(regtest->IsTestChain());
+    BOOST_CHECK(!regtest->IsProductionChain());
+}
+
+
 static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
     int maxHalvings = 64;
@@ -43,6 +65,34 @@ static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
     Consensus::Params consensusParams;
     consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
     TestBlockSubsidyHalvings(consensusParams);
+}
+
+// FREELY's agreed issuance schedule: 50 FLY initially, halving every 210,000 blocks.
+// Use an explicit parameter object so this test does not imply Bitcoin mainnet params are FREELY params.
+BOOST_AUTO_TEST_CASE(freely_monetary_policy_test)
+{
+    Consensus::Params consensus;
+    consensus.nSubsidyHalvingInterval = 210000;
+
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(0, consensus), 50 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(209999, consensus), 50 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(210000, consensus), 25 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(419999, consensus), 25 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(420000, consensus), 12 * COIN + 50'000'000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(630000, consensus), 6 * COIN + 25'000'000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1260000, consensus), 78'125'000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(6720000, consensus), 1);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(6930000, consensus), 0);
+    BOOST_CHECK_EQUAL(consensus.nSubsidyHalvingInterval, 210000);
+
+    // Sum every scheduled subsidy era in base units. The 33rd halving reaches zero.
+    CAmount total_issuance{0};
+    for (int halvings = 0; halvings < 64; ++halvings) {
+        const int height = halvings * consensus.nSubsidyHalvingInterval;
+        total_issuance += GetBlockSubsidy(height, consensus) * consensus.nSubsidyHalvingInterval;
+    }
+    BOOST_CHECK_EQUAL(total_issuance, 2'099'999'997'690'000LL);
+    BOOST_CHECK(total_issuance <= 21'000'000 * COIN);
 }
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)

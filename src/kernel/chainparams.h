@@ -95,7 +95,9 @@ public:
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** If this chain is exclusively used for testing */
-    bool IsTestChain() const { return m_chain_type != ChainType::MAIN; }
+    bool IsTestChain() const { return m_is_test_chain; }
+    /** If this chain is a production network (not a test network). */
+    bool IsProductionChain() const { return m_is_production_chain; }
     /** If this chain allows time to be mocked */
     bool IsMockableChain() const { return m_is_mockable_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
@@ -191,6 +193,10 @@ protected:
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     std::string bech32_hrp;
     ChainType m_chain_type;
+    // True only for networks exclusively intended for testing. Production chains (including FREELY) remain false.
+    bool m_is_test_chain{false};
+    // Set explicitly for production networks so test-only startup overrides stay disabled.
+    bool m_is_production_chain{false};
     CBlock genesis;
     std::vector<uint8_t> vFixedSeeds;
     bool fDefaultConsistencyChecks;
