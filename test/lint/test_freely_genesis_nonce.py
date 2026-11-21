@@ -11,10 +11,10 @@ Run from the repository root with:
 import hashlib
 import importlib.util
 import json
-from pathlib import Path
-import tempfile
 import struct
+import tempfile
 import unittest
+from pathlib import Path
 
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "mine-freely-genesis-nonce.py"
