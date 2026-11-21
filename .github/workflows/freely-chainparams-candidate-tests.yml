@@ -20,6 +20,8 @@ on:
       - "test/functional/feature_freely_startup.py"
       - "test/functional/feature_freely_development_startup.py"
       - "test/functional/test_runner.py"
+      - "docs/FREELY-DEVELOPMENT-MODE-NETWORK-SECURITY.md"
+      - "docs/FREELY-RPC-P2P-SAFETY-AUDIT.md"
       - "test/functional/feature_freely_offline_startup.py"
       - "test/functional/feature_freely_loopback_network.py"
       - "test/lint/test_freely_genesis_nonce.py"
