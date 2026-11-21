@@ -25,6 +25,7 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
             "-discover=0",
             "-dnsseed=0",
             "-natpmp=0",
+            "-upnp=0",
             "-listenonion=0",
         ]]
 
@@ -46,6 +47,35 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
         node.assert_start_raises_init_error(
             extra_args=["-freelydev=1", "-freelyprivate=1"],
             expected_msg="FREELY startup requires exactly one of -freelydev=1 or -freelyprivate=1.",
+            match=ErrorMatch.PARTIAL_REGEX,
+        )
+
+        # UPnP can create an external router mapping independently of the
+        # loopback/offline bind policy, so both FREELY modes must reject it.
+        node.assert_start_raises_init_error(
+            extra_args=[
+                "-freelydev=1",
+                "-listen=0",
+                "-discover=0",
+                "-dnsseed=0",
+                "-natpmp=0",
+                "-upnp=1",
+                "-listenonion=0",
+            ],
+            expected_msg="FREELY offline development requires external discovery services and port mapping to be disabled.",
+            match=ErrorMatch.PARTIAL_REGEX,
+        )
+        node.assert_start_raises_init_error(
+            extra_args=[
+                "-freelyprivate=1",
+                "-bind=127.0.0.1",
+                "-discover=0",
+                "-dnsseed=0",
+                "-natpmp=0",
+                "-upnp=1",
+                "-listenonion=0",
+            ],
+            expected_msg="FREELY loopback private mode prohibits external discovery, port mapping and listener services.",
             match=ErrorMatch.PARTIAL_REGEX,
         )
 

@@ -193,8 +193,9 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
             }
             if (args.GetBoolArg("-discover", true) ||
                 args.GetBoolArg("-dnsseed", true) ||
-                args.GetBoolArg("-natpmp", false)) {
-                throw std::runtime_error("FREELY offline development requires external discovery services to be disabled.");
+                args.GetBoolArg("-natpmp", false) ||
+                args.GetBoolArg("-upnp", false)) {
+                throw std::runtime_error("FREELY offline development requires external discovery services and port mapping to be disabled.");
             }
             if (!args.GetArgs("-rpcbind").empty() || !args.GetArgs("-rpcallowip").empty()) {
                 throw std::runtime_error("FREELY offline development requires the default loopback-only RPC binding.");
@@ -250,9 +251,10 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
             args.GetBoolArg("-discover", true) ||
             args.GetBoolArg("-dnsseed", true) ||
             args.GetBoolArg("-natpmp", false) ||
+            args.GetBoolArg("-upnp", false) ||
             args.GetBoolArg("-listenonion", true) ||
             !args.GetArgs("-externalip").empty()) {
-            throw std::runtime_error("FREELY loopback private mode prohibits external discovery and listener services.");
+            throw std::runtime_error("FREELY loopback private mode prohibits external discovery, port mapping and listener services.");
         }
         if (!args.GetArgs("-zmqpubhashblock").empty() ||
             !args.GetArgs("-zmqpubhashtx").empty() ||

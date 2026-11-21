@@ -45,6 +45,7 @@ class FreelyOfflineWalletTest(BitcoinTestFramework):
             "-dnsseed=0",
             "-discover=0",
             "-natpmp=0",
+            "-upnp=0",
             "-listenonion=0",
         ]]
 

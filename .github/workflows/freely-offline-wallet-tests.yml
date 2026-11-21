@@ -13,6 +13,7 @@ on:
       - "src/wallet/**"
       - "src/rpc/**"
       - "test/functional/feature_freely_offline_wallet.py"
+      - "test/functional/test_runner.py"
       - "test/functional/feature_freely_loopback_network.py"
       - "test/functional/test_framework/**"
       - ".github/workflows/freely-offline-wallet-tests.yml"
