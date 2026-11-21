@@ -41,6 +41,14 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
             match=ErrorMatch.PARTIAL_REGEX,
         )
 
+        # The two mutually exclusive development modes must also fail closed
+        # when an operator accidentally enables both at once.
+        node.assert_start_raises_init_error(
+            extra_args=["-freelydev=1", "-freelyprivate=1"],
+            expected_msg="FREELY startup requires exactly one of -freelydev=1 or -freelyprivate=1.",
+            match=ErrorMatch.PARTIAL_REGEX,
+        )
+
 
 if __name__ == "__main__":
     FreelyStartupFailClosedTest(__file__).main()
