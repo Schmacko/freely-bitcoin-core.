@@ -11,7 +11,6 @@ Run from the repository root with:
 import hashlib
 import importlib.util
 import json
-import struct
 import tempfile
 import unittest
 from pathlib import Path
