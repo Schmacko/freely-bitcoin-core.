@@ -10,8 +10,7 @@ MANIFEST = json.loads(Path(__file__).with_name("network-safety.json").read_text(
 
 
 def complete_fixture():
-    # Only the derived genesis hash/nonce are synthetic. All approved protocol
-    # parameters remain exactly as specified in the owner-approved baseline.
+    # Use the pinned, independently reproduced genesis candidate and approved policy.
     return copy.deepcopy(MANIFEST)
 
 
@@ -69,6 +68,7 @@ class NetworkSafetyTests(unittest.TestCase):
             ("genesis", "timestamp", 1794960001),
             ("genesis", "coinbase_message", "unapproved message"),
             ("genesis", "coinbase_output_script", "6a00"),
+            ("genesis", "coinbase_reward_base_units", 5_000_000_001),
             ("consensus", "retarget_min_timespan_seconds", 302399),
             ("consensus", "retarget_max_timespan_seconds", 4838401),
             ("consensus", "script_activation_heights", {"bip34": 2}),
