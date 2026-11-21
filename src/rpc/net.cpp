@@ -375,6 +375,37 @@ static RPCMethod addnode()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Node address cannot be empty");
     }
 
+    // FREELY development modes must retain their network boundary after
+    // startup as well. The RPC cannot be used to bypass the command-line gate.
+    if (command != "remove" && Params().GetChainType() == ChainType::FREELY) {
+        if (!Params().AllowsLoopbackPeers()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "FREELY offline mode does not permit peer connections.");
+        }
+        // Resolve numeric addresses only: hostname lookup is deliberately disabled
+        // so names such as localhost cannot change the peer destination after this check.
+        const auto peer_addresses{Lookup(std::string{node_arg}, Params().GetDefaultPort(), false, 1)};
+        // IsLocal() is broader than loopback: it also accepts 0.0.0.0/8.
+        // Match explicit loopback subnets instead (127.0.0.0/8 and ::1/128).
+        static const auto ipv4_loopback{LookupHost("127.0.0.1", false)};
+        static const auto ipv6_loopback{LookupHost("::1", false)};
+        const bool is_ipv4_loopback{
+            peer_addresses.size() == 1 && peer_addresses.front().IsIPv4() &&
+            ipv4_loopback && CSubNet{*ipv4_loopback, 8}.Match(peer_addresses.front())
+        };
+        const bool is_ipv6_loopback{
+            peer_addresses.size() == 1 && peer_addresses.front().IsIPv6() &&
+            ipv6_loopback && CSubNet{*ipv6_loopback}.Match(peer_addresses.front())
+        };
+        const bool loopback_peer{
+            (is_ipv4_loopback || is_ipv6_loopback) &&
+            // Reject IPv4-mapped IPv6 spellings even if normalized to IPv4.
+            !(node_arg.find("::") != std::string_view::npos && peer_addresses.front().IsIPv4())
+        };
+        if (!loopback_peer) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "FREELY loopback private mode only permits loopback peer addresses.");
+        }
+    }
+
     bool node_v2transport = connman.GetLocalServices() & NODE_P2P_V2;
     bool use_v2transport = self.MaybeArg<bool>("v2transport").value_or(node_v2transport);
 

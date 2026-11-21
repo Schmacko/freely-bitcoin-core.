@@ -592,8 +592,9 @@ public:
 class CFreelyCandidateParams final : public CChainParams
 {
 public:
-    CFreelyCandidateParams()
+    explicit CFreelyCandidateParams(bool allow_loopback_peers)
     {
+        m_allows_loopback_peers = allow_loopback_peers;
         m_chain_type = ChainType::FREELY;
         m_is_production_chain = true;
         consensus.signet_blocks = false;
@@ -795,9 +796,9 @@ std::unique_ptr<const CChainParams> CChainParams::TestNet4(const TestNetOptions&
     return std::make_unique<const CTestNet4Params>(options);
 }
 
-std::unique_ptr<const CChainParams> CChainParams::FreelyCandidate()
+std::unique_ptr<const CChainParams> CChainParams::FreelyCandidate(bool allow_loopback_peers)
 {
-    return std::make_unique<const CFreelyCandidateParams>();
+    return std::make_unique<const CFreelyCandidateParams>(allow_loopback_peers);
 }
 
 std::vector<int> CChainParams::GetAvailableSnapshotHeights() const
