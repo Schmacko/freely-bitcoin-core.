@@ -17,6 +17,8 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
         node = self.nodes[0]
         self.stop_node(0)
 
+        # The harness writes regtest=1 to bitcoin.conf; -noregtest is required so
+        # -chain=freely is the sole active network selector.
         # Deliberately do not pass -listen=0: upstream DEFAULT_LISTEN is true.
         # If FREELY chain selection ever falls through to normal node startup,
         # this test must catch the regression before P2P initialization.
