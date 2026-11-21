@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -77,6 +78,11 @@ def generate(ci_type):
         "-DVCPKG_HOST_TRIPLET=x64-windows-release",
         "-DVCPKG_TARGET_TRIPLET=x64-windows-release",
     ] + GENERATE_OPTIONS[ci_type]
+    cmake_version_output = run(["cmake", "--version"], capture_output=True, text=True).stdout
+    cmake_version = re.search(r"cmake version (\d+)\.(\d+)", cmake_version_output)
+    if cmake_version and (int(cmake_version.group(1)), int(cmake_version.group(2))) >= (4, 2):
+        # CMake 4.2 promotes legacy non-target directives to a developer warning.
+        command.append("-Wno-error=non-target-directive")
     if run(command, check=False).returncode != 0:
         print("=== ⚠️ ===")
         print("Generate failure! Network issue? Retry once ...")
