@@ -6,7 +6,7 @@
 
 This document defines the evidence required before FREELY can be considered ready for a public production network. It is an engineering gate, not authorization to launch. It deliberately separates work that can be completed now from owner-controlled decisions and from evidence that requires a functioning FREELY chain.
 
-All four owner-controlled protocol parameter areas were explicitly approved on 18 November 2026 and are pinned in docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md and contrib/freely/network-safety.json. The approved PoW limit, genesis nBits, network identity, genesis candidate fields and activation matrix are no longer owner-decision blockers. The derived genesis nonce and final block hash remain uncomputed and require reproducible mining plus independent verification. Production startup must remain fail-closed until that commitment and the implementation/release evidence gates are complete.
+All four owner-controlled protocol parameter areas were explicitly approved on 18 November 2026 and are pinned in docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md and contrib/freely/network-safety.json. The approved PoW limit, genesis nBits, network identity, genesis candidate fields and activation matrix are no longer owner-decision blockers. The derived genesis nonce, coinbase txid/Merkle root and final block hash have now been independently reproduced and pinned in the manifest. The standalone C++ miner workflow and Python preflight workflow pass on their respective exact heads. Production startup must remain fail-closed until the integrated C++ candidate parameters, exact-head node tests, wallet/security evidence and release gates are complete.
 
 ## Gate rules
 
@@ -16,7 +16,7 @@ All four owner-controlled protocol parameter areas were explicitly approved on 1
 4. A test on Bitcoin regtest validates the test harness or upstream behavior; it does not prove FREELY production parameters or a live FREELY network.
 5. Synthetic fixtures are for testing validators only and must never be promoted into production configuration.
 6. No production launch, mining deployment, public RPC/P2P exposure, DNS seed publication, or genesis activation is authorized by this checklist.
-7. Any missing or ambiguous consensus parameter, or any unverified derived genesis commitment, blocks the production gate.
+7. Any missing or ambiguous consensus parameter, any mismatch in the derived genesis commitment, or any missing required implementation/release evidence blocks the production gate.
 
 ## Production gates and acceptance evidence
 
@@ -33,18 +33,23 @@ Already approved:
 - Genesis version 1, timestamp 1,794,960,000, approved coinbase message/output script, 50 FLY unspendable coinbase.
 - BIP34, BIP65, BIP66, CSV and SegWit at height 1; TESTDUMMY disabled with the approved version-bits settings.
 
-Remaining G0 evidence (derived, not owner-selected parameters):
-- Reproduce the approved coinbase transaction ID and Merkle root using Bitcoin Core C++ serialization/hash code.
-- Mine a nonce for the exact approved 80-byte genesis header, then independently recompute and verify the final block hash and proof of work.
-- Commit the nonce/hash and fixed header/PoW vectors to the manifest and C++ regression tests.
-- Verify manifest and eventual C++ chain parameters agree exactly; check custom signet challenge-derived magic collisions at runtime.
+Derived-genesis evidence now present (the full G0 gate remains IN PROGRESS):
+- Standalone C++ miner workflow [44910736974](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44910736974) passed on miner head `865026e755239bf0a89e7a5b91513f896bb9858a`. It built the miner, passed SHA-256d serialization self-test, rejected malformed/missing/out-of-range arguments, and verified nonce `2238688522`, block hash `0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78`, and the exact 80-byte header.
+- Network-safety preflight [44899513446](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44899513446) passed on preflight head `e7019df06a72c8ec37922eca34d6f4cbeefc207f`: 28 network-safety tests and 17 production-readiness evidence tests passed; the manifest validator reported PASS.
+- The same preflight run intentionally confirmed the production evidence ledger remains BLOCKED at 0/9 gates. This is the expected safe result, not a failed preflight.
+- The manifest pins the derived nonce, txid/Merkle root and block hash and independently rebuilds the coinbase and 80-byte header.
+
+Remaining G0 evidence:
+- Complete exact-head C++ candidate integration tests for `CFreelyCandidateParams`, including fixed genesis hash/PoW and manifest-to-C++ parameter equality. Candidate workflow [44911934468](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44911934468) is still queued on head `fb8f9efa5e817e5bafd635139e5386240ea05b67`.
+- Complete custom signet challenge-derived magic collision tests on the integrated candidate head.
+- Obtain passing full CI and startup/functional tests on the integrated candidate branch; a standalone miner/preflight pass is not a node build.
 
 Acceptance:
-- The approved baseline is unchanged and machine-validated.
-- Genesis transaction/Merkle root are independently reproduced.
-- The mined nonce and final block hash are independently verified against the approved target.
+- The approved baseline and derived genesis commitment are machine-validated and independently reproduced.
+- The integrated C++ `CChainParams` and manifest agree value-for-value on the exact candidate head.
+- C++ genesis, chain selection, proof-of-work, retarget, signet-collision and fail-closed startup tests pass on that exact head.
 - No collision with built-in Bitcoin networks, including default/custom signet magic, is present.
-- Manifest and C++ chain parameters agree value-for-value.
+- The remaining implementation/release evidence for G0 is complete before marking the gate PASS.
 
 ### G1 — Consensus implementation
 
@@ -187,12 +192,14 @@ The following can be advanced without selecting production parameters:
 
 ## Current blockers
 
-1. Numeric production `powLimit` and genesis `nBits`.
-2. Final network identity values.
-3. Final genesis commitment.
-4. Exact script/soft-fork activation matrix.
-5. Exact-head build and test evidence; queued/cancelled CI is not evidence of a pass.
-6. Independent security review and explicit production launch approval.
+1. Exact-head candidate C++ integration CI: PR #20 candidate workflow is queued; the derived genesis commitment has standalone C++/Python verification but the integrated `CFreelyCandidateParams` build and regression suite are not yet proven.
+2. Retarget boundary/compact-target additions on PR #6 have a new exact head and are awaiting focused PoW CI.
+3. Private-node startup/security and BIP94 functional regressions on PR #21 are queued; the new C++ guard tests have not yet passed CI.
+4. Wallet-enabled workflow on PR #11 previously failed because `bitcoin-wallet` was not built; the workflow was corrected to build that target and the new exact-head run is pending.
+5. Full cross-platform CI and wallet/node acceptance evidence remain incomplete; queued/cancelled CI is not a pass.
+6. Independent security review, operational/recovery evidence and separate explicit production launch authorization remain outstanding.
+
+The approved numeric `powLimit`, genesis `nBits`, genesis candidate fields, network identity, BIP94 policy and activation matrix are not open owner-decision blockers. Do not request new values unless implementation review discovers a concrete contradiction in the approved baseline.
 
 ## Current conclusion
 
