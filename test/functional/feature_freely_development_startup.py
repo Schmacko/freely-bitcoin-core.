@@ -80,5 +80,84 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
         )
 
 
+        # Exercise the independent command-line guards, not just the happy
+        # path. The test framework config has connect=0; explicit CLI values
+        # below must not weaken the startup boundary.
+        offline_args = [
+            "-freelydev=1",
+            "-listen=0",
+            "-discover=0",
+            "-dnsseed=0",
+            "-natpmp=0",
+            "-upnp=0",
+            "-listenonion=0",
+            "-connect=0",
+        ]
+        for extra, expected in (
+            (
+                ["-connect=1"],
+                "FREELY offline development requires -connect=0 to disable automatic outbound connections.",
+            ),
+            (
+                ["-addnode=127.0.0.1:49444"],
+                "FREELY offline development does not permit configured peers, proxies or overlay-network services.",
+            ),
+            (
+                ["-proxy=127.0.0.1:9050"],
+                "FREELY offline development does not permit configured peers, proxies or overlay-network services.",
+            ),
+            (
+                ["-rpcbind=0.0.0.0"],
+                "FREELY offline development requires the default loopback-only RPC binding.",
+            ),
+        ):
+            node.assert_start_raises_init_error(
+                extra_args=offline_args + extra,
+                expected_msg=expected,
+                match=ErrorMatch.PARTIAL_REGEX,
+            )
+
+        # Loopback-private mode may listen only on explicit loopback binds and
+        # may create peers only through the separately checked loopback addnode
+        # RPC. It must reject configuration that could expose a public socket.
+        private_args = [
+            "-freelyprivate=1",
+            "-bind=127.0.0.1",
+            "-discover=0",
+            "-dnsseed=0",
+            "-natpmp=0",
+            "-upnp=0",
+            "-listenonion=0",
+            "-connect=0",
+        ]
+        for extra, expected in (
+            (
+                ["-bind=0.0.0.0"],
+                "FREELY loopback private mode accepts only 127.0.0.1 or [::1] bind addresses.",
+            ),
+            (
+                ["-whitebind=127.0.0.1:49444"],
+                "FREELY loopback private mode prohibits external discovery, port mapping and listener services.",
+            ),
+            (
+                ["-connect=1"],
+                "FREELY loopback private mode requires -connect=0 and prohibits configured external peers, proxies and overlay-network services.",
+            ),
+            (
+                ["-addnode=203.0.113.1:49444"],
+                "FREELY loopback private mode requires -connect=0 and prohibits configured external peers, proxies and overlay-network services.",
+            ),
+            (
+                ["-rpcallowip=0.0.0.0/0"],
+                "FREELY loopback private mode requires the default loopback-only RPC binding.",
+            ),
+        ):
+            node.assert_start_raises_init_error(
+                extra_args=private_args + extra,
+                expected_msg=expected,
+                match=ErrorMatch.PARTIAL_REGEX,
+            )
+
+
 if __name__ == "__main__":
     FreelyStartupFailClosedTest(__file__).main()
