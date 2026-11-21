@@ -2,7 +2,7 @@
 
 **Owner decision:** All four proposal areas were explicitly approved in the project conversation on 18 November 2026.
 
-**Scope:** Approval authorizes implementation and verification of these parameters. It does not authorize a public launch, mining deployment, public RPC/P2P exposure, DNS seed operation, or deployment. The genesis nonce and resulting block hash are derived outputs and remain uncomputed until a reproducible mining procedure completes.
+**Scope:** Approval authorizes implementation and verification of these parameters. It does not authorize a public launch, mining deployment, public RPC/P2P exposure, DNS seed operation, or deployment. The genesis nonce and resulting block hash have now been derived and independently reproduced for this candidate; production activation remains separately gated.
 
 ## 1. Proof of work and retargeting
 
