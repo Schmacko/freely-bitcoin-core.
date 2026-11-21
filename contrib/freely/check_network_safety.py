@@ -2,7 +2,9 @@
 """Validate the FREELY network-identity and consensus-parameter manifest.
 
 This is a preflight validator, not a replacement for Core's startup checks.
-It deliberately fails while the derived genesis commitment and required production-readiness evidence are incomplete, even when all owner-approved parameters are populated.
+It verifies the owner-approved network and consensus manifest and independently
+recomputes the approved genesis coinbase, Merkle root, header hash and proof of work.
+It does not certify production readiness or authorize network activation.
 """
 from __future__ import annotations
 
