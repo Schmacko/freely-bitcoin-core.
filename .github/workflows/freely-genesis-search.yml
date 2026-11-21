@@ -1,0 +1,70 @@
+name: FREELY genesis proof-of-work search
+
+on:
+  push:
+    branches:
+      - freely/genesis-miner-implementation
+    paths:
+      - contrib/freely/mine_genesis.cpp
+      - .github/workflows/freely-genesis-search.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  genesis-search:
+    name: Build, self-test and search approved genesis header
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install compiler and OpenSSL headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential libssl-dev
+
+      - name: Build standalone miner
+        run: |
+          g++ -O3 -DNDEBUG -std=c++20 -pthread -Wall -Wextra -Werror -Wno-deprecated-declarations \
+            contrib/freely/mine_genesis.cpp -lcrypto -o mine-freely-genesis
+
+      - name: Verify SHA-256d header serialization
+        run: ./mine-freely-genesis --self-test
+
+      - name: Reject malformed and out-of-range CLI arguments
+        shell: bash
+        run: |
+          common=(--merkle-root c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1 --pow-limit 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff --n-bits 0x1d00ffff)
+          if ./mine-freely-genesis "${common[@]}" --threads 4294967297; then
+            echo "out-of-range thread count was accepted" >&2
+            exit 1
+          fi
+          if ./mine-freely-genesis "${common[@]}" --time 1794960000junk; then
+            echo "malformed timestamp was accepted" >&2
+            exit 1
+          fi
+
+      - name: Search approved FREELY genesis header
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          set -o pipefail
+          ./mine-freely-genesis \
+            --merkle-root c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1 \
+            --time 1794960000 \
+            --n-bits 0x1d00ffff \
+            --pow-limit 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff \
+            --start-nonce 0 \
+            --threads "$(nproc)" \
+            | tee artifacts/freely-genesis-search.json
+
+      - name: Upload verified genesis search result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: freely-genesis-search-result
+          path: artifacts/freely-genesis-search.json
+          if-no-files-found: ignore
