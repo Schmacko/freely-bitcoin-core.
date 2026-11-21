@@ -80,3 +80,31 @@ Registration matters: the functional runner only executes named tests present in
 - Exact-head CI, complete code review, independent security review, and explicit launch authorization remain required before any production activation.
 
 A queued, pending, skipped, cancelled, or infrastructure-failed workflow is not a passing result. This document records intended controls and test registration, not a claim that the current CI has passed.
+
+
+## 7. Additional startup-guard regressions — 21 November 2026
+
+The `feature_freely_development_startup.py` functional test now checks negative startup cases for both modes, in addition to the missing/conflicting-mode and UPnP cases above.
+
+Offline-development cases reject:
+- overriding the required `-connect=0`;
+- configured `-addnode`;
+- configured proxy use;
+- custom/non-loopback RPC binding.
+
+Loopback-private cases reject:
+- a non-loopback `-bind`;
+- any `-whitebind`;
+- overriding the required `-connect=0`;
+- configured external peers;
+- a remote RPC allowlist.
+
+The test explicitly supplies complete mode arguments for each attempted startup, so it does not rely on arguments from the initial test-node process. The test framework's `connect=0` configuration is also overridden in the negative cases to verify that a command-line value cannot weaken the guard.
+
+A new workflow, `.github/workflows/freely-private-node-security-tests.yml`, builds `bitcoind`, `bitcoin-cli` and `test_bitcoin`, runs `chaintype_tests`, `freely_genesis_tests`, `pow_tests` and `validation_tests`, then runs the development-startup, offline-startup and loopback-network functional tests. It triggers for the dedicated private-node branch and for PRs targeting `freely/chainparams-candidate-integration`.
+
+Implementation commits:
+- `c6cec89e92d93666959d832d8724f90e305db787`: add startup guard regression cases.
+- `e0fa6a1373a13bd38956a5deeb767d45c9189b31`: add focused security workflow.
+
+The latest exact-head workflow is queued; no compile or functional-test pass is claimed for these additions yet. These tests do not activate production parameters or expose a public network.
