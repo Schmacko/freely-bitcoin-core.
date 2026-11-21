@@ -124,3 +124,19 @@ Commits:
 - `ba1c0a85716d8a102a5db93dafc0a4ada6b8898b`: trigger focused security CI for chain-type test changes.
 
 The new exact-head workflow has not yet completed. No build or test pass is claimed for these additions.
+
+
+## 9. BIP94 timestamp-boundary functional regression — 21 November 2026
+
+The integrated private-node test branch now carries `test/functional/feature_bip94.py` and registers it in `test/functional/test_runner.py`. The focused security workflow runs it alongside FREELY startup/offline/loopback tests.
+
+The test uses Bitcoin Core's existing regtest-only `-test=bip94` switch, not FREELY chain selection. It builds the regtest 144-block difficulty period, submits a boundary block 601 seconds earlier than its parent while keeping it above median-time-past, and expects the BIP94-specific `time-timewarp-attack` rejection. It then verifies that the exact 600-second grace boundary is accepted.
+
+This functional test exercises the shared v32.1 timestamp rule. It does not substitute for the production 2,016-block FREELY retarget-base C++ test, which is covered separately in `pow_tests`, and it does not enable or launch a FREELY network.
+
+Commits:
+- `d577a2a57f56569c9f59835443c990ee01498ddb`: add BIP94 functional regression.
+- `1895c7ed35db19295b0062b4e45b5e7bf06c99cc`: register test in functional runner.
+- `d928e41586951bd7fec424f575d6114e3d1088fc`: include test in focused private-node CI.
+
+The updated exact-head workflow has not yet completed; no new BIP94 functional pass is claimed.
