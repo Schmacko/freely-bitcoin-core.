@@ -54,47 +54,13 @@ jobs:
           fetch-depth: ${{ env.FETCH_DEPTH }}
       - name: Determine commit range
         run: |
-          # Checkout HEAD~ and find the test base commit.
-          # Checkout HEAD~ because it would be wasteful to rerun
-          # tests on the PR head commit that are already run
-          # by other jobs.
-          git checkout HEAD~
-          # Moreover, pull requests that contain a merge commit
-          # are generally draft pull requests that merge in other
-          # pull requests, so only check the relevant commits
-          # after the last merge commit. A merge commit could
-          # also be a subtree merge commit, which may be
-          # worthwhile to check. However, it is rare that the
-          # subtree merge commit is not the top commit (which
-          # would be skipped anyway by this task, because it is
-          # run by all other tasks). Also, `git rebase --exec`
-          # does not work on merge commits, so if this was
-          # important to check, the logic would have to be
-          # rewritten.
-          #
-          # Figure out test base commit by listing ancestors of
-          # HEAD, excluding ancestors of the most recent merge
-          # commit, ordering them from oldest to newest, and
-          # taking the first one.
-          #
-          # In the command below, the ^@ suffix is used to refer
-          # to all parents of the merge commit as described in:
-          # https://git-scm.com/docs/git-rev-parse#_other_rev_parent_shorthand_notations
-          # and the ^ prefix is used to exclude these parents
-          # and all their ancestors from the rev-list output
-          # as described in:
-          # https://git-scm.com/docs/git-rev-list
-          MERGE_BASE=$(git rev-list -n1 --merges HEAD)
-          EXCLUDE_MERGE_BASE_ANCESTORS=
-          # MERGE_BASE can be empty due to limited fetch-depth
-          if test -n "$MERGE_BASE"; then
-            EXCLUDE_MERGE_BASE_ANCESTORS=^${MERGE_BASE}^@
-          fi
-          echo "TEST_BASE=$(git rev-list -n${{ github.event.pull_request.commits }} --reverse HEAD $EXCLUDE_MERGE_BASE_ANCESTORS | head -1)" >> "$GITHUB_ENV"
-      - run: |
+          # Test only commits introduced by this PR relative to its current base.
+          # This also handles stacked PRs whose base branch has advanced since
+          # the PR was opened, without replaying base-branch commits.
           git fetch origin "${GITHUB_BASE_REF}"
           git config user.email "ci@example.com"
           git config user.name "CI"
+          echo "TEST_BASE=$(git rev-parse "origin/${GITHUB_BASE_REF}")" >> "$GITHUB_ENV"
       - run: |
           sudo apt-get update
           sudo apt-get install clang mold ccache build-essential cmake ninja-build pkgconf python3-zmq libboost-dev libsqlite3-dev systemtap-sdt-dev libzmq3-dev qt6-base-dev qt6-tools-dev qt6-l10n-tools libqrencode-dev capnproto libcapnp-dev -y
