@@ -1,9 +1,15 @@
-name: FREELY genesis proof-of-work search
+name: FREELY genesis proof-of-work verification
 
 on:
   push:
     branches:
       - freely/genesis-miner-implementation
+    paths:
+      - contrib/freely/mine_genesis.cpp
+      - .github/workflows/freely-genesis-search.yml
+  pull_request:
+    branches:
+      - freely/genesis-and-network-code
     paths:
       - contrib/freely/mine_genesis.cpp
       - .github/workflows/freely-genesis-search.yml
@@ -14,9 +20,9 @@ permissions:
 
 jobs:
   genesis-search:
-    name: Build, self-test and search approved genesis header
+    name: Build, self-test and verify approved genesis header
     runs-on: ubuntu-24.04
-    timeout-minutes: 330
+    timeout-minutes: 30
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -37,7 +43,7 @@ jobs:
       - name: Reject malformed and out-of-range CLI arguments
         shell: bash
         run: |
-          common=(--merkle-root c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1 --pow-limit 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff --n-bits 0x1d00ffff)
+          common=(--merkle-root c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1 --pow-limit 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff --n-bits 0x1d00ffff --time 1794960000 --start-nonce 2238688522 --max-hashes 1 --threads 1)
           if ./mine-freely-genesis "${common[@]}" --threads 4294967297; then
             echo "out-of-range thread count was accepted" >&2
             exit 1
@@ -46,25 +52,40 @@ jobs:
             echo "malformed timestamp was accepted" >&2
             exit 1
           fi
+          common_without_time=(--merkle-root c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1 --pow-limit 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff --n-bits 0x1d00ffff --start-nonce 2238688522 --max-hashes 1 --threads 1)
+          if ./mine-freely-genesis "${common_without_time[@]}"; then
+            echo "missing timestamp was accepted" >&2
+            exit 1
+          fi
+          common_without_bits=(--merkle-root c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1 --pow-limit 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff --time 1794960000 --start-nonce 2238688522 --max-hashes 1 --threads 1)
+          if ./mine-freely-genesis "${common_without_bits[@]}"; then
+            echo "missing nBits was accepted" >&2
+            exit 1
+          fi
 
-      - name: Search approved FREELY genesis header
+      - name: Verify the owner-approved FREELY genesis nonce and full header
         shell: bash
         run: |
           mkdir -p artifacts
-          set -o pipefail
+          set -euo pipefail
           ./mine-freely-genesis \
             --merkle-root c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1 \
             --time 1794960000 \
             --n-bits 0x1d00ffff \
             --pow-limit 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff \
-            --start-nonce 0 \
-            --threads "$(nproc)" \
-            | tee artifacts/freely-genesis-search.json
+            --start-nonce 2238688522 \
+            --max-hashes 1 \
+            --threads 1 \
+            | tee artifacts/freely-genesis-verification.json
+          grep -q '"status":"nonce_found_and_verified"' artifacts/freely-genesis-verification.json
+          grep -q '"nonce":2238688522' artifacts/freely-genesis-verification.json
+          grep -q '"block_hash":"0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78"' artifacts/freely-genesis-verification.json
+          grep -q '"header_hex":"010000000000000000000000000000000000000000000000000000000000000000000000a1df6cdd77603be993143d338df2341680f2f85134b14afd9bd4512746db8ac280eafc6affff001d0aad6f85"' artifacts/freely-genesis-verification.json
 
-      - name: Upload verified genesis search result
+      - name: Upload verified genesis header result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: freely-genesis-search-result
-          path: artifacts/freely-genesis-search.json
+          name: freely-genesis-verification
+          path: artifacts/freely-genesis-verification.json
           if-no-files-found: ignore

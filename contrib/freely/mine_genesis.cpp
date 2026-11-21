@@ -276,6 +276,8 @@ int main(int argc, char** argv)
 
         std::string merkle_hex, pow_limit_hex;
         uint64_t timestamp = 0, bits_value = 0, start_nonce = 0, max_hashes = 0;
+        bool timestamp_set{false};
+        bool bits_set{false};
         uint64_t threads_value = std::max(1u, std::thread::hardware_concurrency());
         for (int i = 1; i < argc; ++i) {
             const std::string arg = argv[i];
@@ -285,16 +287,22 @@ int main(int argc, char** argv)
             };
             if (arg == "--merkle-root") merkle_hex = value();
             else if (arg == "--pow-limit") pow_limit_hex = value();
-            else if (arg == "--time") timestamp = ParseUnsigned(value());
-            else if (arg == "--n-bits") bits_value = ParseUnsigned(value(), 0);
+            else if (arg == "--time") {
+                timestamp = ParseUnsigned(value());
+                timestamp_set = true;
+            }
+            else if (arg == "--n-bits") {
+                bits_value = ParseUnsigned(value(), 0);
+                bits_set = true;
+            }
             else if (arg == "--start-nonce") start_nonce = ParseUnsigned(value());
             else if (arg == "--max-hashes") max_hashes = ParseUnsigned(value());
             else if (arg == "--threads") threads_value = ParseUnsigned(value());
             else throw std::invalid_argument("unknown argument: " + arg);
         }
 
-        if (merkle_hex.empty() || pow_limit_hex.empty()) {
-            throw std::invalid_argument("--merkle-root and --pow-limit are required");
+        if (merkle_hex.empty() || pow_limit_hex.empty() || !timestamp_set || !bits_set) {
+            throw std::invalid_argument("--merkle-root, --time, --n-bits and --pow-limit are required");
         }
         if (timestamp > 0xffffffffULL || bits_value > 0xffffffffULL ||
             start_nonce > 0xffffffffULL || threads_value == 0 || threads_value > 256) {
