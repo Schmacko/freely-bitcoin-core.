@@ -21,6 +21,7 @@ on:
     branches:
       - freely/chainparams-candidate-integration
     paths:
+      - "docs/FREELY-DEVELOPMENT-MODE-NETWORK-SECURITY.md"
       - "src/chainparams.cpp"
       - "src/chainparamsbase.cpp"
       - "src/common/args.cpp"
