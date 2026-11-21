@@ -56,8 +56,8 @@ jobs:
             -DBUILD_TESTS=ON \
             -DWITH_ZMQ=OFF
 
-      - name: Build node and CLI with wallet support
-        run: cmake --build build --target bitcoind bitcoin-cli --parallel 2
+      - name: Build node, CLI and wallet utility with wallet support
+        run: cmake --build build --target bitcoind bitcoin-cli bitcoin-wallet --parallel 2
 
       - name: Run wallet, RPC, and node functional regression tests
         run: |
