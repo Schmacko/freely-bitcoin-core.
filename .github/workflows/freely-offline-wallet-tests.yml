@@ -20,6 +20,25 @@ on:
       - "test/functional/test_framework/**"
       - ".github/workflows/freely-offline-wallet-tests.yml"
       - ".github/workflows/freely-chainparams-candidate-tests.yml"
+  pull_request:
+    branches:
+      - freely/chainparams-candidate-integration
+    paths:
+      - "src/common/args.cpp"
+      - "src/chainparams.cpp"
+      - "src/chainparamsbase.cpp"
+      - "src/kernel/chainparams.cpp"
+      - "src/kernel/chainparams.h"
+      - "src/wallet/**"
+      - "src/rpc/**"
+      - "test/functional/feature_freely_offline_wallet.py"
+      - "test/functional/test_runner.py"
+      - "docs/FREELY-DEVELOPMENT-MODE-NETWORK-SECURITY.md"
+      - "docs/FREELY-RPC-P2P-SAFETY-AUDIT.md"
+      - "test/functional/feature_freely_loopback_network.py"
+      - "test/functional/test_framework/**"
+      - ".github/workflows/freely-offline-wallet-tests.yml"
+      - ".github/workflows/freely-chainparams-candidate-tests.yml"
   workflow_dispatch:
 
 permissions:
