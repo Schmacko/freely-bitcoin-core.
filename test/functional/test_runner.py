@@ -275,8 +275,6 @@ BASE_SCRIPTS = [
     'tool_utxo_to_sqlite.py',
     'feature_versionbits_warning.py',
     'feature_freely_startup.py',
-    'feature_freely_candidate_startup.py',
-    'feature_bip94.py',
     'feature_blocksxor.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
