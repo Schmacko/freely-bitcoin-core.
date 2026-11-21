@@ -93,6 +93,21 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
         confirmed_block = receiver.getblock(confirmation_hash, 2)
         assert_equal(any(tx["txid"] == txid for tx in confirmed_block["tx"]), True)
 
+        # Partition the private network and build competing branches. The
+        # three-block branch must win over the two-block branch after the
+        # loopback connection is restored, exercising ordinary chainwork
+        # selection and reorganization without changing consensus rules.
+        self.disconnect_nodes(0, 1)
+        miner.generatetoaddress(2, miner_wallet.getnewaddress())
+        winning_tip = receiver.generatetoaddress(3, receiver_wallet.getnewaddress())[-1]
+        assert_equal(miner.getblockcount(), 104)
+        assert_equal(receiver.getblockcount(), 105)
+        self.connect_nodes(1, 0)
+        sync_blocks(self.nodes)
+        assert_equal(miner.getblockcount(), 105)
+        assert_equal(miner.getbestblockhash(), winning_tip)
+        assert_equal(receiver.getbestblockhash(), winning_tip)
+
 
 if __name__ == "__main__":
     FreelyLoopbackNetworkTest(__file__).main()
