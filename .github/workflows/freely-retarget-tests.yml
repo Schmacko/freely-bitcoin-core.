@@ -14,6 +14,7 @@ on:
       - "src/kernel/chainparams.cpp"
       - "src/chainparams.cpp"
       - "test/functional/feature_bip94.py"
+      - "test/functional/test_runner.py"
       - "contrib/freely/check_retarget_vectors.py"
       - "docs/FREELY-RETARGET-TEST-VECTORS.md"
       - ".github/workflows/freely-retarget-tests.yml"
