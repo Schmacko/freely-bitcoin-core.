@@ -21,7 +21,7 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
         # If FREELY chain selection ever falls through to normal node startup,
         # this test must catch the regression before P2P initialization.
         node.assert_start_raises_init_error(
-            extra_args=["-chain=freely"],
+            extra_args=["-noregtest", "-chain=freely"],
             expected_msg="FREELY consensus and genesis parameters are not finalized; refusing startup.",
             match=ErrorMatch.PARTIAL_REGEX,
         )
