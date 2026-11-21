@@ -7,6 +7,7 @@ on:
       - freely/core-chain-implementation
     paths:
       - "test/functional/feature_freely_startup.py"
+      - "test/functional/test_runner.py"
       - "src/bitcoin-cli.cpp"
       - "src/chainparams.cpp"
       - "src/kernel/chainparams.cpp"
