@@ -121,6 +121,10 @@ static std::string DummyAddress(const CChainParams &params)
     case ChainType::REGTEST:
         addr = "bcrt1p35yvjel7srp783ztf8v6jdra7dhfzk5jaun8xz2qp6ws7z80n4tqsr2427";
         break;
+    case ChainType::FREELY:
+        // Deliberately invalid checksum; the HRP is unique to FREELY.
+        addr = "fly1p35yvjel7srp783ztf8v6jdra7dhfzk5jaun8xz2qp6ws7z80n4tq2jku9f";
+        break;
     } // no default case, so the compiler can warn about missing cases
     assert(!addr.empty());
 
