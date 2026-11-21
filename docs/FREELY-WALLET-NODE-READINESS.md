@@ -6,7 +6,7 @@ Workstream opened against the current core-chain implementation branch. This is 
 
 ## Safety boundary
 
-- Keep `-chain=freely` fail-closed until the derived genesis nonce/hash are mined and independently verified, the FREELY CChainParams integration is complete, and release evidence gates pass. All four parameter areas are owner-approved; the canonical values are in `docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md`.
+- Keep normal production chain selection fail-closed pending explicit launch authorization and release evidence. The approved candidate CChainParams and independently reproduced genesis nonce/hash now exist on dependent PRs #20/#21, but exact-head candidate C++/functional CI remains pending. All four parameter areas are owner-approved; the canonical values are in `docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md`.
 - Do not invent or duplicate parameter values in this workstream. Consume the owner-approved network/address/PoW/activation baseline from `docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md`; do not add DNS seeds or activate the network.
 - Do not expose RPC or P2P services publicly, deploy nodes, mine on a public network, or launch a testnet/mainnet.
 - Use Bitcoin Core's existing regtest only as a local test harness. Regtest is not FREELY.
@@ -54,7 +54,7 @@ The v32.1 source tree already contains the wallet initialization interface, wall
 ## Initial acceptance gates
 
 1. Existing upstream wallet and node tests remain intact.
-2. FREELY chain selection remains fail-closed until the derived genesis commitment is verified and CChainParams/runtime integration passes.
+2. Normal production FREELY startup remains fail-closed pending explicit launch authorization. Candidate development startup remains restricted to the separately guarded offline and loopback-only modes and must pass exact-head tests.
 3. No Bitcoin mainnet address or network identity is accepted as a FREELY identity by accident.
 4. Local regtest tests are explicitly labelled as harness tests, never as FREELY network tests.
 5. RPC defaults remain local-only and no public listener is introduced.
@@ -63,7 +63,7 @@ The v32.1 source tree already contains the wallet initialization interface, wall
 
 ## Dependencies and owner decisions
 
-The workstream can progress on source audits, node lifecycle safety, RPC test design, wallet persistence/recovery tests, and upstream compatibility. FREELY address generation, transaction validation against a live FREELY chain, mining rewards, and production wallet interoperability depend on the CChainParams implementation, independently mined/verified genesis nonce and hash, and successful FREELY-specific encoding/consensus tests. The powLimit, genesis nBits, network identity, and activation matrix are approved, not open owner decisions.
+The workstream can progress on source audits, node lifecycle safety, RPC test design, wallet persistence/recovery tests, and upstream compatibility. The approved candidate CChainParams and independently reproduced genesis nonce/hash are now present on dependent branches; FREELY wallet address generation and transaction tests still require exact-head candidate integration CI and successful FREELY-specific Base58/Bech32/extended-key tests. Transaction validation against a live public FREELY chain, mining rewards and production wallet interoperability remain behind activation authorization. The powLimit, genesis nBits, network identity and activation matrix are approved, not open owner decisions.
 
 ## Progress reporting
 
@@ -96,7 +96,7 @@ Coverage includes:
 
 This is an upstream compatibility gate using isolated local regtest fixtures. It is **not** a test of a live FREELY chain, production addresses, FREELY consensus parameters, or public network connectivity. The workflow does not deploy a node or expose RPC/P2P services.
 
-The workflow enables SQLite-backed wallet support, unlike the core-chain plumbing workflow which configures `ENABLE_WALLET=OFF`. It builds the node/CLI before invoking the functional test runner.
+The workflow enables SQLite-backed wallet support, unlike the core-chain plumbing workflow which configures `ENABLE_WALLET=OFF`. It must build `bitcoind`, `bitcoin-cli` and `bitcoin-wallet` before invoking the functional test runner; `wallet_encryption.py` invokes the standalone wallet utility.
 
 ### Validation status
 
@@ -177,3 +177,19 @@ Current wallet/node workflow:
 - Wallet-enabled C++ build and functional tests remain unverified.
 
 The wallet workstream remains upstream-compatibility testing on local regtest only. No FREELY node is selectable, no public RPC/P2P service is exposed, and no launch/deployment is authorized.
+
+
+## Wallet CI failure and correction — 21 November 2026
+
+The exact-head wallet workflow run `44910294866` on head `c7e34f02d06f99988fbea519334c774c2d935ffb` built `bitcoind` and `bitcoin-cli` successfully, then ran the functional suite. The test log showed 25 of 26 tests passing; `wallet_encryption.py` failed because it attempted to execute `build/bin/bitcoin-wallet`, which the workflow had not built:
+
+`FileNotFoundError: .../build/bin/bitcoin-wallet`
+
+This was a workflow target omission, not a FREELY consensus or wallet-code failure. The workflow build step now includes the `bitcoin-wallet` target:
+
+`cmake --build build --target bitcoind bitcoin-cli bitcoin-wallet --parallel 2`
+
+Fix commit:
+- `f3ecbe8647eb53b4a58177d2164ec2855c25e668`
+
+The corrected workflow is committed on `freely/wallet-node-readiness`. A new exact-head run is required before wallet compatibility can be marked passed. The previous 25/26 result is not a pass for the workflow.
