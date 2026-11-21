@@ -26,7 +26,7 @@ def main():
     build_dir = "ci_build"
 
     cmake_version_output = run(["cmake", "--version"], stdout=subprocess.PIPE, text=True).stdout
-    cmake_version = re.search(r"cmake version (\\d+)\\.(\\d+)", cmake_version_output)
+    cmake_version = re.search(r"cmake version (\d+)\.(\d+)", cmake_version_output)
     cmake_args = [
         "cmake",
         "-B",
