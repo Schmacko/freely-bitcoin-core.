@@ -17,6 +17,7 @@
 #include <array>
 
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(chaintype_tests, BasicTestingSetup)
@@ -493,6 +494,80 @@ BOOST_AUTO_TEST_CASE(all_builtin_message_magics_keep_their_chain_type)
     BOOST_CHECK(GetNetworkForMagic(testnet4->MessageStart()) == ChainType::TESTNET4);
     BOOST_CHECK(GetNetworkForMagic(signet->MessageStart()) == ChainType::SIGNET);
     BOOST_CHECK(GetNetworkForMagic(regtest->MessageStart()) == ChainType::REGTEST);
+}
+
+
+BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_peer_and_overlay_configuration)
+{
+    // A loopback-only node may connect to peers through the guarded addnode
+    // RPC, but must not inherit any configured peer, proxy, or overlay path.
+    const std::array<std::pair<const char*, const char*>, 8> forbidden_options{{
+        {"-addnode", "127.0.0.1:49444"},
+        {"-seednode", "127.0.0.1:49444"},
+        {"-proxy", "127.0.0.1:9050"},
+        {"-onion", "127.0.0.1:9050"},
+        {"-i2psam", "127.0.0.1:7656"},
+        {"-torcontrol", "127.0.0.1:9051"},
+        {"-torpassword", "test-only"},
+        {"-rpcallowip", "0.0.0.0/0"},
+    }};
+
+    for (const auto& [option, value] : forbidden_options) {
+        ArgsManager args;
+        args.ForceSetArg("-freelyprivate", "1");
+        args.ForceSetArg("-connect", "0");
+        args.ForceSetArg("-bind", "127.0.0.1:49444");
+        args.ForceSetArg("-discover", "0");
+        args.ForceSetArg("-dnsseed", "0");
+        args.ForceSetArg("-natpmp", "0");
+        args.ForceSetArg("-upnp", "0");
+        args.ForceSetArg("-listenonion", "0");
+        args.ForceSetArg(option, value);
+
+        BOOST_TEST_CONTEXT("forbidden option " << option) {
+            BOOST_CHECK_THROW(CreateChainParams(args, ChainType::FREELY), std::runtime_error);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_external_discovery_and_listener_overrides)
+{
+    const std::array<std::pair<const char*, const char*>, 5> forbidden_options{{
+        {"-discover", "1"},
+        {"-dnsseed", "1"},
+        {"-natpmp", "1"},
+        {"-upnp", "1"},
+        {"-listenonion", "1"},
+    }};
+
+    for (const auto& [option, value] : forbidden_options) {
+        ArgsManager args;
+        args.ForceSetArg("-freelyprivate", "1");
+        args.ForceSetArg("-connect", "0");
+        args.ForceSetArg("-bind", "127.0.0.1:49444");
+        args.ForceSetArg("-discover", "0");
+        args.ForceSetArg("-dnsseed", "0");
+        args.ForceSetArg("-natpmp", "0");
+        args.ForceSetArg("-upnp", "0");
+        args.ForceSetArg("-listenonion", "0");
+        args.ForceSetArg(option, value);
+
+        BOOST_TEST_CONTEXT("forbidden option " << option) {
+            BOOST_CHECK_THROW(CreateChainParams(args, ChainType::FREELY), std::runtime_error);
+        }
+    }
+
+    ArgsManager no_listen_args;
+    no_listen_args.ForceSetArg("-freelyprivate", "1");
+    no_listen_args.ForceSetArg("-connect", "0");
+    no_listen_args.ForceSetArg("-bind", "127.0.0.1:49444");
+    no_listen_args.ForceSetArg("-listen", "0");
+    no_listen_args.ForceSetArg("-discover", "0");
+    no_listen_args.ForceSetArg("-dnsseed", "0");
+    no_listen_args.ForceSetArg("-natpmp", "0");
+    no_listen_args.ForceSetArg("-upnp", "0");
+    no_listen_args.ForceSetArg("-listenonion", "0");
+    BOOST_CHECK_THROW(CreateChainParams(no_listen_args, ChainType::FREELY), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
