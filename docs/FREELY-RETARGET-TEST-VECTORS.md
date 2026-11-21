@@ -161,3 +161,18 @@ The C++ test `freely_bip94_uses_first_block_period_target` has been added to `sr
 ## BIP94 time-warp timestamp functional test
 
 The new functional test runs a private regtest node with the existing regtest-only `-test=bip94` option. It builds 143 blocks with timestamps 600 seconds apart, then submits candidate height 144. The candidate timestamp at parent time minus 601 seconds remains above median-time-past in this fixture but must be rejected as `time-timewarp-attack`; the parent time minus exactly 600 seconds must be accepted. This directly tests the timestamp constraint independently of the C++ retarget-base test. Regtest uses a 144-block interval, so the test does not replace a future end-to-end FREELY test at heights 2,016, 4,032, etc.
+
+
+## Exact-head expansion update — 21 November 2026
+
+The current PR branch now includes the three additional C++ regression cases in `src/test/pow_tests.cpp`:
+
+- `freely_retarget_boundary_uses_first_block_of_period`: a linked 2,016-index fixture distinguishes the correct height-0 period start (302,500 seconds, compact result `0x1d2002b5`) from the off-by-one height-1 measurement (301,500 seconds, lower-clamped result `0x1d1fffff`).
+- `freely_non_boundary_height_carries_forward_bits`: candidate height 2,017 carries the previous block's `nBits` unchanged.
+- `freely_derive_target_rejects_invalid_compact_values`: rejects negative, zero, non-zero mantissa truncated to zero, overflow and above-`powLimit` compact targets.
+
+These use a synthetic compact target and powLimit only. They do not replace or alter the owner-approved production values.
+
+Implementation commit: `f181925edd17d9575dec5471d5056d7e934d08f2`.
+
+The prior exact-head retarget workflow passed on the earlier head `e2d83e87ef9ec238104ed817189fd57e7abdebf1`. The new head has not yet returned a workflow result; these additional tests remain unverified by CI until the new focused PoW run completes.
