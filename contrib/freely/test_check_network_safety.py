@@ -12,12 +12,7 @@ MANIFEST = json.loads(Path(__file__).with_name("network-safety.json").read_text(
 def complete_fixture():
     # Only the derived genesis hash/nonce are synthetic. All approved protocol
     # parameters remain exactly as specified in the owner-approved baseline.
-    data = copy.deepcopy(MANIFEST)
-    data["genesis"].update({
-        "hash": "11" * 32,
-        "nonce": 1,
-    })
-    return data
+    return copy.deepcopy(MANIFEST)
 
 
 class NetworkSafetyTests(unittest.TestCase):
@@ -26,17 +21,32 @@ class NetworkSafetyTests(unittest.TestCase):
         data["schema_version"] = True
         self.assertTrue(any("schema_version must be the integer 1" in item for item in validate(data)))
 
-    def test_approved_template_fails_closed_only_on_unmined_genesis_commitment(self):
-        errors = validate(MANIFEST)
-        self.assertTrue(any("genesis.hash is unset" in item for item in errors))
-        self.assertTrue(any("genesis.nonce is unset" in item for item in errors))
+    def test_approved_genesis_candidate_is_pinned_and_reproducible(self):
+        self.assertEqual(validate(MANIFEST), [])
         self.assertEqual(MANIFEST["network"]["message_start"], "fac3b7d1")
         self.assertEqual(MANIFEST["network"]["p2p_port"], 49444)
         self.assertEqual(MANIFEST["network"]["rpc_port"], 49445)
+        self.assertEqual(MANIFEST["genesis"]["hash"],
+                         "0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78")
+        self.assertEqual(MANIFEST["genesis"]["merkle_root"],
+                         "c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1")
+        self.assertEqual(MANIFEST["genesis"]["nonce"], 2238688522)
         self.assertEqual(MANIFEST["genesis"]["n_bits"], "0x1d00ffff")
         self.assertEqual(MANIFEST["genesis"]["pow_limit"], "0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
         self.assertIs(MANIFEST["genesis"]["coinbase_spendable"], False)
         self.assertIs(MANIFEST["consensus"]["bip94_enabled"], True)
+
+    def test_rejects_mutated_genesis_commitment(self):
+        for field, value in (
+            ("hash", "11" * 32),
+            ("merkle_root", "22" * 32),
+            ("nonce", 2238688523),
+        ):
+            with self.subTest(field=field):
+                data = complete_fixture()
+                data["genesis"][field] = value
+                self.assertTrue(any("independently reproduced FREELY genesis candidate" in item
+                                    for item in validate(data)))
 
     def test_rejects_missing_owner_approved_policy_fields(self):
         data = complete_fixture()

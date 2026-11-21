@@ -7,8 +7,10 @@ It deliberately fails while the derived genesis commitment and required producti
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
+import struct
 import sys
 from pathlib import Path
 from typing import Any
@@ -35,8 +37,8 @@ ALL_BITCOIN_EXTENDED_KEY_PREFIXES = set().union(*BITCOIN_EXTENDED_KEY_PREFIXES.v
 BITCOIN_GENESIS_HASH = "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
 
 # Owner-approved values from docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md.
-# The genesis nonce and block hash are derived outputs and remain unset until
-# the approved candidate header has been mined and independently reproduced.
+# The derived genesis commitment is pinned separately after independent
+# coinbase, Merkle-root, header-serialization and proof-of-work reproduction.
 APPROVED_VALUES = {
     "network": {
         "message_start": "fac3b7d1",
@@ -61,6 +63,7 @@ APPROVED_VALUES = {
         "coinbase_message": "FREELY FLY genesis 2026-11-18",
         "coinbase_output_script": "6a12465245454c5920464c592047454e45534953",
         "coinbase_spendable": False,
+        "coinbase_reward_base_units": 5000000000,
     },
     "consensus": {
         "target_spacing_seconds": 600,
@@ -105,6 +108,12 @@ def matches_approved(actual: Any, expected: Any) -> bool:
     return type(actual) is type(expected) and actual == expected
 
 
+DERIVED_GENESIS = {
+    "hash": "0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78",
+    "merkle_root": "c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1",
+    "nonce": 2238688522,
+}
+
 REQUIRED_PATHS = (
     "network.message_start",
     "network.p2p_port",
@@ -118,6 +127,7 @@ REQUIRED_PATHS = (
     "address.base58_extended_secret_key_prefix",
     "address.bech32_hrp",
     "genesis.hash",
+    "genesis.merkle_root",
     "genesis.nonce",
     "genesis.n_bits",
     "genesis.pow_limit",
@@ -154,6 +164,93 @@ def decode_compact_target(compact: int) -> int | None:
     return target if target > 0 else None
 
 
+def _compact_size(value: int) -> bytes:
+    if not 0 <= value < 253:
+        raise ValueError("genesis fixture only expects compact sizes below 253")
+    return bytes((value,))
+
+
+def _push_data(value: bytes) -> bytes:
+    if len(value) > 75:
+        raise ValueError("genesis coinbase push exceeds direct-push range")
+    return bytes((len(value),)) + value
+
+
+def verify_derived_genesis(genesis: dict[str, Any]) -> list[str]:
+    """Rebuild the approved coinbase, Merkle root and 80-byte genesis header."""
+    required_types = {
+        "hash": str,
+        "merkle_root": str,
+        "nonce": int,
+        "timestamp": int,
+        "version": int,
+        "n_bits": str,
+        "pow_limit": str,
+        "coinbase_message": str,
+        "coinbase_output_script": str,
+        "coinbase_reward_base_units": int,
+    }
+    for field, expected_type in required_types.items():
+        value = genesis.get(field)
+        if expected_type is int:
+            if type(value) is not int:
+                return []
+        elif not isinstance(value, expected_type):
+            return []
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", genesis["hash"]):
+        return []
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", genesis["merkle_root"]):
+        return []
+    if not re.fullmatch(r"0x[0-9a-fA-F]{1,8}", genesis["n_bits"]):
+        return []
+    if not re.fullmatch(r"0x[0-9a-fA-F]+", genesis["pow_limit"]):
+        return []
+
+    errors: list[str] = []
+    try:
+        message = genesis["coinbase_message"].encode("utf-8")
+        script_sig = (
+            _push_data(struct.pack("<I", 486604799))
+            + _push_data(bytes((4,)))
+            + _push_data(message)
+        )
+        script_pub_key = bytes.fromhex(genesis["coinbase_output_script"])
+        coinbase = b"".join((
+            struct.pack("<i", 1),
+            bytes((1,)),
+            bytes(32),
+            struct.pack("<I", 0xFFFFFFFF),
+            _compact_size(len(script_sig)),
+            script_sig,
+            struct.pack("<I", 0xFFFFFFFF),
+            bytes((1,)),
+            struct.pack("<q", genesis["coinbase_reward_base_units"]),
+            _compact_size(len(script_pub_key)),
+            script_pub_key,
+            struct.pack("<I", 0),
+        ))
+        coinbase_txid = hashlib.sha256(hashlib.sha256(coinbase).digest()).digest()[::-1].hex()
+        if coinbase_txid != genesis["merkle_root"].lower():
+            errors.append("genesis.merkle_root does not match the independently serialized approved coinbase transaction")
+
+        header = b"".join((
+            struct.pack("<i", genesis["version"]),
+            bytes(32),
+            bytes.fromhex(genesis["merkle_root"])[::-1],
+            struct.pack("<II", genesis["timestamp"], int(genesis["n_bits"], 16)),
+            struct.pack("<I", genesis["nonce"]),
+        ))
+        digest = hashlib.sha256(hashlib.sha256(header).digest()).digest()
+        if digest[::-1].hex() != genesis["hash"].lower():
+            errors.append("genesis.hash does not match the serialized FREELY genesis header")
+        target = decode_compact_target(int(genesis["n_bits"], 16))
+        if target is not None and int.from_bytes(digest, "little") > target:
+            errors.append("genesis.hash does not satisfy the approved genesis.n_bits proof-of-work target")
+    except (OverflowError, ValueError, struct.error):
+        errors.append("genesis coinbase or header fields cannot be serialized safely")
+    return errors
+
+
 def validate(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     if type(data.get("schema_version")) is not int or data.get("schema_version") != 1:
@@ -185,6 +282,11 @@ def validate(data: dict[str, Any]) -> list[str]:
         for field, expected in expected_values.items():
             if not matches_approved(sections[section].get(field), expected):
                 errors.append(f"{section}.{field} differs from the owner-approved protocol parameter baseline")
+
+    for field, expected in DERIVED_GENESIS.items():
+        if not matches_approved(genesis.get(field), expected):
+            errors.append(f"genesis.{field} differs from the independently reproduced FREELY genesis candidate")
+    errors.extend(verify_derived_genesis(genesis))
 
     magic = network.get("message_start")
     if magic is not None:
