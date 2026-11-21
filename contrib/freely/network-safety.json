@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "FREELY",
+    "ticker": "FLY"
+  },
+  "network": {
+    "message_start": "fac3b7d1",
+    "p2p_port": 49444,
+    "rpc_port": 49445,
+    "data_directory": "freely",
+    "config_section": "freely"
+  },
+  "address": {
+    "base58_public_key_prefix": 55,
+    "base58_script_prefix": 117,
+    "base58_secret_key_prefix": 183,
+    "base58_extended_public_key_prefix": "04464c59",
+    "base58_extended_secret_key_prefix": "04666c79",
+    "bech32_hrp": "fly"
+  },
+  "genesis": {
+    "hash": null,
+    "timestamp": 1794960000,
+    "version": 1,
+    "nonce": null,
+    "n_bits": "0x1d00ffff",
+    "pow_limit": "0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "coinbase_message": "FREELY FLY genesis 2026-11-18",
+    "coinbase_output_script": "6a12465245454c5920464c592047454e45534953",
+    "coinbase_spendable": false
+  },
+  "consensus": {
+    "target_spacing_seconds": 600,
+    "target_timespan_seconds": 1209600,
+    "retarget_interval": 2016,
+    "retarget_min_timespan_seconds": 302400,
+    "retarget_max_timespan_seconds": 4838400,
+    "allow_min_difficulty_blocks": false,
+    "no_retargeting": false,
+    "bip94_enabled": true,
+    "script_activation_heights": {
+      "bip34": 1,
+      "bip65": 1,
+      "bip66": 1,
+      "csv": 1,
+      "segwit": 1
+    },
+    "min_bip9_warning_height": 0,
+    "version_bits": {
+      "testdummy": {
+        "bit": 28,
+        "start_time": -2,
+        "timeout": 9223372036854775807,
+        "min_activation_height": 0,
+        "threshold": 1815,
+        "period": 2016
+      }
+    },
+    "taproot_witness_v1": "verify using Bitcoin Core v32.1 script flags; no separate chain-parameter activation field"
+  }
+}
