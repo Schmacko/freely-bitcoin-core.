@@ -29,6 +29,7 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
         ] for _ in range(self.num_nodes)]
 
     def run_test(self):
+        self.skip_if_no_wallet()
         # setup_network connects node 1 to node 0 using a loopback addnode RPC.
         # Reject public addresses, hostnames (even if they may resolve locally),
         # IPv4-mapped IPv6 spellings, and lookalike host strings. The policy is
@@ -70,19 +71,23 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
         # reached maturity before funding a wallet transaction.
         miner = self.nodes[0]
         receiver = self.nodes[1]
-        mining_address = miner.getnewaddress()
+        miner.createwallet(wallet_name="freely-miner")
+        receiver.createwallet(wallet_name="freely-receiver")
+        miner_wallet = miner.get_wallet_rpc("freely-miner")
+        receiver_wallet = receiver.get_wallet_rpc("freely-receiver")
+        mining_address = miner_wallet.getnewaddress()
         miner.generatetoaddress(101, mining_address)
         sync_blocks(self.nodes)
         assert_equal(receiver.getblockcount(), 101)
 
         # Exercise transaction relay, mempool synchronization, block
         # propagation, and confirmation on the receiving node.
-        destination = receiver.getnewaddress()
-        txid = miner.sendtoaddress(destination, 1)
+        destination = receiver_wallet.getnewaddress()
+        txid = miner_wallet.sendtoaddress(destination, 1)
         sync_mempools(self.nodes)
         assert_equal(txid in receiver.getrawmempool(), True)
 
-        confirmation_hash = miner.generatetoaddress(1, miner.getnewaddress())[0]
+        confirmation_hash = miner.generatetoaddress(1, miner_wallet.getnewaddress())[0]
         sync_blocks(self.nodes)
         assert_equal(receiver.getblockhash(102), confirmation_hash)
         confirmed_block = receiver.getblock(confirmation_hash, 2)
