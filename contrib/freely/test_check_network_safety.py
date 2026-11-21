@@ -166,10 +166,15 @@ class NetworkSafetyTests(unittest.TestCase):
                 data["network"]["data_directory"] = unsafe_path
                 self.assertTrue(any("absolute or traverse parent directories" in item for item in validate(data)))
 
-    def test_accepts_single_safe_data_directory_name(self):
+    def test_accepts_owner_approved_data_directory_name(self):
+        data = complete_fixture()
+        data["network"]["data_directory"] = "freely"
+        self.assertEqual(validate(data), [])
+
+    def test_rejects_safe_but_unapproved_data_directory_name(self):
         data = complete_fixture()
         data["network"]["data_directory"] = "freely_node-1"
-        self.assertEqual(validate(data), [])
+        self.assertTrue(any("owner-approved protocol parameter baseline" in item for item in validate(data)))
 
     def test_rejects_unsafe_or_wrong_config_section(self):
         data = complete_fixture()
@@ -237,7 +242,9 @@ class NetworkSafetyTests(unittest.TestCase):
             data["genesis"]["n_bits"] = compact
             self.assertTrue(any("negative, zero, or overflowing" in item for item in validate(data)))
         data = complete_fixture()
-        data["genesis"]["pow_limit"] = "0x7ffffe" + "00" * 29
+        # A deliberately tiny limit must reject the otherwise valid approved
+        # compact target, independently of the owner-approved-value check.
+        data["genesis"]["pow_limit"] = "0x1"
         self.assertTrue(any("exceeds genesis.pow_limit" in item for item in validate(data)))
 
     def test_rejects_out_of_range_genesis_fields_and_activation_heights(self):
@@ -247,7 +254,7 @@ class NetworkSafetyTests(unittest.TestCase):
         data["consensus"]["script_activation_heights"] = {"segwit": -1}
         errors = validate(data)
         self.assertTrue(any("32-bit compact" in item for item in errors))
-        self.assertTrue(any("256-bit" in item for item in errors))
+        self.assertTrue(any("256 bits" in item for item in errors))
         self.assertTrue(any("activation height" in item for item in errors))
 
     def test_rejects_empty_script_activation_matrix(self):
