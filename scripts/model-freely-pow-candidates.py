@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Model FREELY SHA-256d block intervals for candidate difficulty scenarios.
 
 This is a deterministic mathematical model, not a live miner benchmark.
