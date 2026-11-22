@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright (c) 2026 The FREELY contributors
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -26,7 +25,6 @@ class FreelyOfflineStartupTest(BitcoinTestFramework):
             "-dnsseed=0",
             "-discover=0",
             "-natpmp=0",
-            "-upnp=0",
             "-listenonion=0",
         ]]
 
