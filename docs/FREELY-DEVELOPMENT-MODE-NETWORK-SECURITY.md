@@ -2,7 +2,7 @@
 
 **Status:** Implemented as a gated development feature; exact-head CI is pending. This is not a production launch authorization or a security certification.
 
-**Source baseline:** Bitcoin Core v32.1 fork  
+**Source baseline:** Bitcoin Core v32.1 fork
 **Scope:** offline local development, loopback-only private-node development, P2P/RPC exposure controls, runtime peer-addition policy, and regression-test registration.
 
 This document supersedes the earlier pre-candidate source audit for current FREELY startup behavior. It describes code-level restrictions; it is not an OS sandbox and does not protect against a local administrator deliberately changing firewall rules, forwarding ports, or running external proxy software.
