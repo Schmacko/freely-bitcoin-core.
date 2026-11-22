@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
 # Copyright (c) 2026 The FREELY contributors
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Verify two FREELY nodes can connect over loopback only."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, sync_blocks, sync_mempools
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 
 GENESIS_HASH = "0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78"
@@ -23,7 +22,6 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
             "-freelyprivate=1",
             "-discover=0",
             "-dnsseed=0",
-            "-upnp=0",
             "-natpmp=0",
             "-listenonion=0",
         ] for _ in range(self.num_nodes)]
@@ -77,14 +75,14 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
         receiver_wallet = receiver.get_wallet_rpc("freely-receiver")
         mining_address = miner_wallet.getnewaddress()
         miner.generatetoaddress(101, mining_address)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         assert_equal(receiver.getblockcount(), 101)
 
         # Exercise transaction relay, mempool synchronization, block
         # propagation, and confirmation on the receiving node.
         destination = receiver_wallet.getnewaddress()
         txid = miner_wallet.sendtoaddress(destination, 1)
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         assert_equal(txid in receiver.getrawmempool(), True)
 
         confirmation_hash = miner.generatetoaddress(1, miner_wallet.getnewaddress())[0]
