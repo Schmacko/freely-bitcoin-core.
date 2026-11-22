@@ -42,7 +42,7 @@ def main():
         "--preset=dev-mode",
         "-DCMAKE_CXX_FLAGS=-Wno-error=unused-member-function -Wno-error=unused-function",
     ]
-    if cmake_version and (int(cmake_version.group(1)), int(cmake_version.group(2))) >= (4, 2):
+    if cmake_version and (int(cmake_version.group(1)), int(cmake_version.group(2))) >= (4, 5):
         cmake_args.append("-Wno-error=non-target-directive")
     run(cmake_args)
 
