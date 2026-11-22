@@ -86,7 +86,7 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
         assert_equal(txid in receiver.getrawmempool(), True)
 
         confirmation_hash = miner.generatetoaddress(1, miner_wallet.getnewaddress())[0]
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         assert_equal(receiver.getblockhash(102), confirmation_hash)
         confirmed_block = receiver.getblock(confirmation_hash, 2)
         assert_equal(any(tx["txid"] == txid for tx in confirmed_block["tx"]), True)
@@ -101,7 +101,7 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
         assert_equal(miner.getblockcount(), 104)
         assert_equal(receiver.getblockcount(), 105)
         self.connect_nodes(1, 0)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         assert_equal(miner.getblockcount(), 105)
         assert_equal(miner.getbestblockhash(), winning_tip)
         assert_equal(receiver.getbestblockhash(), winning_tip)
