@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright (c) 2026 The FREELY developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -25,7 +24,6 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
             "-discover=0",
             "-dnsseed=0",
             "-natpmp=0",
-            "-upnp=0",
             "-listenonion=0",
         ]]
 
@@ -50,7 +48,7 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
             match=ErrorMatch.PARTIAL_REGEX,
         )
 
-        # UPnP can create an external router mapping independently of the
+        # NAT-PMP can create an external router mapping independently of the
         # loopback/offline bind policy, so both FREELY modes must reject it.
         node.assert_start_raises_init_error(
             extra_args=[
@@ -58,8 +56,7 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
                 "-listen=0",
                 "-discover=0",
                 "-dnsseed=0",
-                "-natpmp=0",
-                "-upnp=1",
+                "-natpmp=1",
                 "-listenonion=0",
             ],
             expected_msg="FREELY offline development requires external discovery services and port mapping to be disabled.",
@@ -72,7 +69,6 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
                 "-discover=0",
                 "-dnsseed=0",
                 "-natpmp=0",
-                "-upnp=1",
                 "-listenonion=0",
             ],
             expected_msg="FREELY loopback private mode prohibits external discovery, port mapping and listener services.",
@@ -89,7 +85,6 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
             "-discover=0",
             "-dnsseed=0",
             "-natpmp=0",
-            "-upnp=0",
             "-listenonion=0",
             "-connect=0",
         ]
@@ -126,7 +121,6 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
             "-discover=0",
             "-dnsseed=0",
             "-natpmp=0",
-            "-upnp=0",
             "-listenonion=0",
             "-connect=0",
         ]
