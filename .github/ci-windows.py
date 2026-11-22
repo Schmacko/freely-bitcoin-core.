@@ -64,11 +64,18 @@ def github_import_vs_env(_ci_type):
 
 
 def generate(ci_type):
+    # CMake 4.5 introduces a new developer warning for legacy directory-scoped
+    # directives. Keep every other developer warning fatal on the v32.1 baseline.
+    cmake_version = run(["cmake", "--version"], capture_output=True, text=True).stdout.splitlines()[0].split()[-1]
+    cmake_major, cmake_minor = (int(part) for part in cmake_version.split(".")[:2])
+    warning_flags = ["-Werror=dev"]
+    if (cmake_major, cmake_minor) >= (4, 5):
+        warning_flags.append("-Wno-error=non-target-directive")
     command = [
         "cmake",
         "-B",
         "build",
-        "-Werror=dev",
+        *warning_flags,
         "--preset=vs2026",
         # Using x64-windows-release for both host and target triplets
         # to ensure vcpkg builds only release packages, thereby optimizing
