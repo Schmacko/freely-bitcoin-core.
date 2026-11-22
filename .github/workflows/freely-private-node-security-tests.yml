@@ -61,18 +61,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
-            build-essential cmake python3 libboost-dev libevent-dev
+            build-essential cmake python3 libboost-dev libevent-dev libsqlite3-dev
 
       - name: Configure unit-test build
         run: |
           cmake -B build \
-            -DENABLE_WALLET=OFF \
+            -DENABLE_WALLET=ON \
             -DENABLE_IPC=OFF \
             -DBUILD_GUI=OFF \
             -DBUILD_TESTS=ON
 
       - name: Build node, CLI and unit-test executable
-        run: cmake --build build --target bitcoind bitcoin-cli test_bitcoin --parallel 2
+        run: cmake --build build --target bitcoind bitcoin-cli bitcoin-wallet test_bitcoin --parallel 2
 
       - name: Run chain selection, genesis, PoW and validation suites
         run: |
