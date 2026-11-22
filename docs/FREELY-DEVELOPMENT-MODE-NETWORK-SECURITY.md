@@ -24,7 +24,7 @@ The offline mode requires:
 
 - `-listen=0` and exactly one `-connect=0` setting.
 - No `-bind` or `-whitebind` listeners.
-- `-discover=0`, `-dnsseed=0`, `-natpmp=0`, `-upnp=0`, and `-listenonion=0`.
+- `-discover=0`, `-dnsseed=0`, `-natpmp=0`, and `-listenonion=0`.
 - No `-addnode`, `-seednode`, proxy, onion, I2P, Tor, or external-IP configuration.
 - No custom RPC bind or RPC allowlist; RPC retains the upstream loopback-only defaults.
 - No ZMQ publish endpoints.
@@ -40,7 +40,7 @@ It requires:
 - P2P listening enabled.
 - At least one explicit `-bind`, and every bind must be a literal `127.0.0.1` or `[::1]` address, optionally with a port.
 - Exactly one `-connect=0` setting, preventing automatic outbound peer discovery.
-- No `-whitebind`, external discovery, DNS seeding, NAT-PMP, UPnP, onion listener, external IP, proxy, overlay network, seed node, or configured external peer.
+- No `-whitebind`, external discovery, DNS seeding, NAT-PMP, onion listener, external IP, proxy, overlay network, seed node, or configured external peer.
 - No custom RPC bind or allowlist; RPC remains loopback-only.
 - No ZMQ publish endpoints.
 
@@ -50,7 +50,7 @@ This mode is suitable for multiple local processes on one machine. It is not a L
 
 ## 4. External network side effects
 
-Both development modes reject UPnP and NAT-PMP. Disabling P2P listening alone is not treated as sufficient isolation: port-mapping services can create router-side effects independently of the node's intended listener policy.
+Both development modes reject NAT-PMP. Bitcoin Core v32.1 does not register an UPnP option, so FREELY neither adds nor accepts `-upnp`; no UPnP setting is required for this fork. Disabling P2P listening alone is not treated as sufficient isolation: the supported port-mapping service can create router-side effects independently of the node's intended listener policy.
 
 Both modes also reject DNS discovery, address discovery, onion/I2P/Tor configuration, external peer lists, and ZMQ publish endpoints. The loopback mode still allows explicit same-host P2P connections through the guarded RPC path.
 
@@ -61,7 +61,7 @@ The Bitcoin Core functional test runner registers the following FREELY tests:
 | Test | Purpose |
 |---|---|
 | `feature_freely_startup.py` | Normal startup without development authorization remains fail-closed |
-| `feature_freely_development_startup.py` | Missing/conflicting modes and UPnP rejection in both modes |
+| `feature_freely_development_startup.py` | Missing/conflicting modes and NAT-PMP rejection in both modes |
 | `feature_freely_offline_startup.py` | Offline genesis access, zero peers, and RPC peer-addition rejection |
 | `feature_freely_loopback_network.py` | Two local nodes communicate only through loopback |
 | `feature_freely_offline_wallet.py` | Wallet address formats, offline signing, and restart recovery; registered in the extended suite and run by wallet-enabled CI |
@@ -84,7 +84,7 @@ A queued, pending, skipped, cancelled, or infrastructure-failed workflow is not 
 
 ## 7. Additional startup-guard regressions — 21 November 2026
 
-The `feature_freely_development_startup.py` functional test now checks negative startup cases for both modes, in addition to the missing/conflicting-mode and UPnP cases above.
+The `feature_freely_development_startup.py` functional test now checks negative startup cases for both modes, in addition to the missing/conflicting-mode and NAT-PMP rejection cases above.
 
 Offline-development cases reject:
 - overriding the required `-connect=0`;
@@ -115,7 +115,7 @@ The latest exact-head workflow is queued; no compile or functional-test pass is 
 Two table-driven C++ regression tests were added to `chaintype_tests`:
 
 - `freely_loopback_private_mode_rejects_peer_and_overlay_configuration` verifies that configured addnode/seednode peers, proxies, onion/I2P/Tor services, Tor credentials, and remote RPC allowlists cannot be used in loopback-private mode.
-- `freely_loopback_private_mode_rejects_external_discovery_and_listener_overrides` verifies that address discovery, DNS seeding, NAT-PMP, UPnP and onion listening cannot be re-enabled, and that disabling the required P2P listener is rejected.
+- `freely_loopback_private_mode_rejects_external_discovery_and_listener_overrides` verifies that address discovery, DNS seeding, NAT-PMP and onion listening cannot be re-enabled, and that disabling the required P2P listener is rejected.
 
 These tests exercise `CreateChainParams` directly with isolated `ArgsManager` instances. They complement the functional startup tests and run in the existing `chaintype_tests` target. The focused workflow path filter now includes `src/test/chaintype_tests.cpp`, ensuring future changes to these guards trigger the security workflow.
 
