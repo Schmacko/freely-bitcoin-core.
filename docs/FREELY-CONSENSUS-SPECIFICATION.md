@@ -1,9 +1,9 @@
 # FREELY consensus specification — engineering baseline
 
-**Status:** all four protocol parameter areas owner-approved 18 November 2026; runtime integration and release remain fail-closed pending derived genesis commitment, tests and review.  
-**Date:** 16 November 2026  
-**Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`.  
-**Branch:** `freely/consensus-specification`  
+**Status:** all four protocol parameter areas owner-approved 18 November 2026; runtime integration and release remain fail-closed pending derived genesis commitment, tests and review.
+**Date:** 16 November 2026
+**Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`.
+**Branch:** `freely/consensus-specification`
 **Purpose:** turn agreed monetary and block-production rules into an auditable implementation contract, while explicitly isolating unresolved consensus choices. This document does not activate a chain, choose a genesis block, or authorise a public network.
 
 ## 1. Consensus rules already agreed
@@ -77,7 +77,7 @@ Required invariants:
 
 ### Owner-approved production retarget policy (16 November 2026)
 
-The project owner has approved the following production policy, based on the dedicated proposal in [FREELY-RETARGET-POLICY-PROPOSAL.md](FREELY-RETARGET-POLICY-PROPOSAL.md):
+The project owner has approved the following production policy, based on the dedicated proposal in [retarget-policy proposal (PR #5)](https://github.com/Schmacko/freely-bitcoin-core./pull/5):
 
 - SHA-256d proof of work; 600-second target spacing.
 - Retarget interval: 2,016 blocks; target timespan: 1,209,600 seconds (14 days).
