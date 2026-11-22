@@ -1,7 +1,7 @@
 # FREELY consensus decision register
 
-**Date:** 17 November 2026  
-**Status:** All four protocol parameter areas were explicitly approved by the owner on 18 November 2026. The genesis nonce, final transaction/Merkle commitment and block hash remain derived and uncomputed; implementation, compatibility tests, security review and activation gates remain incomplete.  
+**Date:** 17 November 2026
+**Status:** All four protocol parameter areas were explicitly approved by the owner on 18 November 2026. The genesis nonce, final transaction/Merkle commitment and block hash remain derived and uncomputed; implementation, compatibility tests, security review and activation gates remain incomplete.
 **Related:** [Consensus specification](FREELY-CONSENSUS-SPECIFICATION.md) · [Chain-selection audit](FREELY-CHAIN-SELECTION-AUDIT.md)
 
 This register separates agreed policy from recommendations and unresolved decisions. No value in the recommendation column is activated by this document.
@@ -109,7 +109,7 @@ Resolved by owner on 17 Nov 2026: genesis reward is permanently unspendable and 
 
 ## H. Owner decision record — 16 November 2026
 
-The owner explicitly approved the FREELY production retarget policy proposed in [FREELY-RETARGET-POLICY-PROPOSAL.md](../freely/retarget-policy/docs/FREELY-RETARGET-POLICY-PROPOSAL.md) / PR #5:
+The owner explicitly approved the FREELY production retarget policy proposed in [retarget-policy proposal (PR #5)](https://github.com/Schmacko/freely-bitcoin-core./pull/5) / PR #5:
 
 - 600-second target spacing; 2,016-block interval; 1,209,600-second target timespan.
 - Clamp actual elapsed timespan to ¼×–4× the target timespan.
