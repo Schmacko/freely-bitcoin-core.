@@ -40,6 +40,11 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
             "localhost:49444",
             "[::ffff:127.0.0.1]:49444",
             "[::FFFF:7f00:1]:49444",
+            // Expanded mapped-IPv6 spellings normalize to IPv4 in CNetAddr.
+            // They must remain rejected based on the original literal syntax.
+            "[0:0:0:0:0:ffff:127.0.0.1]:49444",
+            "[0:0:0:0:0:ffff:7f00:1]:49444",
+            "0:0:0:0:0:ffff:7f00:1",
             "127.0.0.1.evil.example:49444",
             "127.0.0.1:invalid",
         ):
