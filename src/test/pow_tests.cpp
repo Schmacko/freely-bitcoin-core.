@@ -214,15 +214,18 @@ BOOST_AUTO_TEST_CASE(ChainParams_SIGNET_sanity)
 
 BOOST_AUTO_TEST_CASE(freely_approved_pow_retarget_vectors)
 {
-    auto calculate = [](int64_t elapsed, bool bip94 = true, uint32_t last_bits = 0x1c00ffff) {
-        Consensus::Params params{};
-        params.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
-        params.nPowTargetTimespan = 1'209'600;
-        params.nPowTargetSpacing = 600;
-        params.fPowAllowMinDifficultyBlocks = false;
-        params.enforce_BIP94 = bip94;
-        params.fPowNoRetargeting = false;
+    // Exercise the real approved FREELY parameter object rather than a
+    // hand-built copy that could drift away from production configuration.
+    const auto freely_params{CChainParams::FreelyCandidate()};
+    const auto& params{freely_params->GetConsensus()};
+    BOOST_CHECK_EQUAL(params.nPowTargetSpacing, 600);
+    BOOST_CHECK_EQUAL(params.nPowTargetTimespan, 1'209'600);
+    BOOST_CHECK_EQUAL(params.DifficultyAdjustmentInterval(), 2016);
+    BOOST_CHECK(!params.fPowAllowMinDifficultyBlocks);
+    BOOST_CHECK(params.enforce_BIP94);
+    BOOST_CHECK(!params.fPowNoRetargeting);
 
+    auto calculate = [&params](int64_t elapsed, uint32_t last_bits = 0x1c00ffff) {
         // Model the completed interval [height 0, height 2015]. BIP94
         // deliberately reads the first block's nBits, not the final block's.
         std::vector<CBlockIndex> period(2016);
@@ -246,18 +249,47 @@ BOOST_AUTO_TEST_CASE(freely_approved_pow_retarget_vectors)
     BOOST_CHECK_EQUAL(calculate(4'838'401), 0x1c03fffcU);
 }
 
+BOOST_AUTO_TEST_CASE(freely_retargets_only_at_exact_adjustment_boundaries)
+{
+    const auto freely_params{CChainParams::FreelyCandidate()};
+    const auto& params{freely_params->GetConsensus()};
+
+    // Build one complete period plus its following block. The first block
+    // carries the BIP94 period target; later blocks carry a harder target.
+    std::vector<CBlockIndex> chain(2017);
+    for (int i = 0; i < static_cast<int>(chain.size()); ++i) {
+        chain[i].nHeight = i;
+        chain[i].pprev = i == 0 ? nullptr : &chain[i - 1];
+        chain[i].nTime = 1'000'000 + i * params.nPowTargetSpacing;
+        chain[i].nBits = i == 0 ? 0x1c00ffff : 0x1b3fffc0;
+    }
+
+    // Give the completed period exactly its target elapsed time so the
+    // boundary assertion isolates height scheduling from retarget arithmetic.
+    chain[2015].nTime = chain[0].nTime + params.nPowTargetTimespan;
+    chain[2016].nTime = chain[2015].nTime + params.nPowTargetSpacing;
+
+    CBlockHeader candidate;
+    // Candidate height 2015 is not an adjustment boundary.
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&chain[2014], &candidate, params), chain[2014].nBits);
+
+    // Candidate height 2016 is the boundary and uses the first block's
+    // period target under BIP94, as covered by the dedicated vector test.
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&chain[2015], &candidate, params), 0x1c00ffffU);
+
+    // Candidate height 2017 is immediately after the boundary and must keep
+    // the previous block's target rather than retargeting a second time.
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&chain[2016], &candidate, params), chain[2016].nBits);
+}
+
 BOOST_AUTO_TEST_CASE(freely_bip94_preserves_first_block_period_target)
 {
     // Simulate a last block that has a harder target than the first block.
-    // BIP94 must base the retarget on the first block's target.
-    const auto with_bip94 = [&] {
-        Consensus::Params params{};
-        params.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
-        params.nPowTargetTimespan = 1'209'600;
-        params.nPowTargetSpacing = 600;
-        params.fPowAllowMinDifficultyBlocks = false;
-        params.enforce_BIP94 = true;
-        params.fPowNoRetargeting = false;
+    // BIP94 must base the retarget on the first block's target. Use FREELY's
+    // actual approved parameters so this regression guards the integrated chain.
+    const auto freely_params{CChainParams::FreelyCandidate()};
+    const auto& params{freely_params->GetConsensus()};
+    const auto with_bip94 = [&params] {
         std::vector<CBlockIndex> period(2016);
         for (int i = 0; i < 2016; ++i) {
             period[i].nHeight = i;
