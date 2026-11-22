@@ -384,6 +384,16 @@ static RPCMethod addnode()
         // Resolve numeric addresses only: hostname lookup is deliberately disabled
         // so names such as localhost cannot change the peer destination after this check.
         const auto peer_addresses{Lookup(std::string{node_arg}, Params().GetDefaultPort(), false, 1)};
+        // Split the host from its optional port before checking its syntax. CNetAddr
+        // normalizes IPv4-mapped IPv6 literals to NET_IPV4, so checking only the
+        // normalized address would otherwise accept expanded mapped-IPv6 spellings.
+        uint16_t peer_port{Params().GetDefaultPort()};
+        std::string peer_host;
+        SplitHostPort(node_arg, peer_port, peer_host);
+        const bool ipv4_mapped_ipv6{
+            peer_addresses.size() == 1 && peer_addresses.front().IsIPv4() &&
+            peer_host.find(':') != std::string::npos
+        };
         // IsLocal() is broader than loopback: it also accepts 0.0.0.0/8.
         // Match explicit loopback subnets instead (127.0.0.0/8 and ::1/128).
         static const auto ipv4_loopback{LookupHost("127.0.0.1", false)};
@@ -396,11 +406,7 @@ static RPCMethod addnode()
             peer_addresses.size() == 1 && peer_addresses.front().IsIPv6() &&
             ipv6_loopback && CSubNet{*ipv6_loopback}.Match(peer_addresses.front())
         };
-        const bool loopback_peer{
-            (is_ipv4_loopback || is_ipv6_loopback) &&
-            // Reject IPv4-mapped IPv6 spellings even if normalized to IPv4.
-            !(node_arg.find("::") != std::string_view::npos && peer_addresses.front().IsIPv4())
-        };
+        const bool loopback_peer{(is_ipv4_loopback || is_ipv6_loopback) && !ipv4_mapped_ipv6};
         if (!loopback_peer) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "FREELY loopback private mode only permits loopback peer addresses.");
         }
