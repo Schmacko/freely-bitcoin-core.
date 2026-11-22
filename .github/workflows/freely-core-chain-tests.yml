@@ -1,0 +1,62 @@
+name: FREELY core chain plumbing tests
+
+on:
+  pull_request:
+    branches:
+      - freely/m1-consensus
+      - freely/core-chain-implementation
+    paths:
+      - "test/functional/feature_freely_startup.py"
+      - "test/functional/test_runner.py"
+      - "src/bitcoin-cli.cpp"
+      - "src/chainparams.cpp"
+      - "src/kernel/chainparams.cpp"
+      - "src/chainparamsbase.cpp"
+      - "src/chainparamsbase.h"
+      - "src/util/chaintype.cpp"
+      - "src/util/chaintype.h"
+      - "src/test/chaintype_tests.cpp"
+      - "src/test/freely_genesis_tests.cpp"
+      - "src/test/CMakeLists.txt"
+      - ".github/workflows/freely-core-chain-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: freely-core-chain-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-chain-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out FREELY fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install minimal build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            build-essential cmake python3 libboost-dev libevent-dev
+
+      - name: Configure unit-test build
+        run: |
+          cmake -B build \
+            -DENABLE_WALLET=OFF \
+            -DENABLE_IPC=OFF \
+            -DBUILD_GUI=OFF \
+            -DBUILD_TESTS=ON
+
+      - name: Build Bitcoin Core unit-test executable
+        run: cmake --build build --target bitcoind bitcoin-cli test_bitcoin --parallel 2
+
+      - name: Run FREELY chain type, genesis, monetary and PoW suites
+        run: ctest --test-dir build --output-on-failure -R '^(chaintype_tests|freely_genesis_tests|validation_tests|pow_tests)$'
+
+      - name: Verify FREELY startup fails closed before network activation
+        run: python3 build/test/functional/test_runner.py --jobs=1 feature_freely_startup.py

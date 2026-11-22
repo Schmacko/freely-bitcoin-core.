@@ -274,6 +274,7 @@ BASE_SCRIPTS = [
     'mempool_package_rbf.py',
     'tool_utxo_to_sqlite.py',
     'feature_versionbits_warning.py',
+    'feature_freely_startup.py',
     'feature_blocksxor.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
