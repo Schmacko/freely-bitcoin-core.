@@ -140,3 +140,16 @@ Commits:
 - `d928e41586951bd7fec424f575d6114e3d1088fc`: include test in focused private-node CI.
 
 The updated exact-head workflow has not yet completed; no new BIP94 functional pass is claimed.
+
+## Expanded IPv4-mapped IPv6 literal rejection — 22 November 2026
+
+A further source review found that Bitcoin Core v32.1 normalizes IPv4-mapped IPv6 addresses to `NET_IPV4` in `CNetAddr::SetLegacyIPv6`. The previous RPC guard rejected compressed mapped forms containing `::`, but an expanded mapped literal such as `[0:0:0:0:0:ffff:7f00:1]:49444` contains no double-colon and could evade that syntax check after normalization.
+
+The runtime `addnode` guard now splits the original host from its optional port and rejects a host containing IPv6 colons whenever lookup normalized the resulting address to IPv4. This preserves the intended literal-address policy without rejecting ordinary IPv4 host:port strings. The functional loopback test now covers expanded dotted and hexadecimal mapped forms, including an unbracketed expanded literal.
+
+- Source fix: `196e47722814b747d6017251145ae39a47ec4cbd`.
+- Regression test: `953df0a08f8a6689b4d65499e3fb04adcbee4c6a`.
+- The source and test were committed separately; the current PR head includes both.
+- New exact-head candidate, offline-wallet, private-node-security and full CI workflows were triggered. At the latest inspection they were queued/pending; no new-head compile or test pass is claimed.
+
+This is a tightening of the same-host peer policy only. It does not alter consensus parameters, genesis, public network exposure or launch authorization.
