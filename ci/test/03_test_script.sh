@@ -110,14 +110,14 @@ ccache --zero-stats
 BASE_BUILD_DIR=${BASE_BUILD_DIR:-$BASE_SCRATCH_DIR/build-$HOST}
 
 BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL '-DCMAKE_INSTALL_PREFIX=$BASE_OUTDIR' -Werror=dev"
-# CMake 4.2 promotes legacy non-target directives to a developer warning.
+# CMake 4.5 adds the non-target-directive developer diagnostic.
 # Keep developer warnings fatal, but do not fail the build on this upstream
 # compatibility warning until the build files can migrate to target directives.
 CMAKE_VERSION=$(cmake --version | sed -n '1s/^cmake version //p')
 CMAKE_MAJOR=${CMAKE_VERSION%%.*}
 CMAKE_REST=${CMAKE_VERSION#*.}
 CMAKE_MINOR=${CMAKE_REST%%.*}
-if (( CMAKE_MAJOR > 4 || (CMAKE_MAJOR == 4 && CMAKE_MINOR >= 2) )); then
+if (( CMAKE_MAJOR > 4 || (CMAKE_MAJOR == 4 && CMAKE_MINOR >= 5) )); then
   BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL -Wno-error=non-target-directive"
 fi
 
