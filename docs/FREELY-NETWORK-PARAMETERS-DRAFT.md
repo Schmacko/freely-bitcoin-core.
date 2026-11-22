@@ -1,8 +1,8 @@
 # FREELY network parameters — provisional engineering draft
 
-**Status:** historical provisional draft; superseded on 18 November 2026 by the owner-approved baseline. Do not use its earlier candidate values as current parameters.  
-**Date:** 15 November 2026  
-**Upstream baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`  
+**Status:** historical provisional draft; superseded on 18 November 2026 by the owner-approved baseline. Do not use its earlier candidate values as current parameters.
+**Date:** 15 November 2026
+**Upstream baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`
 **Purpose:** provide a concrete, reviewable starting point for the dedicated FREELY chain implementation while keeping launch-sensitive values visibly provisional.
 
 > **Revision note — 18 November 2026:** This document preserves the earlier provisional candidates for historical traceability. The current exact-value proposal is [FREELY approved protocol parameter baseline](FREELY-APPROVED-PROTOCOL-PARAMETERS.md). Where values differ, the approved baseline supersedes the historical candidate tables below. Approval authorizes implementation and verification, not production activation or launch.
