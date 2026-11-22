@@ -153,3 +153,16 @@ The runtime `addnode` guard now splits the original host from its optional port 
 - New exact-head candidate, offline-wallet, private-node-security and full CI workflows were triggered. At the latest inspection they were queued/pending; no new-head compile or test pass is claimed.
 
 This is a tightening of the same-host peer policy only. It does not alter consensus parameters, genesis, public network exposure or launch authorization.
+
+## Stacked-base preservation after candidate PR closure — 22 November 2026
+
+PR #20 (`freely/chainparams-candidate-integration`) was closed unmerged by the repository owner. Its branch has been restored to the exact closed PR head `3ca424de9a731b1037a7cc277e41f68bfd987296`; it has not been reopened or replaced.
+
+To keep this private-node work reviewable without changing the closed candidate branch, the private-node branch was re-parented onto that preserved head with its complete file tree unchanged:
+
+- Previous private-node head: `e78cac1f642e05320662170c3427640cd3278873`.
+- Preserved base: `3ca424de9a731b1037a7cc277e41f68bfd987296`.
+- New private-node head before this documentation update: `9e662ad5aaeeceade3d168d61bc26989939e57b0`.
+- Tree equality was verified against the previous private-node head; compare is 1 commit ahead, 0 behind.
+
+This is ancestry-only bookkeeping. No source, test, consensus or network parameter changed. New exact-head CI is required before merge consideration.
