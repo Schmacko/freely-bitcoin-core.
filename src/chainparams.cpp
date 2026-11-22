@@ -160,6 +160,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
             // A custom challenge can collide with the default signet's 4-byte
             // message start. That is a distinct network identity collision even
             // though GetNetworkForMagic necessarily labels both as SIGNET.
+            // Compare the challenge payload because the enum alone loses identity.
             const auto default_signet = CChainParams::SigNet();
             if (params->GetConsensus().signet_challenge != default_signet->GetConsensus().signet_challenge) {
                 throw std::runtime_error("Custom signet message magic collides with the default signet network magic.");
@@ -172,10 +173,110 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         ReadRegTestArgs(args, opts);
         return CChainParams::RegTest(opts);
     }
-    case ChainType::FREELY:
-        // Candidate parameters are available for tests, but production startup
-        // remains disabled until the owner explicitly authorizes network activation.
-        throw std::runtime_error("FREELY production startup is disabled pending explicit launch authorization.");
+    case ChainType::FREELY: {
+        const bool offline_dev{args.GetBoolArg("-freelydev", false)};
+        const bool loopback_private{args.GetBoolArg("-freelyprivate", false)};
+        if (offline_dev == loopback_private) {
+            throw std::runtime_error("FREELY startup requires exactly one of -freelydev=1 or -freelyprivate=1.");
+        }
+
+        if (offline_dev) {
+            // Offline development cannot listen for P2P peers or initiate
+            // outbound peer connections.
+            if (args.GetBoolArg("-listen", true)) {
+                throw std::runtime_error("FREELY offline development requires -listen=0.");
+            }
+            if (!args.GetArgs("-bind").empty() ||
+                !args.GetArgs("-whitebind").empty() ||
+                args.GetBoolArg("-listenonion", true)) {
+                throw std::runtime_error("FREELY offline development does not permit P2P listener bindings.");
+            }
+            if (args.GetBoolArg("-discover", true) ||
+                args.GetBoolArg("-dnsseed", true) ||
+                args.GetBoolArg("-natpmp", false)) {
+                throw std::runtime_error("FREELY offline development requires external discovery services and port mapping to be disabled.");
+            }
+            if (!args.GetArgs("-rpcbind").empty() || !args.GetArgs("-rpcallowip").empty()) {
+                throw std::runtime_error("FREELY offline development requires the default loopback-only RPC binding.");
+            }
+            // -listen=0 prevents inbound P2P only. Require -connect=0 as well
+            // so ThreadOpenConnections cannot dial addresses restored from peers.dat
+            // or otherwise learned by the address manager. Do not treat a fresh
+            // data directory as a substitute for enforcing this at startup.
+            const auto connect_args{args.GetArgs("-connect")};
+            if (connect_args.size() != 1 || connect_args.front() != "0") {
+                throw std::runtime_error("FREELY offline development requires -connect=0 to disable automatic outbound connections.");
+            }
+            if (!args.GetArgs("-addnode").empty() ||
+                !args.GetArgs("-seednode").empty() ||
+                !args.GetArgs("-proxy").empty() ||
+                !args.GetArgs("-onion").empty() ||
+                !args.GetArgs("-i2psam").empty() ||
+                !args.GetArgs("-torcontrol").empty() ||
+                !args.GetArgs("-torpassword").empty() ||
+                !args.GetArgs("-externalip").empty()) {
+                throw std::runtime_error("FREELY offline development does not permit configured peers, proxies or overlay-network services.");
+            }
+            // ZMQ notifiers create outbound sockets independently of P2P;
+            // they must not provide a side channel around the offline boundary.
+            if (!args.GetArgs("-zmqpubhashblock").empty() ||
+                !args.GetArgs("-zmqpubhashtx").empty() ||
+                !args.GetArgs("-zmqpubrawblock").empty() ||
+                !args.GetArgs("-zmqpubrawtx").empty() ||
+                !args.GetArgs("-zmqpubsequence").empty()) {
+                throw std::runtime_error("FREELY offline development does not permit ZMQ publish endpoints.");
+            }
+            return CChainParams::FreelyCandidate(false);
+        }
+
+        // Private-network mode is restricted to explicit loopback bindings.
+        // RPC remains loopback-only by default; custom RPC binds/allowlists,
+        // proxies, external addresses, discovery and overlay services are prohibited.
+        if (!args.GetBoolArg("-listen", true)) {
+            throw std::runtime_error("FREELY loopback private mode requires P2P listening.");
+        }
+        const auto binds{args.GetArgs("-bind")};
+        if (binds.empty()) {
+            throw std::runtime_error("FREELY loopback private mode requires an explicit loopback -bind.");
+        }
+        for (const auto& bind : binds) {
+            const bool ipv4_loopback{bind == "127.0.0.1" || (bind.starts_with("127.0.0.1:") && bind.find('=') == std::string::npos)};
+            const bool ipv6_loopback{bind == "[::1]" || (bind.starts_with("[::1]:") && bind.find('=') == std::string::npos)};
+            if (!ipv4_loopback && !ipv6_loopback) {
+                throw std::runtime_error("FREELY loopback private mode accepts only 127.0.0.1 or [::1] bind addresses.");
+            }
+        }
+        if (!args.GetArgs("-whitebind").empty() ||
+            args.GetBoolArg("-discover", true) ||
+            args.GetBoolArg("-dnsseed", true) ||
+            args.GetBoolArg("-natpmp", false) ||
+            args.GetBoolArg("-listenonion", true) ||
+            !args.GetArgs("-externalip").empty()) {
+            throw std::runtime_error("FREELY loopback private mode prohibits external discovery, port mapping and listener services.");
+        }
+        if (!args.GetArgs("-zmqpubhashblock").empty() ||
+            !args.GetArgs("-zmqpubhashtx").empty() ||
+            !args.GetArgs("-zmqpubrawblock").empty() ||
+            !args.GetArgs("-zmqpubrawtx").empty() ||
+            !args.GetArgs("-zmqpubsequence").empty()) {
+            throw std::runtime_error("FREELY loopback private mode does not permit ZMQ publish endpoints.");
+        }
+        const auto connect_args{args.GetArgs("-connect")};
+        if (connect_args.size() != 1 || connect_args.front() != "0" ||
+            !args.GetArgs("-addnode").empty() ||
+            !args.GetArgs("-seednode").empty() ||
+            !args.GetArgs("-proxy").empty() ||
+            !args.GetArgs("-onion").empty() ||
+            !args.GetArgs("-i2psam").empty() ||
+            !args.GetArgs("-torcontrol").empty() ||
+            !args.GetArgs("-torpassword").empty()) {
+            throw std::runtime_error("FREELY loopback private mode requires -connect=0 and prohibits configured external peers, proxies and overlay-network services.");
+        }
+        if (!args.GetArgs("-rpcbind").empty() || !args.GetArgs("-rpcallowip").empty()) {
+            throw std::runtime_error("FREELY loopback private mode requires the default loopback-only RPC binding.");
+        }
+        return CChainParams::FreelyCandidate(true);
+    }
     }
     assert(false);
 }
