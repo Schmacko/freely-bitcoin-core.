@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Independent arithmetic cross-check for the FREELY monetary specification.
 
 This is a documentation/specification check, not a substitute for the C++
