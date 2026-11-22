@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Generate and verify the owner-approved FREELY genesis candidate.
 
 The script uses the approved transaction, timestamp, compact target and powLimit
