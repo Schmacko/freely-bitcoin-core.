@@ -1,7 +1,7 @@
 # FREELY proof-of-work candidate model
 
-**Date:** 17 November 2026  
-**Status:** historical scenario analysis; the owner approved powLimit and genesis nBits on 18 November 2026. This model remains mathematical analysis, not a live mining benchmark or security guarantee.  
+**Date:** 17 November 2026
+**Status:** historical scenario analysis; the owner approved powLimit and genesis nBits on 18 November 2026. This model remains mathematical analysis, not a live mining benchmark or security guarantee.
 **Upstream reference:** Bitcoin Core v32.1 difficulty-1 target is used only as a mathematical normalization unit, not as a proposed FREELY network parameter.
 
 ## 1. Purpose and safety boundary
