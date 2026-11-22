@@ -585,8 +585,88 @@ public:
 };
 
 /**
+ * Approved FREELY parameter candidate with an independently verified genesis
+ * proof of work. It remains unavailable to normal chain selection until the
+ * owner explicitly authorizes production network activation.
+ */
+class CFreelyCandidateParams final : public CChainParams
+{
+public:
+    CFreelyCandidateParams()
+    {
+        m_chain_type = ChainType::FREELY;
+        m_is_production_chain = true;
+        consensus.signet_blocks = false;
+        consensus.signet_challenge.clear();
+        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.BIP34Height = 1;
+        consensus.BIP34Hash = uint256{};
+        consensus.BIP65Height = 1;
+        consensus.BIP66Height = 1;
+        consensus.CSVHeight = 1;
+        consensus.SegwitHeight = 1;
+        consensus.MinBIP9WarningHeight = 0;
+        consensus.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
+        consensus.nPowTargetTimespan = 1'209'600;
+        consensus.nPowTargetSpacing = 600;
+        consensus.fPowAllowMinDifficultyBlocks = false;
+        consensus.enforce_BIP94 = true;
+        consensus.fPowNoRetargeting = false;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1815;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 2016;
+        consensus.nMinimumChainWork = uint256{};
+        consensus.defaultAssumeValid = uint256{};
+
+        pchMessageStart = MessageStartChars{0xfa, 0xc3, 0xb7, 0xd1};
+        nDefaultPort = 49444;
+        nPruneAfterHeight = 1000;
+        m_assumed_blockchain_size = 0;
+        m_assumed_chain_state_size = 0;
+
+        const std::vector<unsigned char> genesis_payload{
+            'F', 'R', 'E', 'E', 'L', 'Y', ' ', 'F', 'L', 'Y', ' ', 'G', 'E', 'N', 'E', 'S', 'I', 'S',
+        };
+        const CScript genesis_output_script = CScript() << OP_RETURN << genesis_payload;
+        genesis = CreateGenesisBlock(
+            "FREELY FLY genesis 2026-11-18",
+            genesis_output_script,
+            1'794'960'000,
+            2238688522, // Independently verified SHA-256d proof-of-work nonce.
+            0x1d00ffff,
+            1,
+            50 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+        assert(genesis.hashMerkleRoot == uint256{"c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1"});
+        assert(consensus.hashGenesisBlock == uint256{
+            "0000000000e43054"
+            "a010a58bde94ce50"
+            "9904f40f697fb874"
+            "eedd426755cc2f78"});
+
+        vSeeds.clear();
+        vFixedSeeds.clear();
+        base58Prefixes[PUBKEY_ADDRESS] = {55};
+        base58Prefixes[SCRIPT_ADDRESS] = {117};
+        base58Prefixes[SECRET_KEY] = {183};
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x46, 0x4c, 0x59};
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x66, 0x6c, 0x79};
+        bech32_hrp = "fly";
+
+        fDefaultConsistencyChecks = false;
+        m_is_mockable_chain = false;
+        m_assumeutxo_data.clear();
+        chainTxData = ChainTxData{.nTime = 0, .tx_count = 0, .dTxRate = 0.0};
+        m_headers_sync_params = HeadersSyncParams{};
+    }
+};
+
+/**
  * Regression test: intended for private networks only. Has minimal difficulty to ensure that
- * blocks can be found instantly.
+ * blocks can be solved instantly.
  */
 class CRegTestParams : public CChainParams
 {
@@ -715,6 +795,11 @@ std::unique_ptr<const CChainParams> CChainParams::TestNet4(const TestNetOptions&
     return std::make_unique<const CTestNet4Params>(options);
 }
 
+std::unique_ptr<const CChainParams> CChainParams::FreelyCandidate()
+{
+    return std::make_unique<const CFreelyCandidateParams>();
+}
+
 std::vector<int> CChainParams::GetAvailableSnapshotHeights() const
 {
     std::vector<int> heights;
@@ -729,8 +814,7 @@ std::vector<int> CChainParams::GetAvailableSnapshotHeights() const
 std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
 {
     // Owner-approved FREELY message magic. This identifies the chain only;
-    // consensus parameters and node startup remain fail-closed until genesis
-    // and CChainParams are independently verified.
+    // normal chain selection remains fail-closed pending owner authorization.
     constexpr MessageStartChars freely_message_start{0xfa, 0xc3, 0xb7, 0xd1};
     if (std::ranges::equal(message, freely_message_start)) {
         return ChainType::FREELY;

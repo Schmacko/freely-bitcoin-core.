@@ -180,6 +180,12 @@ public:
     static std::unique_ptr<const CChainParams> TestNet4(const TestNetOptions& options);
     static std::unique_ptr<const CChainParams> TestNet4() { const TestNetOptions opts{}; return TestNet4(opts); }
 
+    /** Construct approved FREELY parameters for inspection and testing only.
+     *  The genesis proof of work is verified, but CreateChainParams deliberately
+     *  refuses FREELY startup until the owner authorizes network activation.
+     */
+    static std::unique_ptr<const CChainParams> FreelyCandidate();
+
 protected:
     CChainParams() = default;
 
