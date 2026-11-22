@@ -520,7 +520,6 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_peer_and_overlay_confi
         args.ForceSetArg("-discover", "0");
         args.ForceSetArg("-dnsseed", "0");
         args.ForceSetArg("-natpmp", "0");
-        args.ForceSetArg("-upnp", "0");
         args.ForceSetArg("-listenonion", "0");
         args.ForceSetArg(option, value);
 
@@ -532,11 +531,10 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_peer_and_overlay_confi
 
 BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_external_discovery_and_listener_overrides)
 {
-    const std::array<std::pair<const char*, const char*>, 5> forbidden_options{{
+    const std::array<std::pair<const char*, const char*>, 4> forbidden_options{{
         {"-discover", "1"},
         {"-dnsseed", "1"},
         {"-natpmp", "1"},
-        {"-upnp", "1"},
         {"-listenonion", "1"},
     }};
 
@@ -548,7 +546,6 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_external_discovery_and
         args.ForceSetArg("-discover", "0");
         args.ForceSetArg("-dnsseed", "0");
         args.ForceSetArg("-natpmp", "0");
-        args.ForceSetArg("-upnp", "0");
         args.ForceSetArg("-listenonion", "0");
         args.ForceSetArg(option, value);
 
@@ -565,7 +562,6 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_external_discovery_and
     no_listen_args.ForceSetArg("-discover", "0");
     no_listen_args.ForceSetArg("-dnsseed", "0");
     no_listen_args.ForceSetArg("-natpmp", "0");
-    no_listen_args.ForceSetArg("-upnp", "0");
     no_listen_args.ForceSetArg("-listenonion", "0");
     BOOST_CHECK_THROW(CreateChainParams(no_listen_args, ChainType::FREELY), std::runtime_error);
 }
