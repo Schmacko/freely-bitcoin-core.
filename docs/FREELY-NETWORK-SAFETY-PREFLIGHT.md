@@ -57,6 +57,13 @@ Exact-head evidence:
 Remaining work is integrated C++ CChainParams validation, exact-head core/functional CI, wallet/node/security evidence and separate production launch authorization. Normal FREELY startup must remain fail-closed until those gates are reviewed and explicitly authorized.
 
 
+## Current exact-head validation — 23 November 2026
+
+- Current preflight branch head: `24c4ebfe873bf30043fdb5b329b10143962b4fb0`.
+- Python preflight workflow [45204530104](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45204530104) is queued; full CI [45204530112](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45204530112) is in progress. No new-head pass is claimed.
+- The validator now requires `genesis.commitment_status=candidate_pending_owner_approval` and rejects attempts to label the derived nonce/hash as final approved or production identity.
+- The manifest's derived nonce/hash are internally reproducible candidate evidence only. Explicit owner sign-off remains required before they can be frozen as final production identity.
+
 ## Data-directory path safety
 
 The `network.data_directory` value is a single relative directory suffix, not an arbitrary path. The validator accepts a portable name containing letters, digits, underscores and hyphens, and rejects path separators, absolute paths, drive paths, UNC paths, dot segments and traversal. This is deliberately platform-independent so a manifest validated on Linux cannot become unsafe when used on Windows (or vice versa).
