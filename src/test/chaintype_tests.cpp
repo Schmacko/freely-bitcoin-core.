@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(freely_chain_selection_sets_base_but_requires_launch_author
     BOOST_CHECK_THROW(SelectParams(ChainType::FREELY), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(freely_candidate_contains_approved_network_and_consensus_parameters)
+BOOST_AUTO_TEST_CASE(freely_candidate_matches_reviewed_baseline_and_genesis_candidate)
 {
     const auto params{CChainParams::FreelyCandidate()};
     BOOST_REQUIRE(params);
@@ -149,9 +149,11 @@ BOOST_AUTO_TEST_CASE(freely_candidate_contains_approved_network_and_consensus_pa
     BOOST_CHECK(params->FixedSeeds().empty());
     BOOST_CHECK(params->GetAvailableSnapshotHeights().empty());
 
-    // The genesis transaction and proof of work are fixed and independently
-    // verified. Normal production chain selection remains disabled until the
-    // owner explicitly authorizes network activation.
+    // The candidate genesis transaction and proof-of-work vector are
+    // deterministic and independently verified for offline/private testing.
+    // The derived nonce/hash are not final production identity approval.
+    // Normal production chain selection remains disabled until activation is
+    // separately authorized.
     const auto& genesis = params->GenesisBlock();
     BOOST_CHECK_EQUAL(genesis.nVersion, 1);
     BOOST_CHECK(genesis.hashPrevBlock.IsNull());
