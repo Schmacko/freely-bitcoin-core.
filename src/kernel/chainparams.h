@@ -180,6 +180,9 @@ public:
     static std::unique_ptr<const CChainParams> TestNet4(const TestNetOptions& options);
     static std::unique_ptr<const CChainParams> TestNet4() { const TestNetOptions opts{}; return TestNet4(opts); }
 
+    /** Return the reviewed FREELY candidate parameters for tests and offline validation only. */
+    static std::unique_ptr<const CChainParams> FreelyCandidate();
+
 protected:
     CChainParams() = default;
 
