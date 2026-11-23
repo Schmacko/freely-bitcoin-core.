@@ -97,8 +97,8 @@ A target chosen solely to make the first block easy is not a security strategy. 
 | Production minimum-difficulty exception | Disabled, approved |
 | Production no-retargeting | Disabled, approved |
 | BIP94 | Enabled from genesis, approved subject to tests |
-| Numeric powLimit | **Not selected** |
-| Initial difficulty / genesis nBits | **Not selected** |
+| Numeric powLimit | `00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff` — owner-approved 18 Nov 2026 |
+| Initial difficulty / genesis nBits | `0x1d00ffff` — owner-approved 18 Nov 2026 |
 | Honest and attacker hashrate assumptions | **Not yet evidenced** |
 | Public mining or launch | Not authorised |
 
@@ -114,4 +114,4 @@ No candidate in this document is a production setting. Do not hard-code any of t
 
 ## 9. Owner approval update — 18 November 2026
 
-The numeric production `powLimit` and genesis `nBits` are now owner-approved as recorded in the authoritative protocol baseline. This document remains a mathematical model only. It does not establish honest hash rate, attacker cost, mining economics, chain security or expected public block intervals. FREELY does not inherit Bitcoin's accumulated SHA-256d hash power or security.
+The numeric production `powLimit` and genesis `nBits` are owner-approved as recorded in the authoritative protocol baseline; the derived nonce/hash remain candidate-only pending final owner sign-off. This document remains a mathematical model only. It does not establish honest hash rate, attacker cost, mining economics, chain security or expected public block intervals. FREELY does not inherit Bitcoin's accumulated SHA-256d hash power or security.
