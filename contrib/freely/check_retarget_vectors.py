@@ -12,6 +12,8 @@ MIN_TIMESPAN = TARGET_TIMESPAN // 4
 MAX_TIMESPAN = TARGET_TIMESPAN * 4
 SYNTHETIC_POW_LIMIT_COMPACT = 0x1E7FFFFF
 SYNTHETIC_PREVIOUS_BITS = 0x1D7FFFFF
+FREELY_POW_LIMIT = int("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16)
+FREELY_PREVIOUS_BITS = 0x1C00FFFF
 
 
 def decode_compact(compact: int) -> int:
@@ -59,6 +61,14 @@ def calculate_next_bits(elapsed_seconds: int) -> int:
     return encode_compact(next_target)
 
 
+def calculate_approved_next_bits(elapsed_seconds: int) -> int:
+    previous_target = decode_compact(FREELY_PREVIOUS_BITS)
+    actual = max(MIN_TIMESPAN, min(MAX_TIMESPAN, elapsed_seconds))
+    next_target = (previous_target * actual) // TARGET_TIMESPAN
+    next_target = min(next_target, FREELY_POW_LIMIT)
+    return encode_compact(next_target)
+
+
 def main() -> None:
     assert TARGET_TIMESPAN == 1_209_600
     assert MIN_TIMESPAN == 302_400
@@ -81,6 +91,19 @@ def main() -> None:
             raise AssertionError(f"invalid compact target accepted: 0x{compact:08x}")
 
     assert encode_compact(decode_compact(SYNTHETIC_PREVIOUS_BITS)) == SYNTHETIC_PREVIOUS_BITS
+    approved_vectors = (
+        (302_399, 0x1B3FFFC0),
+        (302_400, 0x1B3FFFC0),
+        (1_209_600, 0x1C00FFFF),
+        (4_838_400, 0x1C03FFFC),
+        (4_838_401, 0x1C03FFFC),
+    )
+    for elapsed, expected in approved_vectors:
+        actual = calculate_approved_next_bits(elapsed)
+        assert actual == expected, (
+            f"approved elapsed={elapsed}: expected 0x{expected:08x}, got 0x{actual:08x}"
+        )
+
     try:
         encode_compact(0)
     except ValueError:
