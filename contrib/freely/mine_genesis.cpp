@@ -148,22 +148,31 @@ void HashHeader(const SHA256_CTX& first_block_state, const HeaderPrefix& prefix,
 
 bool SelfTest()
 {
-    if (ParseUnsigned("4294967295") != 0xffffffffULL ||
-        ParseUnsigned("18446744073709551615") != std::numeric_limits<uint64_t>::max() ||
-        ParseUnsigned("0x1d00ffff", 0) != 0x1d00ffffULL ||
-        ParseUnsigned("00", 0) != 0 ||
-        ParseUnsigned("077", 0) != 63) return false;
-    for (const char* invalid : {"", "-1", "12x", "1.0", "08"}) {
-        try {
-            (void)ParseUnsigned(invalid);
-            return false;
-        } catch (const std::invalid_argument&) {
-        }
-    }
-    try {
-        (void)ParseUnsigned("18446744073709551616");
+    const auto fail = [](const char* reason) {
+        std::cerr << "Self-test failure: " << reason << '\\n';
         return false;
-    } catch (const std::out_of_range&) {
+    };
+    try {
+        if (ParseUnsigned("4294967295") != 0xffffffffULL) return fail("32-bit unsigned parsing");
+        if (ParseUnsigned("18446744073709551615") != std::numeric_limits<uint64_t>::max()) return fail("uint64 maximum parsing");
+        if (ParseUnsigned("0x1d00ffff", 0) != 0x1d00ffffULL) return fail("base-zero hexadecimal parsing");
+        if (ParseUnsigned("00", 0) != 0) return fail("base-zero zero parsing");
+        if (ParseUnsigned("077", 0) != 63) return fail("base-zero octal parsing");
+        for (const char* invalid : {"", "-1", "12x", "1.0", "08"}) {
+            try {
+                (void)ParseUnsigned(invalid);
+                return fail("malformed integer accepted");
+            } catch (const std::invalid_argument&) {
+            }
+        }
+        try {
+            (void)ParseUnsigned("18446744073709551616");
+            return fail("uint64 overflow accepted");
+        } catch (const std::out_of_range&) {
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Self-test integer parser threw unexpectedly: " << e.what() << '\\n';
+        return false;
     }
 
     // Bitcoin genesis header is a public SHA-256d serialization test vector.
@@ -173,23 +182,24 @@ bool SelfTest()
         "00000000ffff0000000000000000000000000000000000000000000000000000");
     Bytes32 decoded_target{};
     if (!DecodeCompact(0x1d00ffff, decoded_target) || decoded_target != genesis_compact_target ||
-        !LessOrEqual(decoded_target, approved_pow_limit)) return false;
+        !LessOrEqual(decoded_target, approved_pow_limit)) return fail("genesis compact target decoding");
     if (DecodeCompact(0x1d80ffff, decoded_target) ||
         DecodeCompact(0x01000000, decoded_target) ||
-        DecodeCompact(0x23000001, decoded_target)) return false;
+        DecodeCompact(0x23000001, decoded_target)) return fail("invalid compact target accepted");
     if (!DecodeCompact(0x2100ffff, decoded_target) ||
-        Hex(decoded_target.data(), decoded_target.size()) != "ffff" + std::string(60, '0')) return false;
+        Hex(decoded_target.data(), decoded_target.size()) != "ffff" + std::string(60, '0')) return fail("33-byte compact target decoding");
     if (!DecodeCompact(0x220000ff, decoded_target) ||
-        Hex(decoded_target.data(), decoded_target.size()) != "ff" + std::string(62, '0')) return false;
+        Hex(decoded_target.data(), decoded_target.size()) != "ff" + std::string(62, '0')) return fail("34-byte compact target decoding");
     const auto prefix = MakePrefix(merkle, 1231006505, 0x1d00ffff);
     SHA256_CTX base{};
-    if (SHA256_Init(&base) != 1 || SHA256_Update(&base, prefix.data(), 64) != 1) return false;
+    if (SHA256_Init(&base) != 1 || SHA256_Update(&base, prefix.data(), 64) != 1) return fail("SHA-256 context initialization");
     Bytes32 digest{};
     HashHeader(base, prefix, 2083236893, digest);
     Bytes32 display{};
     std::reverse_copy(digest.begin(), digest.end(), display.begin());
-    return Hex(display.data(), display.size()) ==
-        "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f";
+    if (Hex(display.data(), display.size()) !=
+        "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f") return fail("Bitcoin genesis header SHA-256d vector");
+    return true;
 }
 
 struct SearchResult {
