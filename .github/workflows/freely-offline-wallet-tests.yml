@@ -11,6 +11,9 @@ on:
       - "src/kernel/chainparams.cpp"
       - "src/kernel/chainparams.h"
       - "src/wallet/**"
+      - "src/test/key_io_tests.cpp"
+      - "src/base58.h"
+      - "src/key_io.cpp"
       - "src/rpc/**"
       - "test/functional/feature_freely_offline_wallet.py"
       - "test/functional/test_runner.py"
@@ -76,6 +79,14 @@ jobs:
 
       - name: Build node and CLI
         run: cmake --build build --target bitcoind bitcoin-cli --parallel 2
+
+      - name: Build and test FREELY WIF key encoding
+        run: |
+          cmake --build build --target test_bitcoin --parallel 2
+          ctest --test-dir build --output-on-failure -R '^key_io_tests
+      - name: Test FREELY wallet address encodings and restart recovery
+        run: python3 build/test/functional/test_runner.py --jobs=1 --combinedlogslen=100 feature_freely_offline_wallet.py
+
 
       - name: Test FREELY wallet address encodings and restart recovery
         run: python3 build/test/functional/test_runner.py --jobs=1 --combinedlogslen=100 feature_freely_offline_wallet.py
