@@ -6,7 +6,7 @@
 
 ## Findings
 
-The original upstream-based audit branch deliberately keeps normal FREELY chain selection fail-closed. Since this audit was first written, candidate integration has advanced: PR #20 adds `CFreelyCandidateParams`, a derived candidate genesis commitment, base parameters and fixed C++ assertions; PR #21 adds explicit offline-development and loopback-private startup modes. The candidate is not production-activated, has no DNS/fixed seeds, and is not reachable through ordinary `CreateChainParams(..., FREELY)` without the guarded development path. All four baseline proposal areas were approved; the derived nonce/hash remain candidate-only and require explicit owner sign-off before final production identity is frozen.
+The original upstream-based audit branch deliberately keeps normal FREELY chain selection fail-closed. Since this audit was first written, PR #20 was closed unmerged. Replacement PR #22 adds `CFreelyCandidateParams`, a derived candidate genesis commitment, base parameters and fixed C++ assertions; PR #21 adds explicit offline-development and loopback-private startup modes but still targets the preserved PR #20 base and requires a deliberate rebase/transplant onto the replacement lineage. The candidate is not production-activated, has no DNS/fixed seeds, and is not reachable through ordinary `CreateChainParams(..., FREELY)` without the guarded development path. All four baseline proposal areas were approved; the derived nonce/hash remain candidate-only and require explicit owner sign-off before final production identity is frozen.
 
 ### Existing Bitcoin network identifiers
 
@@ -80,10 +80,10 @@ The candidate genesis commitment is independently reproduced; the derived nonce/
 - Candidate block hash (pending owner sign-off): `0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78`.
 
 Evidence:
-- Standalone C++ miner workflow [44910736974](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44910736974) passed on exact head `865026e755239bf0a89e7a5b91513f896bb9858a`.
-- Network manifest preflight [44899513446](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44899513446) passed on exact head `e7019df06a72c8ec37922eca34d6f4cbeefc207f`: 28 network-safety tests, 17 production-readiness tests and manifest validation.
-- The preflight correctly kept the production evidence ledger BLOCKED at 0/9 gates.
-- Candidate C++ chain-parameter workflow [44911934468](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44911934468) is still queued; integrated node tests are not yet proven.
+- Current miner head `8e81ea9fbf9c0b079bad1d14e8383cd36a4912b5`: push-triggered candidate verification [45204029247](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45204029247) passed; PR-triggered verification [45204041280](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45204041280) is queued and full CI [45204040649](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45204040649) is in progress.
+- Current preflight head `24c4ebfe873bf30043fdb5b329b10143962b4fb0`: preflight [45204530104](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45204530104) is queued and full CI [45204530112](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45204530112) is in progress; no new-head pass is claimed.
+- Replacement candidate PR #22 head `92239197131c5d0dbbf6f77fbb30760facb18460`: focused core-chain workflow [45203933162](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45203933162) is pending and full CI [45203932853](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45203932853) is in progress.
+- PR #21 offline-wallet and private-node workflows [45202770106](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45202770106) and [45202770188](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/45202770188) are in progress; its base lineage remains unresolved.
 
 No production parameter, seed, deployment, public testnet or mainnet launch is authorized by this audit.
 
