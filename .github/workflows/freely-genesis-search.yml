@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   genesis-search:
-    name: Build, self-test and verify approved genesis header
+    name: Build, self-test and verify candidate genesis header
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -63,7 +63,7 @@ jobs:
             exit 1
           fi
 
-      - name: Verify the owner-approved FREELY genesis nonce and full header
+      - name: Verify the candidate FREELY genesis nonce and full header
         shell: bash
         run: |
           mkdir -p artifacts
