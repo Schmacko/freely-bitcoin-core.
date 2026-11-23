@@ -2,11 +2,11 @@
 
 **Reviewed source:** Bitcoin Core v32.1, pinned fork base `f0de87f040621468b956f01f526a43a010310501`
 **Reviewed implementation context:** `freely/m1-consensus` and `freely/core-chain-implementation`
-**Status:** static v32.1 source audit plus review of the current FREELY candidate integration branches. All protocol/network identity values are owner-approved; the derived genesis candidate is independently reproduced. Normal production chain selection remains fail-closed; candidate C++/functional CI and release evidence are still pending.
+**Status:** static v32.1 source audit plus review of the current FREELY candidate integration branches. The approved non-genesis network identity and baseline consensus values are pinned; the derived genesis nonce/hash are independently reproduced candidate outputs pending explicit owner sign-off as final production identity. Normal production chain selection remains fail-closed; candidate C++/functional CI and release evidence are still pending.
 
 ## Findings
 
-The original upstream-based audit branch deliberately keeps normal FREELY chain selection fail-closed. Since this audit was first written, candidate integration has advanced: PR #20 adds `CFreelyCandidateParams`, the approved genesis commitment, base parameters and fixed C++ assertions; PR #21 adds explicit offline-development and loopback-private startup modes. The candidate is not production-activated, has no DNS/fixed seeds, and is not reachable through ordinary `CreateChainParams(..., FREELY)` without the guarded development path. All four parameter areas are owner-approved; no numeric consensus or network-identity decision is currently outstanding.
+The original upstream-based audit branch deliberately keeps normal FREELY chain selection fail-closed. Since this audit was first written, candidate integration has advanced: PR #20 adds `CFreelyCandidateParams`, a derived candidate genesis commitment, base parameters and fixed C++ assertions; PR #21 adds explicit offline-development and loopback-private startup modes. The candidate is not production-activated, has no DNS/fixed seeds, and is not reachable through ordinary `CreateChainParams(..., FREELY)` without the guarded development path. All four baseline proposal areas were approved; the derived nonce/hash remain candidate-only and require explicit owner sign-off before final production identity is frozen.
 
 ### Existing Bitcoin network identifiers
 
@@ -72,12 +72,12 @@ This script validates a manifest. It does not inspect the C++ binary or prove th
 
 ## Owner approvals and remaining engineering gates
 
-All four protocol-parameter proposal areas were explicitly approved on 18 November 2026. The exact `powLimit`, genesis `nBits`, BIP94/time-warp policy, network magic/ports/address identity and activation matrix are pinned in the canonical approved-parameter document and machine-readable manifest. No numeric consensus or network-identity decision is currently outstanding.
+All four protocol-parameter proposal areas were explicitly approved on 18 November 2026. The approved `powLimit`, genesis `nBits`, BIP94/time-warp policy, non-genesis network magic/ports/address identity and activation matrix are pinned in the canonical approved-parameter document. The manifest separately marks the derived genesis nonce/hash as candidate-only; explicit owner sign-off on that final commitment remains outstanding.
 
-The derived genesis commitment is independently reproduced:
-- Coinbase txid / Merkle root: `c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1`.
-- Nonce: `2238688522`.
-- Block hash: `0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78`.
+The candidate genesis commitment is independently reproduced; the derived nonce/hash are not final owner-approved identity:
+- Approved coinbase txid / Merkle root: `c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1`.
+- Candidate nonce (pending owner sign-off): `2238688522`.
+- Candidate block hash (pending owner sign-off): `0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78`.
 
 Evidence:
 - Standalone C++ miner workflow [44910736974](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44910736974) passed on exact head `865026e755239bf0a89e7a5b91513f896bb9858a`.
