@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The preflight validator checks the machine-readable FREELY network manifest against the owner-approved parameter baseline and the independently reproduced genesis candidate. The current manifest contains the approved network identity, proof-of-work/retarget settings, activation matrix, coinbase, nonce, Merkle root and block hash. A valid current manifest reports **PASS** for manifest consistency; this is not production launch authorization.
+The preflight validator checks the machine-readable FREELY network manifest against the owner-approved baseline and the independently reproduced genesis candidate. The manifest contains approved non-genesis network identity, PoW/retarget settings, activation matrix and genesis template, plus a candidate nonce/hash explicitly marked `candidate_pending_owner_approval`. A valid manifest reports **PASS** for internal consistency only; the derived nonce/hash are not final owner-approved identity and this is not production launch authorization.
 
 ## Run
 
@@ -26,7 +26,7 @@ See [FREELY upstream network-identity audit](FREELY-UPSTREAM-NETWORK-IDENTITY-AU
 ## What is checked
 
 - FREELY / FLY project identity.
-- Presence and exact approved values for network magic, P2P/RPC ports, data directory, address prefixes, genesis hash/nonce/Merkle root, genesis difficulty fields, coinbase-spendability decision, BIP94 decision and script activation matrix.
+- Presence and exact approved values for network magic, P2P/RPC ports, data directory, address prefixes, genesis template, difficulty fields, coinbase-spendability decision, BIP94 decision and script activation matrix; the derived genesis hash/nonce must remain explicitly candidate-only and independently reproducible.
 - Format and basic range checks for those values.
 - Reuse of Bitcoin mainnet message magic, ports, data-directory name, Base58 address/secret/extended-key prefixes, Bech32 HRP, or genesis hash.
 - Distinct P2P and RPC ports.
@@ -42,17 +42,17 @@ The validator also decodes the genesis compact target and checks that it is posi
 
 ## Owner approvals and remaining engineering gates
 
-All four protocol-parameter proposal areas were explicitly approved on 18 November 2026. The exact values are pinned in `docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md` and `contrib/freely/network-safety.json`; no numeric powLimit, genesis, initial-difficulty, BIP94, activation-matrix or network-identity decision is currently outstanding.
+All four baseline protocol-parameter proposal areas were approved on 18 November 2026. The approved values are pinned in `docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md`. The manifest pins the derived nonce/hash only as `candidate_pending_owner_approval`; explicit owner sign-off on the final production genesis commitment remains outstanding.
 
-The derived genesis candidate has been independently reproduced:
-- Nonce: `2238688522`.
+The candidate genesis commitment has been independently reproduced; the derived nonce/hash are not final approved identity:
+- Candidate nonce (pending owner sign-off): `2238688522`.
 - Coinbase txid / Merkle root: `c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1`.
-- Block hash: `0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78`.
+- Candidate block hash (pending owner sign-off): `0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78`.
 
 Exact-head evidence:
 - Network preflight workflow [44899513446](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44899513446) passed on `e7019df06a72c8ec37922eca34d6f4cbeefc207f`: 28 network-safety tests, 17 production-readiness evidence tests, and manifest preflight PASS.
 - The workflow also confirmed the production evidence ledger remains BLOCKED at 0/9 gates, as required.
-- Standalone C++ miner workflow [44910736974](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44910736974) passed on `865026e755239bf0a89e7a5b91513f896bb9858a`, independently verifying the exact nonce/hash/header.
+- Standalone C++ miner workflow [44910736974](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44910736974) passed on `865026e755239bf0a89e7a5b91513f896bb9858a`, independently verifying the candidate nonce/hash/header.
 
 Remaining work is integrated C++ CChainParams validation, exact-head core/functional CI, wallet/node/security evidence and separate production launch authorization. Normal FREELY startup must remain fail-closed until those gates are reviewed and explicitly authorized.
 
