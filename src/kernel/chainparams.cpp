@@ -585,9 +585,10 @@ public:
 };
 
 /**
- * Approved FREELY parameter candidate with an independently verified genesis
- * proof of work. It remains unavailable to normal chain selection until the
- * owner explicitly authorizes production network activation.
+ * Reviewed FREELY baseline with a deterministic genesis candidate for offline
+ * validation and regression tests. The derived nonce/hash are not approved as
+ * final production identity. Normal chain selection remains fail-closed until
+ * the owner separately authorizes production network activation.
  */
 class CFreelyCandidateParams final : public CChainParams
 {
@@ -635,7 +636,7 @@ public:
             "FREELY FLY genesis 2026-11-18",
             genesis_output_script,
             1'794'960'000,
-            2238688522, // Independently verified SHA-256d proof-of-work nonce.
+            2238688522, // Candidate nonce only; not final production identity approval.
             0x1d00ffff,
             1,
             50 * COIN);
