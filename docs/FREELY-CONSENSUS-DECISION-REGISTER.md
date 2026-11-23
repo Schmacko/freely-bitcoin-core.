@@ -1,7 +1,7 @@
 # FREELY consensus decision register
 
 **Date:** 17 November 2026
-**Status:** All four protocol parameter areas were explicitly approved by the owner on 18 November 2026. The genesis nonce, final transaction/Merkle commitment and block hash remain derived and uncomputed; implementation, compatibility tests, security review and activation gates remain incomplete.
+**Status:** All four baseline protocol parameter areas were explicitly approved by the owner on 18 November 2026. The candidate genesis nonce and block hash have since been independently reproduced, but remain pending explicit owner sign-off as final production identity. Implementation, compatibility tests, security review and activation gates remain incomplete.
 **Related:** [Consensus specification](FREELY-CONSENSUS-SPECIFICATION.md) · [Chain-selection audit](FREELY-CHAIN-SELECTION-AUDIT.md)
 
 This register separates agreed policy from recommendations and unresolved decisions. No value in the recommendation column is activated by this document.
@@ -97,7 +97,7 @@ Every proposed deviation must include:
 4. unit and functional tests;
 5. independent review.
 
-## G. Decisions still requiring owner approval
+## G. Historical pre-approval decision list (superseded by the consolidated approval section)
 
 1. Approve a numeric production `powLimit` and initial difficulty only after the candidate model, expected honest hash rate, attacker-cost assumptions and chain-stall risks are reviewed.
 2. Approve final network identity values after candidate collision checks; candidate generation and validation are authorised, not final activation.
@@ -117,7 +117,7 @@ The owner explicitly approved the FREELY production retarget policy proposed in 
 - Production no-retargeting mode disabled.
 - Reuse pinned Bitcoin Core v32.1 retarget calculation semantics, implemented and tested with FREELY-specific parameters.
 
-This is a consensus-policy approval, not activation in runtime code. All four parameter proposal areas, including numeric PoW values, network identity and the initial script matrix, were owner-approved on 18 November 2026. The derived genesis nonce/hash and C++/functional verification remain outstanding. No public testnet or mainnet is authorised.
+This is a consensus-policy approval, not activation in runtime code. All four baseline parameter areas, including numeric PoW values, network identity and the initial script matrix, were owner-approved on 18 November 2026. The derived nonce/hash have been independently reproduced as a candidate; final owner sign-off and C++/functional verification remain outstanding. No public testnet or mainnet is authorised.
 
 
 ## I. Owner decision record — 17 November 2026
@@ -125,10 +125,10 @@ This is a consensus-policy approval, not activation in runtime code. All four pa
 The owner explicitly approved the following bounded decisions and authorisations:
 
 - Genesis coinbase reward: permanently unspendable; the 50 FLY height-zero subsidy remains included in scheduled issuance accounting. Scheduled issuance is 20,999,999.9769 FLY; maximum spendable scheduled subsidy under this convention is 20,999,949.9769 FLY.
-- Proof of work: benchmark candidate `powLimit` / initial difficulty scenarios and present a recommendation. No numeric production value is approved yet.
+- Proof of work: as of 17 November, benchmark candidate `powLimit` / initial difficulty scenarios and present a recommendation. The numeric production values were subsequently approved on 18 November in the consolidated baseline.
 - Time-warp mitigation: enable BIP94 from genesis (`enforce_BIP94 = true`), subject to source audit and dedicated tests.
 - Script rules: established Bitcoin script features are intended to be active from the start, subject to pinned-v32.1 compatibility verification; future soft forks require controlled activation.
-- Network identity: generate and collision-check candidate identity values and generate/independently verify a candidate genesis commitment. Final production values and activation are not approved.
+- Network identity: as of 17 November, generate and collision-check candidate identity values and verify a candidate genesis commitment. The baseline identity values were subsequently approved on 18 November; final nonce/hash sign-off and activation remain separate.
 
 These approvals authorise reversible documentation, candidate modelling, code review, tests and non-production tooling only. They do not authorise production parameter activation, public network exposure, mining deployment, paid services or launch.
 
@@ -147,10 +147,10 @@ The BIP94 approval covers both the period-start retarget base and the time-warp 
 
 A consolidated exact-value proposal has been prepared in [FREELY-PROTOCOL-PARAMETER-APPROVAL.md](FREELY-PROTOCOL-PARAMETER-APPROVAL.md). It proposes (1) the Bitcoin difficulty-1 `powLimit` and matching genesis `nBits`, (2) a unique FREELY network identity, (3) a timestamped genesis coinbase/manifest commitment candidate, and (4) a height-1 script activation matrix compatible with Bitcoin Core v32.1.
 
-**Status: proposed only; no owner approval recorded.** No proposed value has been copied into FREELY production runtime parameters. The genesis nonce and final header hash remain outputs of a deterministic PoW search and are not fabricated. The owner must approve or amend the four proposals; approval still does not itself authorise launch or public network exposure.
+**Historical status at proposal time: proposed only; superseded by the consolidated owner approval below.** The 18 November approval authorises implementation and verification, not production activation. The derived nonce/hash remain candidate outputs pending explicit final owner sign-off.
 
 
-## L. Consolidated owner approval — 18 November 2026
+## M. Consolidated owner approval — 18 November 2026
 
 This section supersedes earlier statements in this register that numeric production PoW parameters, final network identity, genesis candidate fields or the initial script activation matrix remained unapproved. The exact authoritative baseline is [FREELY-APPROVED-PROTOCOL-PARAMETERS.md](FREELY-APPROVED-PROTOCOL-PARAMETERS.md).
 
@@ -172,7 +172,7 @@ This section supersedes earlier statements in this register that numeric product
 - Version 1; timestamp 1,794,960,000 (2026-11-18 00:00:00 UTC); previous hash all zeroes.
 - Coinbase message `FREELY FLY genesis 2026-11-18`; 50 FLY output to `6a12465245454c5920464c592047454e45534953`.
 - Genesis coinbase permanently unspendable; no premine or founder allocation.
-- Nonce, transaction ID, Merkle root and final block hash are derived outputs. They must be generated by the pinned Core serialization/hash implementation, independently reproduced and checked against proof of work before they can be frozen.
+- The approved coinbase template and its txid/Merkle commitment have been independently reproduced. Candidate nonce `2238688522` and block hash `0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78` also pass independent serialization and proof-of-work verification, but remain pending explicit owner sign-off before they are frozen as final production identity.
 
 ### Approved initial script/deployment policy
 
@@ -181,4 +181,4 @@ This section supersedes earlier statements in this register that numeric product
 - TESTDUMMY: bit 28, NEVER_ACTIVE, NO_TIMEOUT, minimum activation height 0, threshold 1,815/2,016, period 2,016.
 - No Bitcoin-mainnet historical activation hashes, checkpoints or script exceptions are copied.
 
-These approvals authorize reversible implementation, deterministic candidate generation, tests and independent review. They do not authorize genesis activation in a released node, mining deployment, public RPC/P2P exposure, DNS seeds, public testnet/mainnet, paid infrastructure or launch. Startup remains fail-closed until implementation and evidence gates pass.
+These approvals authorize reversible implementation, deterministic candidate generation, tests and independent review. They do not authorize genesis activation in a released node, mining deployment, public RPC/P2P exposure, DNS seeds, public testnet/mainnet, paid infrastructure or launch. Startup remains fail-closed until implementation and evidence gates pass and the owner explicitly approves the final derived nonce/hash as production identity.
