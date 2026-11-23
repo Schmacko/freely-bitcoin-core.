@@ -98,6 +98,8 @@ public:
     bool IsTestChain() const { return m_is_test_chain; }
     /** If this chain is a production network (not a test network). */
     bool IsProductionChain() const { return m_is_production_chain; }
+    /** Whether the explicitly isolated FREELY private mode permits loopback peers. */
+    bool AllowsLoopbackPeers() const { return m_allows_loopback_peers; }
     /** If this chain allows time to be mocked */
     bool IsMockableChain() const { return m_is_mockable_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
@@ -181,7 +183,7 @@ public:
     static std::unique_ptr<const CChainParams> TestNet4() { const TestNetOptions opts{}; return TestNet4(opts); }
 
     /** Return the reviewed FREELY candidate parameters for tests and offline validation only. */
-    static std::unique_ptr<const CChainParams> FreelyCandidate();
+    static std::unique_ptr<const CChainParams> FreelyCandidate(bool allow_loopback_peers = false);
 
 protected:
     CChainParams() = default;
@@ -200,6 +202,8 @@ protected:
     bool m_is_test_chain{false};
     // Set explicitly for production networks so test-only startup overrides stay disabled.
     bool m_is_production_chain{false};
+    // Runtime isolation policy only; never changes FREELY consensus parameters.
+    bool m_allows_loopback_peers{false};
     CBlock genesis;
     std::vector<uint8_t> vFixedSeeds;
     bool fDefaultConsistencyChecks;
