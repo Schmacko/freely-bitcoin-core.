@@ -20,6 +20,7 @@
     "bech32_hrp": "fly"
   },
   "genesis": {
+    "commitment_status": "candidate_pending_owner_approval",
     "hash": "0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78",
     "timestamp": 1794960000,
     "version": 1,
