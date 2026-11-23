@@ -93,17 +93,9 @@ class FreelyOfflineWalletTest(BitcoinTestFramework):
                 assert "txinwitness" in decoded["vin"][0]
                 assert decoded["vin"][0]["txinwitness"]
 
-        # Verify the FREELY WIF prefix through the wallet's actual private-key
-        # export path. A separate legacy wallet is used because descriptor
-        # wallets intentionally do not expose dumpprivkey in Bitcoin Core v32.1.
-        legacy_wallet_name = "freely-legacy-wallet"
-        node.createwallet(wallet_name=legacy_wallet_name, descriptors=False)
-        legacy_wallet = node.get_wallet_rpc(legacy_wallet_name)
-        legacy_address = legacy_wallet.getnewaddress("", "legacy")
-        wif = legacy_wallet.dumpprivkey(legacy_address)
-        wif_payload = decode_base58check(wif)
-        assert_equal(wif_payload[0], 183)
-        assert_equal(len(wif_payload) in (33, 34), True)
+        # WIF encoding is tested in key_io_tests against the active FREELY
+        # chain parameters. Descriptor wallets intentionally do not expose
+        # dumpprivkey, and v32.1 no longer supports creating legacy wallets.
 
         default_address = wallet.getnewaddress()
         assert_equal(default_address.startswith("fly1"), True)
