@@ -60,7 +60,7 @@ Do not distribute addresses, private keys, wallet backups or software using thes
 | Retarget interval | 2,016 blocks | Agreed |
 | PoW algorithm | SHA-256d | Agreed |
 | PoW limit | See approved baseline: `00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff` | Owner-approved 18 Nov; historical draft table superseded |
-| Genesis `nBits` | `0x1d00ffff` | Owner-approved 18 Nov; derived genesis commitment still pending |
+| Genesis `nBits` | `0x1d00ffff` | Owner-approved 18 Nov; candidate nonce/hash independently reproduced, final sign-off pending |
 | Retarget clamp and rounding | Upstream v32.1; ¼×–4× elapsed-time clamp | Owner-approved 16 Nov 2026; implementation tests pending |
 | Minimum-difficulty blocks | Disabled for production | Owner-approved; runtime parameter test pending |
 | No-retargeting | Disabled for production | Owner-approved; runtime parameter test pending |
@@ -75,11 +75,11 @@ The 600-second target and 2,016-block interval imply a 14-day target timespan. T
 
 ## 4. Genesis block requirements
 
-The owner has approved the height-zero 50 FLY genesis reward as permanently unspendable while remaining included in scheduled issuance accounting. The genesis block is not yet generated. Candidate generation and independent verification are authorised, but no candidate hash or field is final. Do not hard-code a nonce, hash, Merkle root or timestamp as a production value.
+The owner has approved the height-zero 50 FLY genesis reward as permanently unspendable while remaining included in scheduled issuance accounting. A candidate genesis header has been generated and independently verified against the approved template and PoW bounds. Its derived nonce/hash remain candidate-only pending explicit owner sign-off as final production identity. Do not hard-code them as final production values or activate the candidate.
 
 Candidate generation must record and test:
 
-1. Candidate timestamp and neutral coinbase message (final wording remains subject to approval).
+1. Owner-approved timestamp and coinbase message from the canonical baseline.
 2. Candidate genesis version and compact target, constrained by the owner-approved `powLimit`; final nonce/hash remain derived outputs.
 3. A permanently unspendable genesis output and explicit proof that the genesis coinbase is not spendable from the UTXO set.
 4. The approved monetary schedule and exact 50 FLY height-zero accounting treatment.
@@ -98,7 +98,7 @@ Required independent checks:
 - Genesis coinbase reward: unspendable permanently; included in scheduled issuance. Spendable scheduled subsidy total is 20,999,949.9769 FLY.
 - BIP94: enabled from genesis (`enforce_BIP94 = true`), subject to exact v32.1 source review and dedicated retarget/time-warp tests.
 - Script features: established Bitcoin rules are intended active from the start, subject to the activation matrix and compatibility tests. Future soft forks use controlled activation.
-- Numeric production `powLimit`, genesis `nBits`, network identity and initial activation matrix were approved on 18 November 2026. This draft is historical; use the canonical approved baseline. The nonce/hash remain to be derived and independently verified.
+- Numeric production `powLimit`, genesis `nBits`, non-genesis network identity and initial activation matrix were approved on 18 November 2026. This draft is historical; use the canonical approved baseline. The derived nonce/hash have been independently verified as candidates but still require final owner sign-off.
 
 ## 6. Development and test-network policy
 
@@ -185,7 +185,7 @@ The generator `scripts/generate-freely-genesis-candidate.py`:
 - emits the candidate transaction bytes, txid and Merkle root;
 - leaves block time, nBits, nonce and full block hash unset.
 
-**Important:** this is a candidate coinbase transaction and Merkle root, not a valid or final FREELY genesis block. The message wording has not been finally approved; the numeric powLimit and genesis nBits are still unresolved; the block header hash cannot be frozen or verified against proof of work yet. Do not use this candidate in runtime parameters, wallets or a public network.
+**Historical note:** this 17 November coinbase candidate is superseded by the approved 18 November template in `FREELY-APPROVED-PROTOCOL-PARAMETERS.md`. The current candidate header has since been independently verified, but its derived nonce/hash remain pending explicit final owner sign-off. Do not treat this historical candidate as production parameters.
 
 
 ### Candidate block-header verification tool — 17 November 2026
@@ -199,4 +199,4 @@ A deterministic `--self-test-header` fixture exercises both a valid and invalid 
 
 All four parameter areas were approved by the owner. The current exact values are maintained only in [FREELY-APPROVED-PROTOCOL-PARAMETERS.md](FREELY-APPROVED-PROTOCOL-PARAMETERS.md). Earlier candidate magic, ports, Base58 prefixes, PoW limit and genesis script in this historical draft are withdrawn and must not be copied into runtime configuration.
 
-The approved genesis nonce, transaction/Merkle commitment and final block hash remain to be generated and independently verified. No production genesis is activated by this document.
+The current candidate genesis nonce and block hash have been independently reproduced and are recorded as candidate-only; explicit owner sign-off remains required before they become final production identity. No production genesis is activated by this document.
