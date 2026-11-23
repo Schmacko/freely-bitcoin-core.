@@ -34,5 +34,5 @@ jobs:
           status=$?
           set -e
           test "$status" -eq 1
-      - name: Verify approved network identity and genesis commitment
+      - name: Verify approved baseline and candidate genesis commitment status
         run: python contrib/freely/check_network_safety.py
