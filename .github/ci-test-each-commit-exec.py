@@ -24,11 +24,21 @@ def main():
     num_procs = int(run(["nproc"], stdout=subprocess.PIPE).stdout)
     build_dir = "ci_build"
 
+    # CMake 4.5 adds a non-target-directive developer warning. Preserve the
+    # upstream -Werror=dev policy while suppressing only that new diagnostic.
+    cmake_version = run(
+        ["cmake", "--version"], stdout=subprocess.PIPE, text=True
+    ).stdout.splitlines()[0].split()[-1]
+    cmake_major, cmake_minor = (int(part) for part in cmake_version.split(".")[:2])
+    cmake_dev_warning_flags = ["-Werror=dev"]
+    if (cmake_major, cmake_minor) >= (4, 5):
+        cmake_dev_warning_flags.append("-Wno-error=non-target-directive")
+
     run([
         "cmake",
         "-B",
         build_dir,
-        "-Werror=dev",
+        *cmake_dev_warning_flags,
         # Use clang++, because it is a bit faster and uses less memory than g++
         "-DCMAKE_C_COMPILER=clang",
         "-DCMAKE_CXX_COMPILER=clang++",
