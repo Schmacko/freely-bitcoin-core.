@@ -17,6 +17,12 @@ on:
       - "src/util/chaintype.cpp"
       - "src/util/chaintype.h"
       - "src/test/chaintype_tests.cpp"
+      - "src/test/pow_tests.cpp"
+      - "src/test/validation_tests.cpp"
+      - "src/pow.cpp"
+      - "src/pow.h"
+      - "test/functional/feature_bip94.py"
+      - "contrib/freely/check_retarget_vectors.py"
       - "src/test/freely_genesis_tests.cpp"
       - "src/test/CMakeLists.txt"
       - "scripts/mine-freely-genesis-nonce.py"
@@ -61,8 +67,14 @@ jobs:
       - name: Run FREELY chain, consensus, PoW and wallet suites
         run: ctest --test-dir build --output-on-failure -R '^(chaintype_tests|freely_genesis_tests|validation_tests|pow_tests|wallet_tests)$'
 
+      - name: Verify independent FREELY retarget vectors
+        run: python3 contrib/freely/check_retarget_vectors.py
+
       - name: Test restartable genesis nonce-search helper
         run: python3 test/lint/test_freely_genesis_nonce.py
 
       - name: Verify FREELY startup fails closed before network activation
         run: python3 build/test/functional/test_runner.py --jobs=1 feature_freely_startup.py
+
+      - name: Verify BIP94 timestamp-boundary protection
+        run: python3 build/test/functional/test_runner.py --jobs=1 feature_bip94.py
