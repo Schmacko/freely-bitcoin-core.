@@ -6,7 +6,7 @@
 
 This document defines the evidence required before FREELY can be considered ready for a public production network. It is an engineering gate, not authorization to launch. It deliberately separates work that can be completed now from owner-controlled decisions and from evidence that requires a functioning FREELY chain.
 
-All four owner-controlled protocol parameter areas were explicitly approved on 18 November 2026 and are pinned in docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md and contrib/freely/network-safety.json. The approved PoW limit, genesis nBits, network identity, genesis candidate fields and activation matrix are no longer owner-decision blockers. The derived genesis nonce, coinbase txid/Merkle root and final block hash have now been independently reproduced and pinned in the manifest. The standalone C++ miner workflow and Python preflight workflow pass on their respective exact heads. Production startup must remain fail-closed until the integrated C++ candidate parameters, exact-head node tests, wallet/security evidence and release gates are complete.
+All four owner-controlled protocol parameter areas were explicitly approved on 18 November 2026 and are pinned in docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md and contrib/freely/network-safety.json. The approved PoW limit, genesis nBits, non-genesis network identity, genesis template and activation matrix are pinned. The derived nonce and block hash are independently reproduced candidate outputs, but remain pending explicit owner sign-off as the final production genesis identity; the manifest labels them `candidate_pending_owner_approval`. The standalone C++ miner workflow and Python preflight workflow pass on their respective exact heads. Production startup must remain fail-closed until the integrated C++ candidate parameters, exact-head node tests, wallet/security evidence and release gates are complete.
 
 ## Gate rules
 
@@ -33,19 +33,20 @@ Already approved:
 - Genesis version 1, timestamp 1,794,960,000, approved coinbase message/output script, 50 FLY unspendable coinbase.
 - BIP34, BIP65, BIP66, CSV and SegWit at height 1; TESTDUMMY disabled with the approved version-bits settings.
 
-Derived-genesis evidence now present (the full G0 gate remains IN PROGRESS):
-- Standalone C++ miner workflow [44910736974](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44910736974) passed on miner head `865026e755239bf0a89e7a5b91513f896bb9858a`. It built the miner, passed SHA-256d serialization self-test, rejected malformed/missing/out-of-range arguments, and verified nonce `2238688522`, block hash `0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78`, and the exact 80-byte header.
+Derived candidate-genesis evidence now present (the final nonce/hash owner sign-off and full G0 gate remain IN PROGRESS):
+- Standalone C++ miner workflow [44910736974](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44910736974) passed on miner head `865026e755239bf0a89e7a5b91513f896bb9858a`. It built the miner, passed SHA-256d serialization self-test, rejected malformed/missing/out-of-range arguments, and verified candidate nonce `2238688522`, candidate block hash `0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78`, and the exact 80-byte header.
 - Network-safety preflight [44899513446](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44899513446) passed on preflight head `e7019df06a72c8ec37922eca34d6f4cbeefc207f`: 28 network-safety tests and 17 production-readiness evidence tests passed; the manifest validator reported PASS.
 - The same preflight run intentionally confirmed the production evidence ledger remains BLOCKED at 0/9 gates. This is the expected safe result, not a failed preflight.
-- The manifest pins the derived nonce, txid/Merkle root and block hash and independently rebuilds the coinbase and 80-byte header.
+- The manifest pins the derived nonce/hash as candidate-only, alongside the approved coinbase/Merkle commitment, and independently rebuilds the coinbase and 80-byte header.
 
 Remaining G0 evidence:
 - Complete exact-head C++ candidate integration tests for `CFreelyCandidateParams`, including fixed genesis hash/PoW and manifest-to-C++ parameter equality. Candidate workflow [44911934468](https://github.com/Schmacko/freely-bitcoin-core./actions/runs/44911934468) is still queued on head `fb8f9efa5e817e5bafd635139e5386240ea05b67`.
 - Complete custom signet challenge-derived magic collision tests on the integrated candidate head.
+- Obtain explicit owner sign-off for the derived candidate nonce and block hash as the final production genesis identity; otherwise keep them candidate-only and do not activate production.
 - Obtain passing full CI and startup/functional tests on the integrated candidate branch; a standalone miner/preflight pass is not a node build.
 
 Acceptance:
-- The approved baseline and derived genesis commitment are machine-validated and independently reproduced.
+- The approved baseline and candidate genesis commitment are machine-validated and independently reproduced; the derived nonce/hash still require explicit owner sign-off as final production identity.
 - The integrated C++ `CChainParams` and manifest agree value-for-value on the exact candidate head.
 - C++ genesis, chain selection, proof-of-work, retarget, signet-collision and fail-closed startup tests pass on that exact head.
 - No collision with built-in Bitcoin networks, including default/custom signet magic, is present.
@@ -198,8 +199,9 @@ The following can be advanced without selecting production parameters:
 4. Wallet-enabled workflow on PR #11 previously failed because `bitcoin-wallet` was not built; the workflow was corrected to build that target and the new exact-head run is pending.
 5. Full cross-platform CI and wallet/node acceptance evidence remain incomplete; queued/cancelled CI is not a pass.
 6. Independent security review, operational/recovery evidence and separate explicit production launch authorization remain outstanding.
+7. Final owner approval of the derived genesis nonce and block hash is still required before freezing the production network identity.
 
-The approved numeric `powLimit`, genesis `nBits`, genesis candidate fields, network identity, BIP94 policy and activation matrix are not open owner-decision blockers. Do not request new values unless implementation review discovers a concrete contradiction in the approved baseline.
+The approved baseline values for `powLimit`, genesis `nBits`, timestamp/coinbase template, non-genesis network identity, BIP94 policy and activation matrix are fixed. The derived nonce and block hash remain candidate-only pending explicit owner sign-off; do not treat them as final production identity or activate them.
 
 ## Current conclusion
 
