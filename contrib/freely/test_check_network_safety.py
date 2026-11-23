@@ -20,8 +20,9 @@ class NetworkSafetyTests(unittest.TestCase):
         data["schema_version"] = True
         self.assertTrue(any("schema_version must be the integer 1" in item for item in validate(data)))
 
-    def test_approved_genesis_candidate_is_pinned_and_reproducible(self):
+    def test_candidate_genesis_commitment_is_pinned_and_reproducible(self):
         self.assertEqual(validate(MANIFEST), [])
+        self.assertEqual(MANIFEST["genesis"]["commitment_status"], "candidate_pending_owner_approval")
         self.assertEqual(MANIFEST["network"]["message_start"], "fac3b7d1")
         self.assertEqual(MANIFEST["network"]["p2p_port"], 49444)
         self.assertEqual(MANIFEST["network"]["rpc_port"], 49445)
@@ -34,6 +35,14 @@ class NetworkSafetyTests(unittest.TestCase):
         self.assertEqual(MANIFEST["genesis"]["pow_limit"], "0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
         self.assertIs(MANIFEST["genesis"]["coinbase_spendable"], False)
         self.assertIs(MANIFEST["consensus"]["bip94_enabled"], True)
+
+    def test_rejects_unapproved_genesis_commitment_status(self):
+        for status in ("final_approved", "production", None):
+            with self.subTest(status=status):
+                data = complete_fixture()
+                data["genesis"]["commitment_status"] = status
+                self.assertTrue(any("commitment_status must remain candidate_pending_owner_approval" in item
+                                    for item in validate(data)))
 
     def test_rejects_mutated_genesis_commitment(self):
         for field, value in (
