@@ -218,17 +218,23 @@ BOOST_AUTO_TEST_CASE(freely_approved_compact_retarget_vectors)
     consensus.nPowTargetTimespan = 1'209'600;
     consensus.fPowAllowMinDifficultyBlocks = false;
     consensus.fPowNoRetargeting = false;
-    consensus.enforce_BIP94 = false;
+    consensus.enforce_BIP94 = true;
     consensus.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
 
-    CBlockIndex previous;
-    previous.nHeight = 2015;
-    previous.nBits = 0x1c00ffffU;
+    // Model the complete first difficulty period so the approved BIP94 path
+    // derives its retarget base from the actual period-start ancestor.
+    std::vector<CBlockIndex> period(2016);
+    for (int height = 0; height < static_cast<int>(period.size()); ++height) {
+        period[height].nHeight = height;
+        period[height].nBits = 0x1c00ffffU;
+        period[height].pprev = height == 0 ? nullptr : &period[height - 1];
+    }
+    period.front().nTime = 0;
 
     const auto check_vector = [&](int64_t elapsed, uint32_t expected)
     {
-        previous.nTime = elapsed;
-        BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&previous, 0, consensus), expected);
+        period.back().nTime = elapsed;
+        BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&period.back(), period.front().nTime, consensus), expected);
     };
 
     check_vector(302'399, 0x1b3fffc0U);
@@ -237,7 +243,6 @@ BOOST_AUTO_TEST_CASE(freely_approved_compact_retarget_vectors)
     check_vector(4'838'400, 0x1c03fffcU);
     check_vector(4'838'401, 0x1c03fffcU);
 }
-
 /* FREELY-approved production retarget policy, tested with synthetic targets.
  * Synthetic powLimit and nBits are fixtures only; they are not FREELY network parameters.
  */
