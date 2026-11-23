@@ -86,8 +86,8 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
             "-dnsseed=0",
             "-natpmp=0",
             "-listenonion=0",
-            "-connect=0",
         ]
+        # disable_autoconnect=True already supplies exactly one -connect=0 in the framework config.
         for extra, expected in (
             (
                 ["-connect=1"],
@@ -122,8 +122,8 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
             "-dnsseed=0",
             "-natpmp=0",
             "-listenonion=0",
-            "-connect=0",
         ]
+        # The framework config already supplies exactly one -connect=0.
         for extra, expected in (
             (
                 ["-bind=0.0.0.0"],
