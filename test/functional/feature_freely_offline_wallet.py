@@ -93,13 +93,9 @@ class FreelyOfflineWalletTest(BitcoinTestFramework):
                 assert "txinwitness" in decoded["vin"][0]
                 assert decoded["vin"][0]["txinwitness"]
 
-        # Verify the approved WIF secret-key prefix as well as address
-        # prefixes, without exposing or logging the generated private key.
-        private_key = wallet.dumpprivkey(wallet.getnewaddress("", "legacy"))
-        wif_payload = decode_base58check(private_key)
-        assert_equal(wif_payload[0], 183)
-        assert_equal(len(wif_payload), 34)
-        assert_equal(wif_payload[-1], 1)
+        # Descriptor wallets in Bitcoin Core v32.1 do not expose the legacy
+        # dumpprivkey RPC. The C++ FREELY chain-parameter regression separately
+        # verifies the approved SECRET_KEY (WIF) version prefix.
 
         default_address = wallet.getnewaddress()
         assert_equal(default_address.startswith("fly1"), True)
