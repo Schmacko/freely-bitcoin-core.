@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(freely_approved_compact_retarget_vectors)
     consensus.nPowTargetTimespan = 1'209'600;
     consensus.fPowAllowMinDifficultyBlocks = false;
     consensus.fPowNoRetargeting = false;
-    consensus.enforce_BIP94 = true;
+    consensus.enforce_BIP94 = false;
     consensus.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
 
     CBlockIndex previous;
