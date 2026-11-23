@@ -99,6 +99,19 @@ BOOST_AUTO_TEST_CASE(freely_candidate_matches_reviewed_baseline_and_genesis_cand
     BOOST_CHECK(!params->IsTestChain());
     BOOST_CHECK(params->IsProductionChain());
     BOOST_CHECK(!params->IsMockableChain());
+    BOOST_CHECK(!params->AllowsLoopbackPeers());
+
+    // The isolated private-node switch is runtime policy only: it must not
+    // alter genesis, network identity, or consensus parameters.
+    const auto loopback_params{CChainParams::FreelyCandidate(true)};
+    BOOST_REQUIRE(loopback_params);
+    BOOST_CHECK(loopback_params->AllowsLoopbackPeers());
+    BOOST_CHECK(loopback_params->GenesisBlock().GetHash() == params->GenesisBlock().GetHash());
+    BOOST_CHECK(loopback_params->MessageStart() == params->MessageStart());
+    BOOST_CHECK_EQUAL(loopback_params->GetDefaultPort(), params->GetDefaultPort());
+    BOOST_CHECK(loopback_params->GetConsensus().powLimit == params->GetConsensus().powLimit);
+    BOOST_CHECK_EQUAL(loopback_params->GetConsensus().nPowTargetSpacing,
+                      params->GetConsensus().nPowTargetSpacing);
 
     const auto& consensus = params->GetConsensus();
     BOOST_CHECK_EQUAL(consensus.nSubsidyHalvingInterval, 210000);
