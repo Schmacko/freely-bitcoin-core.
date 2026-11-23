@@ -152,7 +152,7 @@ class GenesisNonceSearchTest(unittest.TestCase):
                              temporary, StopFlag())
 
 
-    def test_approved_freely_genesis_header_vector(self):
+    def test_candidate_freely_genesis_header_vector(self):
         merkle_root = "c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1"
         expected_hash = "0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78"
         timestamp = 1_794_960_000
@@ -172,8 +172,8 @@ class GenesisNonceSearchTest(unittest.TestCase):
         self.assertLessEqual(int.from_bytes(digest, "little"), target)
         self.assertLessEqual(target, pow_limit)
 
-    def test_approved_freely_genesis_coinbase_and_merkle_root(self):
-        # Independently serialize the approved C++ coinbase without using
+    def test_candidate_freely_genesis_coinbase_and_merkle_root(self):
+        # Independently serialize the candidate C++ coinbase without using
         # Bitcoin Core's CScript or transaction serializer.
         def push_data(data):
             if len(data) >= 76:
