@@ -151,7 +151,7 @@ void HashHeader(const SHA256_CTX& first_block_state, const HeaderPrefix& prefix,
 bool SelfTest()
 {
     const auto fail = [](const char* reason) {
-        std::cerr << "Self-test failure: " << reason << '\\n';
+        std::cerr << "Self-test failure: " << reason << '\n';
         return false;
     };
     try {
@@ -179,7 +179,7 @@ bool SelfTest()
         } catch (const std::out_of_range&) {
         }
     } catch (const std::exception& e) {
-        std::cerr << "Self-test integer parser threw unexpectedly: " << e.what() << '\\n';
+        std::cerr << "Self-test integer parser threw unexpectedly: " << e.what() << '\n';
         return false;
     }
 
