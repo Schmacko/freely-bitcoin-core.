@@ -2,8 +2,9 @@
 """Validate the FREELY network-identity and consensus-parameter manifest.
 
 This is a preflight validator, not a replacement for Core's startup checks.
-It verifies the owner-approved network and consensus manifest and independently
-recomputes the approved genesis coinbase, Merkle root, header hash and proof of work.
+It verifies the owner-approved network and consensus baseline and independently
+recomputes the candidate genesis coinbase, Merkle root, header hash and proof of work.
+The derived nonce/hash remain candidate-only pending explicit owner approval.
 It does not certify production readiness or authorize network activation.
 """
 from __future__ import annotations
@@ -39,7 +40,7 @@ ALL_BITCOIN_EXTENDED_KEY_PREFIXES = set().union(*BITCOIN_EXTENDED_KEY_PREFIXES.v
 BITCOIN_GENESIS_HASH = "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
 
 # Owner-approved values from docs/FREELY-APPROVED-PROTOCOL-PARAMETERS.md.
-# The derived genesis commitment is pinned separately after independent
+# The derived genesis candidate is pinned separately after independent
 # coinbase, Merkle-root, header-serialization and proof-of-work reproduction.
 APPROVED_VALUES = {
     "network": {
@@ -110,6 +111,8 @@ def matches_approved(actual: Any, expected: Any) -> bool:
     return type(actual) is type(expected) and actual == expected
 
 
+CANDIDATE_GENESIS_STATUS = "candidate_pending_owner_approval"
+
 DERIVED_GENESIS = {
     "hash": "0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78",
     "merkle_root": "c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1",
@@ -128,6 +131,7 @@ REQUIRED_PATHS = (
     "address.base58_extended_public_key_prefix",
     "address.base58_extended_secret_key_prefix",
     "address.bech32_hrp",
+    "genesis.commitment_status",
     "genesis.hash",
     "genesis.merkle_root",
     "genesis.nonce",
@@ -179,7 +183,7 @@ def _push_data(value: bytes) -> bytes:
 
 
 def verify_derived_genesis(genesis: dict[str, Any]) -> list[str]:
-    """Rebuild the approved coinbase, Merkle root and 80-byte genesis header."""
+    """Rebuild the candidate coinbase, Merkle root and 80-byte genesis header."""
     required_types = {
         "hash": str,
         "merkle_root": str,
@@ -233,7 +237,7 @@ def verify_derived_genesis(genesis: dict[str, Any]) -> list[str]:
         ))
         coinbase_txid = hashlib.sha256(hashlib.sha256(coinbase).digest()).digest()[::-1].hex()
         if coinbase_txid != genesis["merkle_root"].lower():
-            errors.append("genesis.merkle_root does not match the independently serialized approved coinbase transaction")
+            errors.append("genesis.merkle_root does not match the independently serialized candidate coinbase transaction")
 
         header = b"".join((
             struct.pack("<i", genesis["version"]),
@@ -244,7 +248,7 @@ def verify_derived_genesis(genesis: dict[str, Any]) -> list[str]:
         ))
         digest = hashlib.sha256(hashlib.sha256(header).digest()).digest()
         if digest[::-1].hex() != genesis["hash"].lower():
-            errors.append("genesis.hash does not match the serialized FREELY genesis header")
+            errors.append("genesis.hash does not match the serialized FREELY candidate genesis header")
         target = decode_compact_target(int(genesis["n_bits"], 16))
         if target is not None and int.from_bytes(digest, "little") > target:
             errors.append("genesis.hash does not satisfy the approved genesis.n_bits proof-of-work target")
@@ -279,6 +283,9 @@ def validate(data: dict[str, Any]) -> list[str]:
     address = sections["address"]
     genesis = sections["genesis"]
     consensus = sections["consensus"]
+
+    if genesis.get("commitment_status") != CANDIDATE_GENESIS_STATUS:
+        errors.append("genesis.commitment_status must remain candidate_pending_owner_approval until the owner explicitly approves the final production nonce/hash")
 
     for section, expected_values in APPROVED_VALUES.items():
         for field, expected in expected_values.items():
@@ -471,7 +478,7 @@ def main() -> int:
             print(f" - {error}")
         return 1
     print("FREELY network preflight: PASS")
-    print("Manifest identity and required fields are internally consistent.")
+    print("Candidate manifest is internally consistent; derived nonce/hash remain pending explicit owner approval.")
     print("This does not replace consensus-code review, compilation, or runtime startup tests.")
     return 0
 
