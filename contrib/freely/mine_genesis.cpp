@@ -71,8 +71,10 @@ uint64_t ParseUnsigned(const std::string& value, int base = 10)
         else if (c >= 'a' && c <= 'f') digit = static_cast<unsigned int>(c - 'a') + 10;
         else if (c >= 'A' && c <= 'F') digit = static_cast<unsigned int>(c - 'A') + 10;
         else throw std::invalid_argument("integer contains an invalid digit");
-        if (digit >= static_cast<unsigned int>(base) ||
-            result > (std::numeric_limits<uint64_t>::max() - digit) / static_cast<unsigned int>(base)) {
+        if (digit >= static_cast<unsigned int>(base)) {
+            throw std::invalid_argument("integer contains a digit outside the selected base");
+        }
+        if (result > (std::numeric_limits<uint64_t>::max() - digit) / static_cast<unsigned int>(base)) {
             throw std::out_of_range("integer is outside the supported range");
         }
         result = result * static_cast<unsigned int>(base) + digit;
@@ -158,12 +160,18 @@ bool SelfTest()
         if (ParseUnsigned("0x1d00ffff", 0) != 0x1d00ffffULL) return fail("base-zero hexadecimal parsing");
         if (ParseUnsigned("00", 0) != 0) return fail("base-zero zero parsing");
         if (ParseUnsigned("077", 0) != 63) return fail("base-zero octal parsing");
-        for (const char* invalid : {"", "-1", "12x", "1.0", "08"}) {
+        if (ParseUnsigned("08") != 8) return fail("base-ten leading-zero parsing");
+        for (const char* invalid : {"", "-1", "12x", "1.0"}) {
             try {
                 (void)ParseUnsigned(invalid);
                 return fail("malformed integer accepted");
             } catch (const std::invalid_argument&) {
             }
+        }
+        try {
+            (void)ParseUnsigned("08", 0);
+            return fail("invalid octal digit accepted");
+        } catch (const std::invalid_argument&) {
         }
         try {
             (void)ParseUnsigned("18446744073709551616");
