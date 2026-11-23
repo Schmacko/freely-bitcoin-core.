@@ -7,6 +7,7 @@
 
 #include <key.h>
 #include <key_io.h>
+#include <base58.h>
 #include <script/script.h>
 #include <test/util/json.h>
 #include <test/util/setup_common.h>
@@ -118,6 +119,26 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
     SelectParams(ChainType::MAIN);
 }
 
+
+// Goal: ensure FREELY private keys use the approved WIF prefix.
+BOOST_AUTO_TEST_CASE(freely_wif_prefix)
+{
+    SelectParams(ChainType::FREELY);
+    std::vector<unsigned char> secret(32, 0);
+    secret.back() = 1;
+    CKey key;
+    key.Set(secret.begin(), secret.end(), true);
+    BOOST_REQUIRE(key.IsValid());
+
+    const std::string wif{EncodeSecret(key)};
+    std::vector<unsigned char> decoded;
+    BOOST_REQUIRE(DecodeBase58Check(wif, decoded, 64));
+    BOOST_REQUIRE_EQUAL(decoded.size(), 34);
+    BOOST_CHECK_EQUAL(decoded.front(), 183);
+    BOOST_CHECK(DecodeSecret(wif).IsValid());
+
+    SelectParams(ChainType::MAIN);
+}
 
 // Goal: check that base58 parsing code is robust against a variety of corrupted data
 BOOST_AUTO_TEST_CASE(key_io_invalid)
