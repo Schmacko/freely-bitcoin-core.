@@ -57,7 +57,6 @@ uint64_t ParseUnsigned(const std::string& value, int base = 10)
             offset = 2;
         } else if (value.size() > 1 && value[0] == '0') {
             base = 8;
-            offset = 1;
         }
     }
     if (base < 2 || base > 16 || offset == value.size()) {
@@ -151,8 +150,10 @@ bool SelfTest()
 {
     if (ParseUnsigned("4294967295") != 0xffffffffULL ||
         ParseUnsigned("18446744073709551615") != std::numeric_limits<uint64_t>::max() ||
-        ParseUnsigned("0x1d00ffff", 0) != 0x1d00ffffULL) return false;
-    for (const char* invalid : {"", "-1", "12x", "1.0"}) {
+        ParseUnsigned("0x1d00ffff", 0) != 0x1d00ffffULL ||
+        ParseUnsigned("00", 0) != 0 ||
+        ParseUnsigned("077", 0) != 63) return false;
+    for (const char* invalid : {"", "-1", "12x", "1.0", "08"}) {
         try {
             (void)ParseUnsigned(invalid);
             return false;
