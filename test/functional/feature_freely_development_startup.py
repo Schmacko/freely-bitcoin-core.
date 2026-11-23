@@ -66,7 +66,7 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
             extra_args=[
                 "-freelyprivate=1",
                 "-bind=127.0.0.1",
-                "-discover=0",
+                "-discover=1",
                 "-dnsseed=0",
                 "-natpmp=0",
                 "-listenonion=0",
