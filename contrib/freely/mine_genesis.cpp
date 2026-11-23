@@ -47,10 +47,35 @@ uint64_t ParseUnsigned(const std::string& value, int base = 10)
     if (value.empty() || value.front() == '-') {
         throw std::invalid_argument("expected a non-negative integer");
     }
-    size_t parsed{0};
-    const uint64_t result = std::stoull(value, &parsed, base);
-    if (parsed != value.size()) {
-        throw std::invalid_argument("integer contains trailing characters");
+
+    size_t offset{0};
+    if (base == 0) {
+        base = 10;
+        if (value.size() >= 2 && value[0] == '0' && (value[1] == 'x' || value[1] == 'X')) {
+            base = 16;
+            offset = 2;
+        } else if (value.size() > 1 && value[0] == '0') {
+            base = 8;
+            offset = 1;
+        }
+    }
+    if (base < 2 || base > 16 || offset == value.size()) {
+        throw std::invalid_argument("invalid integer base or empty digit sequence");
+    }
+
+    uint64_t result{0};
+    for (; offset < value.size(); ++offset) {
+        const char c = value[offset];
+        unsigned int digit;
+        if (c >= '0' && c <= '9') digit = static_cast<unsigned int>(c - '0');
+        else if (c >= 'a' && c <= 'f') digit = static_cast<unsigned int>(c - 'a') + 10;
+        else if (c >= 'A' && c <= 'F') digit = static_cast<unsigned int>(c - 'A') + 10;
+        else throw std::invalid_argument("integer contains an invalid digit");
+        if (digit >= static_cast<unsigned int>(base) ||
+            result > (UINT64_MAX - digit) / static_cast<unsigned int>(base)) {
+            throw std::out_of_range("integer is outside the supported range");
+        }
+        result = result * static_cast<unsigned int>(base) + digit;
     }
     return result;
 }
