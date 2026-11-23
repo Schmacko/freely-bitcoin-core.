@@ -16,6 +16,7 @@
 #include <exception>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
@@ -72,7 +73,7 @@ uint64_t ParseUnsigned(const std::string& value, int base = 10)
         else if (c >= 'A' && c <= 'F') digit = static_cast<unsigned int>(c - 'A') + 10;
         else throw std::invalid_argument("integer contains an invalid digit");
         if (digit >= static_cast<unsigned int>(base) ||
-            result > (UINT64_MAX - digit) / static_cast<unsigned int>(base)) {
+            result > (std::numeric_limits<uint64_t>::max() - digit) / static_cast<unsigned int>(base)) {
             throw std::out_of_range("integer is outside the supported range");
         }
         result = result * static_cast<unsigned int>(base) + digit;
@@ -149,6 +150,7 @@ void HashHeader(const SHA256_CTX& first_block_state, const HeaderPrefix& prefix,
 bool SelfTest()
 {
     if (ParseUnsigned("4294967295") != 0xffffffffULL ||
+        ParseUnsigned("18446744073709551615") != std::numeric_limits<uint64_t>::max() ||
         ParseUnsigned("0x1d00ffff", 0) != 0x1d00ffffULL) return false;
     for (const char* invalid : {"", "-1", "12x", "1.0"}) {
         try {
@@ -156,6 +158,11 @@ bool SelfTest()
             return false;
         } catch (const std::invalid_argument&) {
         }
+    }
+    try {
+        (void)ParseUnsigned("18446744073709551616");
+        return false;
+    } catch (const std::out_of_range&) {
     }
 
     // Bitcoin genesis header is a public SHA-256d serialization test vector.
