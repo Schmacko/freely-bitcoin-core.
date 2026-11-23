@@ -5,9 +5,9 @@
 #include <test/data/key_io_invalid.json.h>
 #include <test/data/key_io_valid.json.h>
 
+#include <base58.h>
 #include <key.h>
 #include <key_io.h>
-#include <base58.h>
 #include <script/script.h>
 #include <test/util/json.h>
 #include <test/util/setup_common.h>
