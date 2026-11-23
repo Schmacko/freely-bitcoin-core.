@@ -1,6 +1,6 @@
 # FREELY consensus specification — engineering baseline
 
-**Status:** all four protocol parameter areas owner-approved 18 November 2026; runtime integration and release remain fail-closed pending derived genesis commitment, tests and review.
+**Status:** all four baseline protocol parameter areas owner-approved 18 November 2026; the derived genesis nonce/hash are independently reproduced candidate outputs pending explicit final owner sign-off. Runtime integration and release remain fail-closed pending tests and review.
 **Date:** 16 November 2026
 **Source baseline:** Bitcoin Core v32.1, commit `f0de87f040621468b956f01f526a43a010310501`.
 **Branch:** `freely/consensus-specification`
@@ -87,11 +87,11 @@ The project owner has approved the following production policy, based on the ded
 - Reuse Bitcoin Core v32.1 `GetNextWorkRequired` / `CalculateNextWorkRequired` semantics, including upstream integer arithmetic and compact-target handling, subject to FREELY-specific parameters and tests.
 - At non-boundary heights, retain the previous block's `nBits`. At a retarget boundary, use the upstream v32.1 period timestamp selection and clamp/scale procedure. The exact code path and vectors must be confirmed by implementation tests before activation.
 
-The production retarget/clamp/minimum-difficulty/no-retargeting policy and BIP94 from genesis were approved. On 18 November 2026 the owner also approved the numeric `powLimit`, genesis `nBits`, genesis candidate fields, network identity and initial script activation matrix. The derived nonce/hash and exact-head C++/functional verification remain outstanding.
+The production retarget/clamp/minimum-difficulty/no-retargeting policy and BIP94 from genesis were approved. On 18 November 2026 the owner also approved numeric `powLimit`, genesis `nBits`, genesis template fields, non-genesis network identity and initial script activation matrix. The derived nonce/hash have since been independently reproduced as candidates; final owner sign-off and exact-head C++/functional verification remain outstanding.
 
 ### Remaining implementation and derived-output gates
 
-1. Derive the genesis transaction ID, Merkle root, nonce and block hash from the approved candidate using pinned Core serialization and independent reproduction.
+1. Verify the independently reproduced candidate transaction ID, Merkle root, nonce and block hash using pinned Core serialization, then obtain explicit owner sign-off for the final production nonce/hash.
 2. Implement and test the approved network identity, PoW parameters and activation matrix without exposing a selectable production chain prematurely.
 3. Verify exact v32.1 BIP94 and script-flag semantics with C++ and functional regression tests.
 4. Preserve upstream timestamp validity and median-time-past rules unless a separately reviewed change is approved.
@@ -176,17 +176,17 @@ No guessed nonce, hash, Merkle root, address prefix or network magic is acceptab
 | Decision | Current state | Why it matters |
 |---|---|---|
 | Genesis coinbase / height-zero issuance accounting | **Owner-approved: permanently unspendable; included in scheduled issuance** | Determines spendable issuance and supply description |
-| PoW limit and genesis target | Open | Defines valid block difficulty from genesis |
+| PoW limit and genesis target | **Owner-approved: powLimit and nBits fixed; integration tests pending** | Defines valid block difficulty from genesis |
 | Retarget algorithm / clamp / production flags | **Owner-approved policy; implementation and tests pending** | Consensus compatibility; different rules split the chain |
 | Minimum difficulty policy | **Owner-approved: disabled on production FREELY** | Changes block validity |
 | No-retargeting mode | **Owner-approved: disabled on production FREELY** | Changes block validity |
 | Time-warp mitigation | **Owner-approved: BIP94 enabled from genesis; tests pending** | Changes block validity and security |
 | Buried deployments / script rules | **Owner-approved initial-feature policy; per-rule compatibility tests pending** | Defines valid transaction and block rules |
 | Version-bits schedule | Controlled future activations; no historical schedule copied | Defines future consensus transitions |
-| Network identity candidates | Candidate generation and collision review authorised; final values pending | Prevents accidental peer/address collisions |
-| Genesis timestamp/message and output | Open | Defines unique genesis commitment |
+| Network identity | **Owner-approved baseline values; runtime collision/integration tests pending** | Prevents accidental peer/address collisions |
+| Genesis timestamp/message and output | **Owner-approved template; derived nonce/hash require final sign-off** | Defines unique genesis commitment |
 
-These choices should be reviewed together as a single consensus parameter sheet. They are not safely delegated to defaults or copied from Bitcoin mainnet.
+This table is a historical pre-approval snapshot; the exact baseline was approved in section 14. The derived nonce/hash remain candidate-only pending final owner sign-off. These choices are not safely delegated to defaults or copied from Bitcoin mainnet.
 
 ## 9. Implementation sequence
 
@@ -226,7 +226,7 @@ See [FREELY consensus decision register](FREELY-CONSENSUS-DECISION-REGISTER.md) 
 
 The FREELY consensus specification package is complete as an **implementation contract and decision-controlled draft**. Every consensus domain required before implementation is identified, its known rules are stated, its unresolved choices are explicitly registered, and the required tests and activation gates are defined.
 
-**Specification coverage: 100% (document deliverable). Parameter selection: owner-approved. Consensus freeze: not complete until the derived genesis commitment is independently verified and exact-head C++/functional tests pass.**
+**Specification coverage: 100% (document deliverable). Baseline parameter selection: owner-approved. Consensus freeze: not complete until the candidate nonce/hash receive explicit final owner sign-off and exact-head C++/functional tests pass.**
 
 ### 12.2 Authoritative parameter status
 
@@ -247,7 +247,7 @@ The FREELY consensus specification package is complete as an **implementation co
 | No-retargeting | Disabled in production | Owner-approved |
 | Retarget algorithm | Pinned v32.1 integer/compact-target semantics | Owner-approved |
 | Numeric powLimit | `00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff` | Owner-approved 18 Nov 2026 |
-| Genesis nBits and genesis commitment | `0x1d00ffff`; nonce/hash derived | nBits owner-approved; commitment generation and verification pending |
+| Genesis nBits and genesis commitment | `0x1d00ffff`; candidate nonce/hash independently reproduced | nBits owner-approved; final nonce/hash owner sign-off and C++ integration pending |
 | BIP94/time-warp mitigation | Enabled from genesis | Owner-approved; exact-head tests pending |
 | Timestamp/MTP | Preserve v32.1 unless a reviewed change is approved | Baseline rule |
 | Script/soft-fork activation matrix | BIP34/BIP65/BIP66/CSV/SegWit at height 1; TESTDUMMY NEVER_ACTIVE; Taproot/witness-v1 via v32.1 flags | Owner-approved 18 Nov; compatibility tests pending |
@@ -298,10 +298,10 @@ No Bitcoin MAIN activation hash, exception or deployment timestamp is presumed v
 - [x] Regression, integration, private-network and independent-review gates defined.
 - [x] Public launch, mining deployment and paid infrastructure explicitly excluded absent separate approval.
 - [x] Owner confirms genesis coinbase is permanently unspendable and included in scheduled issuance.
-- [ ] Owner approves numeric powLimit and initial difficulty after candidate modelling and security review.
+- [x] Owner approves numeric powLimit and initial difficulty (`powLimit` and genesis `nBits`) in the 18 November baseline.
 - [x] Owner approves BIP94 enabled from genesis; source audit and tests remain pending.
 - [x] Owner approves established script-feature policy from the start, subject to per-feature compatibility verification.
-- [ ] Owner approves final identity and genesis commitment after collision/reproducibility checks.
+- [ ] Owner explicitly approves the derived candidate nonce/hash as final production genesis identity after collision and reproducibility checks.
 
 **Release rule:** do not enable production FREELY chain parameters, generate a production genesis commitment, or expose a public network while any consensus-critical gate above remains unresolved. Completing this specification document does not waive those gates.
 
@@ -362,6 +362,6 @@ The owner approved all four parameter proposal areas. This section supersedes ea
 | Taproot / witness-v1 | Verify against v32.1 script flags; no separate buried-height field |
 | TESTDUMMY | Bit 28, NEVER_ACTIVE, NO_TIMEOUT, min height 0, threshold 1815/2016, period 2016 |
 
-The nonce, transaction ID, Merkle root and final block hash are derived outputs, not remaining owner decisions. They must be generated by the pinned Core implementation, independently reproduced, and proof-of-work checked before any genesis commitment is frozen. Approval permits implementation and verification; it does not authorize production activation, public RPC/P2P exposure, DNS seeds, mining deployment, public testnet/mainnet or launch.
+The approved coinbase txid/Merkle commitment and candidate nonce/hash have been independently reproduced. The nonce/hash remain pending explicit owner sign-off as final production identity and must not be frozen or activated before that decision. Approval of the baseline permits implementation and verification; it does not authorize production activation, public RPC/P2P exposure, DNS seeds, mining deployment, public testnet/mainnet or launch. Approval permits implementation and verification; it does not authorize production activation, public RPC/P2P exposure, DNS seeds, mining deployment, public testnet/mainnet or launch.
 
 **Implementation gate:** PR #8 still has no FREELY `CChainParams` object and deliberately throws from the consensus factory. Preserve that fail-closed behavior until the approved values are integrated with exhaustive source handling, fixed genesis vectors and successful exact-head tests.
