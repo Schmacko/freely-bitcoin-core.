@@ -3,7 +3,7 @@ name: FREELY offline wallet tests
 on:
   push:
     branches:
-      - freely/private-node-startup
+      - freely/private-node-integration-20261124
     paths:
       - "src/common/args.cpp"
       - "src/chainparams.cpp"
@@ -25,7 +25,7 @@ on:
       - ".github/workflows/freely-chainparams-candidate-tests.yml"
   pull_request:
     branches:
-      - freely/chainparams-candidate-integration
+      - freely/chainparams-reconciled-20261122
     paths:
       - "src/common/args.cpp"
       - "src/chainparams.cpp"
