@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Independent integer-only checker for FREELY's synthetic retarget test vectors.
 
 These fixtures validate the approved 2,016-block / 600-second retarget arithmetic.
