@@ -98,6 +98,8 @@ public:
     bool IsTestChain() const { return m_is_test_chain; }
     /** If this chain is a production network (not a test network). */
     bool IsProductionChain() const { return m_is_production_chain; }
+    /** Whether FREELY development mode permits loopback-only P2P peers. */
+    bool AllowsLoopbackPeers() const { return m_allows_loopback_peers; }
     /** If this chain allows time to be mocked */
     bool IsMockableChain() const { return m_is_mockable_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
@@ -180,11 +182,10 @@ public:
     static std::unique_ptr<const CChainParams> TestNet4(const TestNetOptions& options);
     static std::unique_ptr<const CChainParams> TestNet4() { const TestNetOptions opts{}; return TestNet4(opts); }
 
-    /** Construct approved FREELY parameters for inspection and testing only.
-     *  The genesis proof of work is verified, but CreateChainParams deliberately
-     *  refuses FREELY startup until the owner authorizes network activation.
+    /** Construct approved FREELY parameters for gated development and testing.
+     *  Loopback peer permission is enabled only by the explicit private-network mode.
      */
-    static std::unique_ptr<const CChainParams> FreelyCandidate();
+    static std::unique_ptr<const CChainParams> FreelyCandidate(bool allow_loopback_peers = false);
 
 protected:
     CChainParams() = default;
@@ -203,6 +204,7 @@ protected:
     bool m_is_test_chain{false};
     // Set explicitly for production networks so test-only startup overrides stay disabled.
     bool m_is_production_chain{false};
+    bool m_allows_loopback_peers{false};
     CBlock genesis;
     std::vector<uint8_t> vFixedSeeds;
     bool fDefaultConsistencyChecks;

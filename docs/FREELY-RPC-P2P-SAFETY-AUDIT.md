@@ -1,11 +1,11 @@
 # FREELY RPC, P2P and chain-selection safety audit
 
-**Status:** source audit and fail-closed design review
+**Status:** Historical pre-candidate source audit (17–18 November 2026). Current gated development-mode controls are documented in [FREELY development-mode network security](FREELY-DEVELOPMENT-MODE-NETWORK-SECURITY.md).
 **Source baseline:** Bitcoin Core v32.1 fork, FREELY core-chain implementation branch
 **Date:** 17 November 2026
 **Scope:** chain selection, RPC binding defaults, P2P listener defaults, data-directory isolation, CLI chain reporting, and network-magic dispatch.
 
-This document records source-level findings. It does not claim that a FREELY node is runnable, that a public service is safe, or that a FREELY network has been activated.
+This document records the earlier source-level baseline before the approved candidate parameters and gated development modes were added. Its historical status table and pre-candidate statements are superseded by the linked current security document. It does not authorize a public service or network activation.
 
 ## 1. Executive findings
 

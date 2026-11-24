@@ -5,6 +5,7 @@
 #include <test/data/key_io_invalid.json.h>
 #include <test/data/key_io_valid.json.h>
 
+#include <base58.h>
 #include <key.h>
 #include <key_io.h>
 #include <script/script.h>
@@ -118,6 +119,34 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
     SelectParams(ChainType::MAIN);
 }
 
+
+// Goal: ensure FREELY private keys use the approved WIF prefix.
+BOOST_AUTO_TEST_CASE(freely_wif_prefix)
+{
+    // Use the same explicit offline-only gate required by normal FREELY startup.
+    gArgs.ForceSetArg("-freelydev", "1");
+    gArgs.ForceSetArg("-listen", "0");
+    gArgs.ForceSetArg("-connect", "0");
+    gArgs.ForceSetArg("-discover", "0");
+    gArgs.ForceSetArg("-dnsseed", "0");
+    gArgs.ForceSetArg("-listenonion", "0");
+    SelectParams(ChainType::FREELY);
+    std::vector<unsigned char> secret(32, 0);
+    secret.back() = 1;
+    CKey key;
+    key.Set(secret.begin(), secret.end(), true);
+    BOOST_REQUIRE(key.IsValid());
+
+    const std::string wif{EncodeSecret(key)};
+    std::vector<unsigned char> decoded;
+    BOOST_REQUIRE(DecodeBase58Check(wif, decoded, 64));
+    BOOST_REQUIRE_EQUAL(decoded.size(), 34);
+    BOOST_CHECK_EQUAL(decoded.front(), 183);
+    BOOST_CHECK(DecodeSecret(wif).IsValid());
+
+    SelectParams(ChainType::MAIN);
+    gArgs.ForceSetArg("-freelydev", "0");
+}
 
 // Goal: check that base58 parsing code is robust against a variety of corrupted data
 BOOST_AUTO_TEST_CASE(key_io_invalid)
