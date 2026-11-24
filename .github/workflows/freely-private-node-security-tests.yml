@@ -3,7 +3,7 @@ name: FREELY private-node security tests
 on:
   push:
     branches:
-      - freely/private-node-startup
+      - freely/private-node-integration-20261124
     paths:
       - "src/chainparams.cpp"
       - "src/chainparamsbase.cpp"
@@ -21,7 +21,7 @@ on:
       - ".github/workflows/freely-private-node-security-tests.yml"
   pull_request:
     branches:
-      - freely/chainparams-candidate-integration
+      - freely/chainparams-reconciled-20261122
     paths:
       - "docs/FREELY-DEVELOPMENT-MODE-NETWORK-SECURITY.md"
       - "src/chainparams.cpp"
