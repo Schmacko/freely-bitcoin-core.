@@ -5,6 +5,7 @@ on:
     branches:
       - freely/m1-consensus
       - freely/core-chain-implementation
+      - freely/genesis-and-network-code
     paths:
       - "test/functional/feature_freely_startup.py"
       - "test/functional/test_runner.py"
@@ -16,6 +17,12 @@ on:
       - "src/util/chaintype.cpp"
       - "src/util/chaintype.h"
       - "src/test/chaintype_tests.cpp"
+      - "src/test/pow_tests.cpp"
+      - "src/test/validation_tests.cpp"
+      - "src/pow.cpp"
+      - "src/pow.h"
+      - "test/functional/feature_bip94.py"
+      - "contrib/freely/check_retarget_vectors.py"
       - "src/test/freely_genesis_tests.cpp"
       - "src/test/CMakeLists.txt"
       - "scripts/mine-freely-genesis-nonce.py"
@@ -40,28 +47,34 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install minimal build dependencies
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
-            build-essential cmake python3 libboost-dev libevent-dev
+            build-essential cmake python3 libboost-dev libevent-dev libsqlite3-dev
 
-      - name: Configure unit-test build
+      - name: Configure wallet-enabled unit-test build
         run: |
           cmake -B build \
-            -DENABLE_WALLET=OFF \
+            -DENABLE_WALLET=ON \
             -DENABLE_IPC=OFF \
             -DBUILD_GUI=OFF \
             -DBUILD_TESTS=ON
 
-      - name: Build Bitcoin Core unit-test executable
-        run: cmake --build build --target bitcoind bitcoin-cli test_bitcoin --parallel 2
+      - name: Build node, CLI, wallet and unit-test executable
+        run: cmake --build build --target bitcoind bitcoin-cli bitcoin-wallet test_bitcoin --parallel 2
 
-      - name: Run FREELY chain type, genesis, monetary and PoW suites
-        run: ctest --test-dir build --output-on-failure -R '^(chaintype_tests|freely_genesis_tests|validation_tests|pow_tests)$'
+      - name: Run FREELY chain, consensus, PoW and wallet suites
+        run: ctest --test-dir build --output-on-failure -R '^(chaintype_tests|freely_genesis_tests|validation_tests|pow_tests|wallet_tests)$'
+
+      - name: Verify independent FREELY retarget vectors
+        run: python3 contrib/freely/check_retarget_vectors.py
 
       - name: Test restartable genesis nonce-search helper
         run: python3 test/lint/test_freely_genesis_nonce.py
 
       - name: Verify FREELY startup fails closed before network activation
         run: python3 build/test/functional/test_runner.py --jobs=1 feature_freely_startup.py
+
+      - name: Verify BIP94 timestamp-boundary protection
+        run: python3 build/test/functional/test_runner.py --jobs=1 feature_bip94.py

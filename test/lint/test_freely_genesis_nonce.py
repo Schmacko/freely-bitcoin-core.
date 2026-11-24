@@ -11,9 +11,10 @@ Run from the repository root with:
 import hashlib
 import importlib.util
 import json
+import struct
+from pathlib import Path
 import tempfile
 import unittest
-from pathlib import Path
 
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "mine-freely-genesis-nonce.py"
@@ -149,6 +150,68 @@ class GenesisNonceSearchTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "does not match"):
                 MINER.worker(0, 1, 0, 1, bytes(76), 1, "expected-job",
                              temporary, StopFlag())
+
+
+    def test_candidate_freely_genesis_header_vector(self):
+        merkle_root = "c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1"
+        expected_hash = "0000000000e43054a010a58bde94ce509904f40f697fb874eedd426755cc2f78"
+        timestamp = 1_794_960_000
+        bits = 0x1D00FFFF
+        nonce = 2_238_688_522
+        prefix = (MINER.struct.pack("<i", 1) + bytes(32)
+                  + bytes.fromhex(merkle_root)[::-1]
+                  + MINER.struct.pack("<II", timestamp, bits))
+        header = prefix + MINER.struct.pack("<I", nonce)
+
+        digest = MINER.hash256(header)
+        target = MINER.decode_compact(bits)
+        pow_limit = int("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16)
+
+        self.assertEqual(len(header), 80)
+        self.assertEqual(digest[::-1].hex(), expected_hash)
+        self.assertLessEqual(int.from_bytes(digest, "little"), target)
+        self.assertLessEqual(target, pow_limit)
+
+    def test_candidate_freely_genesis_coinbase_and_merkle_root(self):
+        # Independently serialize the candidate C++ coinbase without using
+        # Bitcoin Core's CScript or transaction serializer.
+        def push_data(data):
+            if len(data) >= 76:
+                raise ValueError("this regression only needs direct pushes below 76 bytes")
+            return bytes((len(data),)) + data
+
+        timestamp_message = b"FREELY FLY genesis 2026-11-18"
+        output_message = b"FREELY FLY GENESIS"
+        # CScript << 486604799 << CScriptNum(4) << vector(timestamp).
+        script_sig = (
+            push_data((486604799).to_bytes(4, "little"))
+            + push_data(bytes((0x04,)))
+            + push_data(timestamp_message)
+        )
+        script_pub_key = bytes((0x6A,)) + push_data(output_message)
+
+        coinbase = b"".join((
+            struct.pack("<i", 1),                 # transaction version
+            bytes((1,)),                            # one input
+            bytes(32),                            # null prevout hash
+            struct.pack("<I", 0xFFFFFFFF),        # null prevout index
+            bytes((len(script_sig),)),
+            script_sig,
+            struct.pack("<I", 0xFFFFFFFF),        # final sequence
+            bytes((1,)),                            # one output
+            struct.pack("<q", 50 * 100_000_000),  # 50 FLY, 8 decimals
+            bytes((len(script_pub_key),)),
+            script_pub_key,
+            struct.pack("<I", 0),                 # locktime
+        ))
+
+        txid = hashlib.sha256(hashlib.sha256(coinbase).digest()).digest()[::-1].hex()
+        expected = "c28adb462751d49bfd4ab13451f8f2801634f28d333d1493e93b6077dd6cdfa1"
+        self.assertEqual(len(coinbase), 117)
+        self.assertEqual(txid, expected)
+        # A one-transaction genesis block's Merkle root is the coinbase txid.
+        merkle_root = txid
+        self.assertEqual(merkle_root, expected)
 
 
 if __name__ == "__main__":
