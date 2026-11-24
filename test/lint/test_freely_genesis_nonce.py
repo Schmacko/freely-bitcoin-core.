@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright (c) 2026 The FREELY developers
 # Distributed under the MIT software license.
 
@@ -12,6 +11,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import struct
 import tempfile
 import unittest
 
