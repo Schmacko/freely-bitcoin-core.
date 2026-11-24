@@ -123,6 +123,13 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
 // Goal: ensure FREELY private keys use the approved WIF prefix.
 BOOST_AUTO_TEST_CASE(freely_wif_prefix)
 {
+    // Use the same explicit offline-only gate required by normal FREELY startup.
+    gArgs.ForceSetArg("-freelydev", "1");
+    gArgs.ForceSetArg("-listen", "0");
+    gArgs.ForceSetArg("-connect", "0");
+    gArgs.ForceSetArg("-discover", "0");
+    gArgs.ForceSetArg("-dnsseed", "0");
+    gArgs.ForceSetArg("-listenonion", "0");
     SelectParams(ChainType::FREELY);
     std::vector<unsigned char> secret(32, 0);
     secret.back() = 1;
@@ -138,6 +145,7 @@ BOOST_AUTO_TEST_CASE(freely_wif_prefix)
     BOOST_CHECK(DecodeSecret(wif).IsValid());
 
     SelectParams(ChainType::MAIN);
+    gArgs.ForceSetArg("-freelydev", "0");
 }
 
 // Goal: check that base58 parsing code is robust against a variety of corrupted data
