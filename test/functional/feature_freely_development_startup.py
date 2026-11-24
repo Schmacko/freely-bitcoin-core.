@@ -127,7 +127,7 @@ class FreelyStartupFailClosedTest(BitcoinTestFramework):
         for extra, expected in (
             (
                 ["-bind=0.0.0.0"],
-                "FREELY loopback private mode accepts only 127\.0\.0\.1 or \[::1\] bind addresses\.",
+                r"FREELY loopback private mode accepts only 127\.0\.0\.1 or \[::1\] bind addresses\.",
             ),
             (
                 ["-whitebind=127.0.0.1:49444"],
