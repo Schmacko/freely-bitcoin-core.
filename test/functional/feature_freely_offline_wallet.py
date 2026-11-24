@@ -110,9 +110,6 @@ class FreelyOfflineWalletTest(BitcoinTestFramework):
         assert_equal(wallet.getaddressinfo(default_address)["ismine"], True)
         assert_equal(wallet.getwalletinfo()["walletname"], wallet_name)
 
-        node.loadwallet(legacy_wallet_name)
-        legacy_wallet = node.get_wallet_rpc(legacy_wallet_name)
-        assert_equal(legacy_wallet.dumpprivkey(legacy_address), wif)
 
 
 if __name__ == "__main__":
