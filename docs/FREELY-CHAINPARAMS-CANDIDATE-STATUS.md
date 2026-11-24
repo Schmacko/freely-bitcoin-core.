@@ -1,7 +1,7 @@
 # FREELY chain-parameter candidate status
 
-**Status:** reviewed implementation candidate for regression tests only  
-**Source baseline:** Bitcoin Core v32.1  
+**Status:** reviewed implementation candidate for regression tests only
+**Source baseline:** Bitcoin Core v32.1
 **Production activation:** not authorized
 
 ## Scope
