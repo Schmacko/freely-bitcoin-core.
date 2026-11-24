@@ -154,6 +154,7 @@ std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
     // Section names to be recognized in the config file.
     static const std::set<std::string> available_sections{
         ChainTypeToString(ChainType::REGTEST),
+        ChainTypeToString(ChainType::FREELY),
         ChainTypeToString(ChainType::SIGNET),
         ChainTypeToString(ChainType::TESTNET),
         ChainTypeToString(ChainType::TESTNET4),
@@ -936,10 +937,11 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
     const bool fSigNet  = get_net("-signet");
     const bool fTestNet = get_net("-testnet");
     const bool fTestNet4 = get_net("-testnet4");
+    const bool fFreely = get_net("-freely");
     const auto chain_arg = GetArg("-chain");
 
-    if ((int)chain_arg.has_value() + (int)fRegTest + (int)fSigNet + (int)fTestNet + (int)fTestNet4 > 1) {
-        throw std::runtime_error("Invalid combination of -regtest, -signet, -testnet, -testnet4 and -chain. Can use at most one.");
+    if ((int)chain_arg.has_value() + (int)fRegTest + (int)fSigNet + (int)fTestNet + (int)fTestNet4 + (int)fFreely > 1) {
+        throw std::runtime_error("Invalid combination of -regtest, -signet, -testnet, -testnet4, -freely and -chain. Can use at most one.");
     }
     if (chain_arg) {
         if (auto parsed = ChainTypeFromString(*chain_arg)) return *parsed;
@@ -950,6 +952,7 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
     if (fSigNet) return ChainType::SIGNET;
     if (fTestNet) return ChainType::TESTNET;
     if (fTestNet4) return ChainType::TESTNET4;
+    if (fFreely) return ChainType::FREELY;
     return ChainType::MAIN;
 }
 
