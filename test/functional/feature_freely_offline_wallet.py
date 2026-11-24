@@ -101,6 +101,10 @@ class FreelyOfflineWalletTest(BitcoinTestFramework):
         assert_equal(default_address.startswith("fly1"), True)
         assert_equal(wallet.getaddressinfo(default_address)["ismine"], True)
 
+        # Back up the descriptor wallet before restarting, then restore it under a new name.
+        backup_path = node.datadir_path / "freely-wallet.bak"
+        wallet.backupwallet(backup_path)
+
         # Verify wallet database recovery and key ownership after a clean restart.
         self.stop_node(0)
         self.start_node(0)
@@ -109,6 +113,13 @@ class FreelyOfflineWalletTest(BitcoinTestFramework):
         wallet = node.get_wallet_rpc(wallet_name)
         assert_equal(wallet.getaddressinfo(default_address)["ismine"], True)
         assert_equal(wallet.getwalletinfo()["walletname"], wallet_name)
+
+        restored_result = node.restorewallet("freely-wallet-restored", backup_path)
+        assert_equal(restored_result["name"], "freely-wallet-restored")
+        restored = node.get_wallet_rpc("freely-wallet-restored")
+        for address in addresses.values():
+            assert_equal(restored.getaddressinfo(address)["ismine"], True)
+        assert_equal(restored.getaddressinfo(default_address)["ismine"], True)
 
 
 
