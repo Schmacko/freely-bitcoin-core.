@@ -50,7 +50,7 @@ class FreelyOfflineWalletTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         wallet_name = "freely-wallet"
-        node.createwallet(wallet_name=wallet_name, descriptors=False)
+        node.createwallet(wallet_name=wallet_name, descriptors=True)
         wallet = node.get_wallet_rpc(wallet_name)
 
         # Exercise every standard address output type against the active
