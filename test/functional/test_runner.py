@@ -91,6 +91,8 @@ EXTENDED_SCRIPTS = [
     'feature_dbcrash.py',
     'feature_index_prune.py',
     'feature_utxo_abort_on_error.py',
+    # Wallet-enabled FREELY test, invoked by its dedicated wallet CI workflow.
+    'feature_freely_offline_wallet.py',
 ]
 
 # Special script to run each bench sanity check
@@ -275,6 +277,10 @@ BASE_SCRIPTS = [
     'tool_utxo_to_sqlite.py',
     'feature_versionbits_warning.py',
     'feature_freely_startup.py',
+    'feature_freely_development_startup.py',
+    'feature_freely_offline_startup.py',
+    'feature_freely_loopback_network.py',
+    'feature_bip94.py',
     'feature_blocksxor.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
