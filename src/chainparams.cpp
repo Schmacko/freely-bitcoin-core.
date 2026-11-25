@@ -9,7 +9,6 @@
 #include <common/args.h>
 #include <consensus/params.h>
 #include <deploymentinfo.h>
-#include <mapport.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
 #include <util/log.h>
@@ -23,6 +22,11 @@
 #include <vector>
 
 using util::SplitString;
+
+// Bitcoin Core v32.1 defines FREELY_DEFAULT_NATPMP as true in mapport.h. Keep this
+// dependency-local copy because including mapport.h here would create the
+// cycle chainparams -> mapport -> net -> chainparams.
+static constexpr bool FREELY_FREELY_DEFAULT_NATPMP{true};
 
 static void HandleDeploymentArgs(const ArgsManager& args, CChainParams::DeploymentOptions& options)
 {
@@ -194,7 +198,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
             }
             if (args.GetBoolArg("-discover", true) ||
                 args.GetBoolArg("-dnsseed", true) ||
-                args.GetBoolArg("-natpmp", DEFAULT_NATPMP)) {
+                args.GetBoolArg("-natpmp", FREELY_DEFAULT_NATPMP)) {
                 throw std::runtime_error("FREELY offline development requires external discovery services and port mapping to be disabled.");
             }
             if (!args.GetArgs("-rpcbind").empty() || !args.GetArgs("-rpcallowip").empty()) {
@@ -250,7 +254,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         if (!args.GetArgs("-whitebind").empty() ||
             args.GetBoolArg("-discover", true) ||
             args.GetBoolArg("-dnsseed", true) ||
-            args.GetBoolArg("-natpmp", DEFAULT_NATPMP) ||
+            args.GetBoolArg("-natpmp", FREELY_DEFAULT_NATPMP) ||
             args.GetBoolArg("-listenonion", true) ||
             !args.GetArgs("-externalip").empty()) {
             throw std::runtime_error("FREELY loopback private mode prohibits external discovery, port mapping and listener services.");
