@@ -85,6 +85,7 @@ BOOST_AUTO_TEST_CASE(freely_development_modes_are_mutually_exclusive)
 
     ArgsManager both_modes_args;
     both_modes_args.ForceSetArg("-freelydev", "1");
+    both_modes_args.ForceSetArg("-natpmp", "0");
     both_modes_args.ForceSetArg("-freelyprivate", "1");
     BOOST_CHECK_THROW(CreateChainParams(both_modes_args, ChainType::FREELY), std::runtime_error);
 }
@@ -93,6 +94,7 @@ BOOST_AUTO_TEST_CASE(freely_development_startup_requires_isolated_mode)
 {
     ArgsManager args;
     args.ForceSetArg("-freelydev", "1");
+    args.ForceSetArg("-natpmp", "0");
     args.ForceSetArg("-connect", "0");
     BOOST_CHECK_THROW(CreateChainParams(args, ChainType::FREELY), std::runtime_error);
 
@@ -104,10 +106,35 @@ BOOST_AUTO_TEST_CASE(freely_development_startup_requires_isolated_mode)
     BOOST_CHECK(!offline_params->AllowsLoopbackPeers());
 }
 
+BOOST_AUTO_TEST_CASE(freely_development_modes_reject_default_natpmp_port_mapping)
+{
+    // Bitcoin Core v32.1 defaults DEFAULT_NATPMP to true. Both FREELY
+    // development modes must fail closed unless the operator explicitly
+    // disables port mapping; -listen=0 alone is not the policy boundary.
+    ArgsManager offline_args;
+    offline_args.ForceSetArg("-freelydev", "1");
+    offline_args.ForceSetArg("-connect", "0");
+    offline_args.ForceSetArg("-listen", "0");
+    offline_args.ForceSetArg("-discover", "0");
+    offline_args.ForceSetArg("-dnsseed", "0");
+    offline_args.ForceSetArg("-listenonion", "0");
+    BOOST_CHECK_THROW(CreateChainParams(offline_args, ChainType::FREELY), std::runtime_error);
+
+    ArgsManager private_args;
+    private_args.ForceSetArg("-freelyprivate", "1");
+    private_args.ForceSetArg("-connect", "0");
+    private_args.ForceSetArg("-bind", "127.0.0.1:49444");
+    private_args.ForceSetArg("-discover", "0");
+    private_args.ForceSetArg("-dnsseed", "0");
+    private_args.ForceSetArg("-listenonion", "0");
+    BOOST_CHECK_THROW(CreateChainParams(private_args, ChainType::FREELY), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(freely_offline_mode_rejects_proxy_and_overlay_services)
 {
     ArgsManager proxy_args;
     proxy_args.ForceSetArg("-freelydev", "1");
+    proxy_args.ForceSetArg("-natpmp", "0");
     proxy_args.ForceSetArg("-connect", "0");
     proxy_args.ForceSetArg("-listen", "0");
     proxy_args.ForceSetArg("-discover", "0");
@@ -118,6 +145,7 @@ BOOST_AUTO_TEST_CASE(freely_offline_mode_rejects_proxy_and_overlay_services)
 
     ArgsManager external_ip_args;
     external_ip_args.ForceSetArg("-freelydev", "1");
+    external_ip_args.ForceSetArg("-natpmp", "0");
     external_ip_args.ForceSetArg("-connect", "0");
     external_ip_args.ForceSetArg("-listen", "0");
     external_ip_args.ForceSetArg("-discover", "0");
@@ -128,6 +156,7 @@ BOOST_AUTO_TEST_CASE(freely_offline_mode_rejects_proxy_and_overlay_services)
 
     ArgsManager i2p_args;
     i2p_args.ForceSetArg("-freelydev", "1");
+    i2p_args.ForceSetArg("-natpmp", "0");
     i2p_args.ForceSetArg("-connect", "0");
     i2p_args.ForceSetArg("-listen", "0");
     i2p_args.ForceSetArg("-discover", "0");
@@ -141,6 +170,7 @@ BOOST_AUTO_TEST_CASE(freely_offline_mode_rejects_zmq_publish_endpoints)
 {
     ArgsManager args;
     args.ForceSetArg("-freelydev", "1");
+    args.ForceSetArg("-natpmp", "0");
     args.ForceSetArg("-connect", "0");
     args.ForceSetArg("-listen", "0");
     args.ForceSetArg("-discover", "0");
@@ -154,12 +184,14 @@ BOOST_AUTO_TEST_CASE(freely_development_mode_rejects_outbound_peers)
 {
     ArgsManager connect_args;
     connect_args.ForceSetArg("-freelydev", "1");
+    connect_args.ForceSetArg("-natpmp", "0");
     connect_args.ForceSetArg("-listen", "0");
     connect_args.ForceSetArg("-connect", "127.0.0.1:49444");
     BOOST_CHECK_THROW(CreateChainParams(connect_args, ChainType::FREELY), std::runtime_error);
 
     ArgsManager addnode_args;
     addnode_args.ForceSetArg("-freelydev", "1");
+    addnode_args.ForceSetArg("-natpmp", "0");
     addnode_args.ForceSetArg("-connect", "0");
     addnode_args.ForceSetArg("-listen", "0");
     addnode_args.ForceSetArg("-addnode", "127.0.0.1:49444");
@@ -167,6 +199,7 @@ BOOST_AUTO_TEST_CASE(freely_development_mode_rejects_outbound_peers)
 
     ArgsManager seednode_args;
     seednode_args.ForceSetArg("-freelydev", "1");
+    seednode_args.ForceSetArg("-natpmp", "0");
     seednode_args.ForceSetArg("-connect", "0");
     seednode_args.ForceSetArg("-listen", "0");
     seednode_args.ForceSetArg("-seednode", "127.0.0.1:49444");
@@ -177,6 +210,7 @@ BOOST_AUTO_TEST_CASE(freely_development_mode_rejects_listener_overrides)
 {
     ArgsManager bind_args;
     bind_args.ForceSetArg("-freelydev", "1");
+    bind_args.ForceSetArg("-natpmp", "0");
     bind_args.ForceSetArg("-connect", "0");
     bind_args.ForceSetArg("-listen", "0");
     bind_args.ForceSetArg("-bind", "127.0.0.1:49444");
@@ -184,6 +218,7 @@ BOOST_AUTO_TEST_CASE(freely_development_mode_rejects_listener_overrides)
 
     ArgsManager whitebind_args;
     whitebind_args.ForceSetArg("-freelydev", "1");
+    whitebind_args.ForceSetArg("-natpmp", "0");
     whitebind_args.ForceSetArg("-connect", "0");
     whitebind_args.ForceSetArg("-listen", "0");
     whitebind_args.ForceSetArg("-whitebind", "127.0.0.1:49444");
@@ -191,6 +226,7 @@ BOOST_AUTO_TEST_CASE(freely_development_mode_rejects_listener_overrides)
 
     ArgsManager onion_args;
     onion_args.ForceSetArg("-freelydev", "1");
+    onion_args.ForceSetArg("-natpmp", "0");
     onion_args.ForceSetArg("-connect", "0");
     onion_args.ForceSetArg("-listen", "0");
     onion_args.ForceSetArg("-listenonion", "1");
@@ -201,6 +237,7 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_requires_explicit_local_bindin
 {
     ArgsManager no_connect_args;
     no_connect_args.ForceSetArg("-freelyprivate", "1");
+    no_connect_args.ForceSetArg("-natpmp", "0");
     no_connect_args.ForceSetArg("-bind", "127.0.0.1:49444");
     no_connect_args.ForceSetArg("-discover", "0");
     no_connect_args.ForceSetArg("-dnsseed", "0");
@@ -209,6 +246,7 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_requires_explicit_local_bindin
 
     ArgsManager no_bind_args;
     no_bind_args.ForceSetArg("-freelyprivate", "1");
+    no_bind_args.ForceSetArg("-natpmp", "0");
     no_bind_args.ForceSetArg("-discover", "0");
     no_bind_args.ForceSetArg("-dnsseed", "0");
     no_bind_args.ForceSetArg("-listenonion", "0");
@@ -216,6 +254,7 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_requires_explicit_local_bindin
 
     ArgsManager loopback_args;
     loopback_args.ForceSetArg("-freelyprivate", "1");
+    loopback_args.ForceSetArg("-natpmp", "0");
     loopback_args.ForceSetArg("-connect", "0");
     loopback_args.ForceSetArg("-bind", "127.0.0.1:49444");
     loopback_args.ForceSetArg("-discover", "0");
@@ -226,6 +265,7 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_requires_explicit_local_bindin
 
     ArgsManager public_bind_args;
     public_bind_args.ForceSetArg("-freelyprivate", "1");
+    public_bind_args.ForceSetArg("-natpmp", "0");
     public_bind_args.ForceSetArg("-bind", "0.0.0.0:49444");
     public_bind_args.ForceSetArg("-discover", "0");
     public_bind_args.ForceSetArg("-dnsseed", "0");
@@ -241,6 +281,7 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_requires_explicit_local_bindin
          }) {
         ArgsManager unsafe_bind_args;
         unsafe_bind_args.ForceSetArg("-freelyprivate", "1");
+        unsafe_bind_args.ForceSetArg("-natpmp", "0");
         unsafe_bind_args.ForceSetArg("-connect", "0");
         unsafe_bind_args.ForceSetArg("-bind", unsafe_bind);
         unsafe_bind_args.ForceSetArg("-discover", "0");
@@ -254,6 +295,7 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_external_services)
 {
     ArgsManager rpc_args;
     rpc_args.ForceSetArg("-freelyprivate", "1");
+    rpc_args.ForceSetArg("-natpmp", "0");
     rpc_args.ForceSetArg("-connect", "0");
     rpc_args.ForceSetArg("-bind", "127.0.0.1:49444");
     rpc_args.ForceSetArg("-discover", "0");
@@ -264,6 +306,7 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_external_services)
 
     ArgsManager proxy_args;
     proxy_args.ForceSetArg("-freelyprivate", "1");
+    proxy_args.ForceSetArg("-natpmp", "0");
     proxy_args.ForceSetArg("-connect", "0");
     proxy_args.ForceSetArg("-bind", "127.0.0.1:49444");
     proxy_args.ForceSetArg("-discover", "0");
@@ -274,6 +317,7 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_external_services)
 
     ArgsManager external_ip_args;
     external_ip_args.ForceSetArg("-freelyprivate", "1");
+    external_ip_args.ForceSetArg("-natpmp", "0");
     external_ip_args.ForceSetArg("-connect", "0");
     external_ip_args.ForceSetArg("-bind", "127.0.0.1:49444");
     external_ip_args.ForceSetArg("-discover", "0");
@@ -284,6 +328,7 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_external_services)
 
     ArgsManager zmq_args;
     zmq_args.ForceSetArg("-freelyprivate", "1");
+    zmq_args.ForceSetArg("-natpmp", "0");
     zmq_args.ForceSetArg("-connect", "0");
     zmq_args.ForceSetArg("-bind", "127.0.0.1:49444");
     zmq_args.ForceSetArg("-discover", "0");
