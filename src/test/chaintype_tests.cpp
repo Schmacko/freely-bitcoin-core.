@@ -93,6 +93,8 @@ BOOST_AUTO_TEST_CASE(freely_development_modes_are_mutually_exclusive)
 BOOST_AUTO_TEST_CASE(freely_development_startup_requires_isolated_mode)
 {
     ArgsManager args;
+    // Match the v32.1 default explicitly so this fixture tests the intended
+    // isolation conditions rather than failing on the independent NAT-PMP guard.
     args.ForceSetArg("-freelydev", "1");
     args.ForceSetArg("-natpmp", "0");
     args.ForceSetArg("-connect", "0");
@@ -237,6 +239,7 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_requires_explicit_local_bindin
 {
     ArgsManager no_connect_args;
     no_connect_args.ForceSetArg("-freelyprivate", "1");
+    no_connect_args.ForceSetArg("-natpmp", "0");
     no_connect_args.ForceSetArg("-natpmp", "0");
     no_connect_args.ForceSetArg("-bind", "127.0.0.1:49444");
     no_connect_args.ForceSetArg("-discover", "0");
