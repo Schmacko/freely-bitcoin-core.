@@ -23,10 +23,10 @@
 
 using util::SplitString;
 
-// Bitcoin Core v32.1 defines FREELY_DEFAULT_NATPMP as true in mapport.h. Keep this
+// Bitcoin Core v32.1 defines DEFAULT_NATPMP as true in mapport.h. Keep this
 // dependency-local copy because including mapport.h here would create the
 // cycle chainparams -> mapport -> net -> chainparams.
-static constexpr bool FREELY_FREELY_DEFAULT_NATPMP{true};
+static constexpr bool FREELY_DEFAULT_NATPMP{true};
 
 static void HandleDeploymentArgs(const ArgsManager& args, CChainParams::DeploymentOptions& options)
 {
