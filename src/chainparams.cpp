@@ -9,6 +9,7 @@
 #include <common/args.h>
 #include <consensus/params.h>
 #include <deploymentinfo.h>
+#include <mapport.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
 #include <util/log.h>
@@ -193,7 +194,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
             }
             if (args.GetBoolArg("-discover", true) ||
                 args.GetBoolArg("-dnsseed", true) ||
-                args.GetBoolArg("-natpmp", false)) {
+                args.GetBoolArg("-natpmp", DEFAULT_NATPMP)) {
                 throw std::runtime_error("FREELY offline development requires external discovery services and port mapping to be disabled.");
             }
             if (!args.GetArgs("-rpcbind").empty() || !args.GetArgs("-rpcallowip").empty()) {
@@ -249,7 +250,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         if (!args.GetArgs("-whitebind").empty() ||
             args.GetBoolArg("-discover", true) ||
             args.GetBoolArg("-dnsseed", true) ||
-            args.GetBoolArg("-natpmp", false) ||
+            args.GetBoolArg("-natpmp", DEFAULT_NATPMP) ||
             args.GetBoolArg("-listenonion", true) ||
             !args.GetArgs("-externalip").empty()) {
             throw std::runtime_error("FREELY loopback private mode prohibits external discovery, port mapping and listener services.");
