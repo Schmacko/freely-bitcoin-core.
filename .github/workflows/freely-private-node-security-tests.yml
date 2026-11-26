@@ -1,0 +1,88 @@
+name: FREELY private-node security tests
+
+on:
+  push:
+    branches:
+      - freely/private-node-integration-20261124
+    paths:
+      - "src/chainparams.cpp"
+      - "src/chainparamsbase.cpp"
+      - "src/common/args.cpp"
+      - "src/kernel/chainparams.cpp"
+      - "src/kernel/chainparams.h"
+      - "src/rpc/net.cpp"
+      - "src/test/chaintype_tests.cpp"
+      - "test/functional/feature_freely_development_startup.py"
+      - "test/functional/feature_freely_offline_startup.py"
+      - "test/functional/feature_freely_loopback_network.py"
+      - "test/functional/feature_bip94.py"
+      - "test/functional/test_runner.py"
+      - "docs/FREELY-DEVELOPMENT-MODE-NETWORK-SECURITY.md"
+      - ".github/workflows/freely-private-node-security-tests.yml"
+  pull_request:
+    branches:
+      - freely/chainparams-reconciled-20261122
+    paths:
+      - "docs/FREELY-DEVELOPMENT-MODE-NETWORK-SECURITY.md"
+      - "src/chainparams.cpp"
+      - "src/chainparamsbase.cpp"
+      - "src/common/args.cpp"
+      - "src/kernel/chainparams.cpp"
+      - "src/kernel/chainparams.h"
+      - "src/rpc/net.cpp"
+      - "src/test/chaintype_tests.cpp"
+      - "test/functional/feature_freely_development_startup.py"
+      - "test/functional/feature_freely_offline_startup.py"
+      - "test/functional/feature_freely_loopback_network.py"
+      - "test/functional/feature_bip94.py"
+      - "test/functional/test_runner.py"
+      - ".github/workflows/freely-private-node-security-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: freely-private-node-security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  private-node-security:
+    name: Build and test FREELY network isolation modes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install minimal build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            build-essential cmake python3 libboost-dev libevent-dev libsqlite3-dev
+
+      - name: Configure unit-test build
+        run: |
+          cmake -B build \
+            -DENABLE_WALLET=ON \
+            -DENABLE_IPC=OFF \
+            -DBUILD_GUI=OFF \
+            -DBUILD_TESTS=ON
+
+      - name: Build node, CLI and unit-test executable
+        run: cmake --build build --target bitcoind bitcoin-cli bitcoin-wallet test_bitcoin --parallel 2
+
+      - name: Run chain selection, genesis, PoW and validation suites
+        run: |
+          ctest --test-dir build --output-on-failure \
+            -R '^(chaintype_tests|freely_genesis_tests|pow_tests|validation_tests)$'
+
+      - name: Run FREELY startup, offline and loopback network tests
+        run: |
+          python3 build/test/functional/test_runner.py --jobs=1 \
+            feature_freely_development_startup.py \
+            feature_freely_offline_startup.py \
+            feature_freely_loopback_network.py \
+            feature_bip94.py
