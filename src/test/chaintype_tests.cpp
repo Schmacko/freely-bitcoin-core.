@@ -613,4 +613,19 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_rejects_external_discovery_and
     BOOST_CHECK_THROW(CreateChainParams(no_listen_args, ChainType::FREELY), std::runtime_error);
 }
 
+BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_accepts_ipv6_loopback_binding)
+{
+    ArgsManager args;
+    args.ForceSetArg("-freelyprivate", "1");
+    args.ForceSetArg("-connect", "0");
+    args.ForceSetArg("-bind", "[::1]:49444");
+    args.ForceSetArg("-discover", "0");
+    args.ForceSetArg("-dnsseed", "0");
+    args.ForceSetArg("-natpmp", "0");
+    args.ForceSetArg("-listenonion", "0");
+
+    const auto params{CreateChainParams(args, ChainType::FREELY)};
+    BOOST_CHECK(params->AllowsLoopbackPeers());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
