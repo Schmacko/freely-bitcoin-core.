@@ -104,6 +104,9 @@ BOOST_AUTO_TEST_CASE(freely_development_startup_requires_isolated_mode)
     args.ForceSetArg("-discover", "0");
     args.ForceSetArg("-dnsseed", "0");
     args.ForceSetArg("-listenonion", "0");
+    BOOST_CHECK_EQUAL(args.GetBoolArg("-discover", true), false);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("-dnsseed", true), false);
+    BOOST_CHECK_EQUAL(args.GetBoolArg("-natpmp", true), false);
     const auto offline_params = CreateChainParams(args, ChainType::FREELY);
     BOOST_CHECK(!offline_params->AllowsLoopbackPeers());
 }
@@ -263,6 +266,9 @@ BOOST_AUTO_TEST_CASE(freely_loopback_private_mode_requires_explicit_local_bindin
     loopback_args.ForceSetArg("-discover", "0");
     loopback_args.ForceSetArg("-dnsseed", "0");
     loopback_args.ForceSetArg("-listenonion", "0");
+    BOOST_CHECK_EQUAL(loopback_args.GetBoolArg("-discover", true), false);
+    BOOST_CHECK_EQUAL(loopback_args.GetBoolArg("-dnsseed", true), false);
+    BOOST_CHECK_EQUAL(loopback_args.GetBoolArg("-natpmp", true), false);
     const auto private_params = CreateChainParams(loopback_args, ChainType::FREELY);
     BOOST_CHECK(private_params->AllowsLoopbackPeers());
 
