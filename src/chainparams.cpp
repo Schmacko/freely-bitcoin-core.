@@ -158,6 +158,8 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         ReadRegTestArgs(args, opts);
         return CChainParams::RegTest(opts);
     }
+    case ChainType::FREELY:
+        throw std::runtime_error("FREELY consensus and genesis parameters are not finalized; refusing startup.");
     }
     assert(false);
 }
