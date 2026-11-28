@@ -56,7 +56,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
         // consensus/genesis construction remains fail-closed in CreateChainParams.
         return std::make_unique<CBaseChainParams>("freely", 49445);
     }
-    assert(false);
+    throw std::invalid_argument("Unknown chain type");
 }
 
 void SelectBaseParams(const ChainType chain)
