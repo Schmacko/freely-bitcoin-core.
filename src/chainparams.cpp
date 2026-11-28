@@ -161,7 +161,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
     case ChainType::FREELY:
         throw std::runtime_error("FREELY consensus and genesis parameters are not finalized; refusing startup.");
     }
-    assert(false);
+    throw std::invalid_argument("Unknown chain type");
 }
 
 void SelectParams(const ChainType chain)
