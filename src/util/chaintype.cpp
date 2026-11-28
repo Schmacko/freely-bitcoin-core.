@@ -8,6 +8,7 @@
 
 #include <optional>
 #include <string>
+#include <stdexcept>
 
 std::string ChainTypeToString(ChainType chain)
 {
@@ -25,7 +26,7 @@ std::string ChainTypeToString(ChainType chain)
     case ChainType::FREELY:
         return "freely";
     }
-    assert(false);
+    throw std::invalid_argument("Unknown chain type");
 }
 
 std::optional<ChainType> ChainTypeFromString(std::string_view chain)
