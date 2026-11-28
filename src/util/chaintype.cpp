@@ -4,11 +4,9 @@
 
 #include <util/chaintype.h>
 
-#include <util/check.h>
-
 #include <optional>
-#include <string>
 #include <stdexcept>
+#include <string>
 
 std::string ChainTypeToString(ChainType chain)
 {
