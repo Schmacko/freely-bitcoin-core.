@@ -24,6 +24,9 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
             "-dnsseed=0",
             "-natpmp=0",
             "-listenonion=0",
+            # The fixed candidate genesis predates CI runs; permit GBT in this
+            # isolated test without changing any consensus or production setting.
+            "-maxtipage=3153600000",
         ] for _ in range(self.num_nodes)]
 
     def run_test(self):
@@ -78,6 +81,17 @@ class FreelyLoopbackNetworkTest(BitcoinTestFramework):
             peers = node.getpeerinfo()
             assert_equal(len(peers), 1)
             assert_equal(peers[0]["addr"].startswith("127.0.0.1:"), True)
+
+        # Verify the real FREELY block-template path without mining. This
+        # exercises the candidate chain's first post-genesis block height,
+        # previous-hash linkage, proof-of-work target and subsidy in the
+        # template produced for a connected private node.
+        template = self.nodes[0].getblocktemplate({"rules": ["segwit"]})
+        assert_equal(template["height"], 1)
+        assert_equal(template["previousblockhash"], GENESIS_HASH)
+        assert_equal(template["bits"], "1d00ffff")
+        assert_equal(template["coinbasevalue"], 50 * 100_000_000)
+        assert_equal(template["transactions"], [])
 
 
 if __name__ == "__main__":
