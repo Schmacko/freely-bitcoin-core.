@@ -1,0 +1,49 @@
+name: FREELY consensus specification checks
+
+on:
+  pull_request:
+    branches:
+      - freely/upstream-v32.1
+    paths:
+      - "docs/FREELY-CONSENSUS-SPECIFICATION.md"
+      - "docs/FREELY-CONSENSUS-DECISION-REGISTER.md"
+      - "scripts/verify-freely-consensus-spec.py"
+      - "scripts/model-freely-pow-candidates.py"
+      - "scripts/generate-freely-genesis-candidate.py"
+      - "docs/FREELY-POW-CANDIDATE-MODEL.md"
+      - ".github/workflows/freely-consensus-specification.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  subsidy-specification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          path: .
+
+      - name: Check Python syntax
+        run: python3 -m py_compile scripts/verify-freely-consensus-spec.py
+
+      - name: Check candidate model syntax
+        run: python3 -m py_compile scripts/model-freely-pow-candidates.py
+
+      - name: Check genesis candidate generator syntax
+        run: python3 -m py_compile scripts/generate-freely-genesis-candidate.py
+
+      - name: Verify subsidy boundaries and issuance arithmetic
+        run: python3 scripts/verify-freely-consensus-spec.py
+
+      - name: Run deterministic PoW candidate model smoke test
+        run: python3 scripts/model-freely-pow-candidates.py --difficulty 1 --difficulty 256 --hashrate 1000000000 --window 600
+
+      - name: Generate candidate genesis coinbase and verify Bitcoin serialization fixture
+        run: python3 scripts/generate-freely-genesis-candidate.py
+
+      - name: Verify synthetic genesis header serialization and proof of work
+        run: python3 scripts/generate-freely-genesis-candidate.py --self-test-header
