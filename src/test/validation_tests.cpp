@@ -77,6 +77,12 @@ BOOST_AUTO_TEST_CASE(freely_monetary_policy_test)
     const auto& consensus{freely_params->GetConsensus()};
 
     BOOST_CHECK_EQUAL(consensus.nSubsidyHalvingInterval, 210000);
+    // Bind the candidate to the owner's approved production retarget schedule.
+    BOOST_CHECK_EQUAL(consensus.nPowTargetSpacing, 600);
+    BOOST_CHECK_EQUAL(consensus.nPowTargetTimespan, 1'209'600);
+    BOOST_CHECK_EQUAL(consensus.DifficultyAdjustmentInterval(), 2016);
+    BOOST_CHECK(!consensus.fPowAllowMinDifficultyBlocks);
+    BOOST_CHECK(!consensus.fPowNoRetargeting);
     BOOST_CHECK_EQUAL(GetBlockSubsidy(0, consensus), 50 * COIN);
     BOOST_CHECK_EQUAL(GetBlockSubsidy(209999, consensus), 50 * COIN);
     BOOST_CHECK_EQUAL(GetBlockSubsidy(210000, consensus), 25 * COIN);
