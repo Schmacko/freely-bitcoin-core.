@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
+import re
 import subprocess
 import sys
 import shlex
@@ -24,35 +25,26 @@ def main():
     num_procs = int(run(["nproc"], stdout=subprocess.PIPE).stdout)
     build_dir = "ci_build"
 
-    # CMake 4.5 adds a non-target-directive developer warning. Preserve the
-    # upstream -Werror=dev policy while suppressing only that new diagnostic.
-    cmake_version = run(
-        ["cmake", "--version"], stdout=subprocess.PIPE, text=True
-    ).stdout.splitlines()[0].split()[-1]
-    cmake_major, cmake_minor = (int(part) for part in cmake_version.split(".")[:2])
-    cmake_dev_warning_flags = ["-Werror=dev"]
-    if (cmake_major, cmake_minor) >= (4, 5):
-        cmake_dev_warning_flags.append("-Wno-error=non-target-directive")
-
-    run([
+    cmake_version_output = run(["cmake", "--version"], stdout=subprocess.PIPE, text=True).stdout
+    cmake_version = re.search(r"cmake version (\d+)\.(\d+)", cmake_version_output)
+    cmake_args = [
         "cmake",
         "-B",
         build_dir,
-        *cmake_dev_warning_flags,
-        # Use clang++, because it is a bit faster and uses less memory than g++
+        "-Werror=dev",
         "-DCMAKE_C_COMPILER=clang",
         "-DCMAKE_CXX_COMPILER=clang++",
-        # Use mold, because it is faster than the default linker
         "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=mold",
-        # Use Debug build type for more debug checks, but enable optimizations
         "-DAPPEND_CXXFLAGS='-O3 -g2'",
         "-DAPPEND_CFLAGS='-O3 -g2'",
         "-DCMAKE_BUILD_TYPE=Debug",
         "-DCMAKE_COMPILE_WARNING_AS_ERROR=ON",
         "--preset=dev-mode",
-        # Tolerate unused (member) functions in intermediate commits in a pull request
         "-DCMAKE_CXX_FLAGS=-Wno-error=unused-member-function -Wno-error=unused-function",
-    ])
+    ]
+    if cmake_version and (int(cmake_version.group(1)), int(cmake_version.group(2))) >= (4, 5):
+        cmake_args.append("-Wno-error=non-target-directive")
+    run(cmake_args)
 
     if run(["cmake", "--build", build_dir, "-j", str(num_procs)], check=False).returncode != 0:
         print("Build failure. Verbose build follows.")
