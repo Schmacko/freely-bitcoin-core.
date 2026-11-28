@@ -44,6 +44,14 @@ BOOST_AUTO_TEST_CASE(unknown_chain_type_is_rejected)
     BOOST_CHECK(!ChainTypeFromString("FREELY").has_value());
 }
 
+BOOST_AUTO_TEST_CASE(invalid_chain_type_enum_is_rejected)
+{
+    const auto invalid_chain{static_cast<ChainType>(-1)};
+    BOOST_CHECK_THROW(ChainTypeToString(invalid_chain), std::invalid_argument);
+    BOOST_CHECK_THROW(CreateBaseChainParams(invalid_chain), std::invalid_argument);
+    BOOST_CHECK_THROW(CreateChainParams(*m_node.args, invalid_chain), std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_CASE(freely_approved_base_parameters_are_selected)
 {
     const auto base{CreateBaseChainParams(ChainType::FREELY)};
