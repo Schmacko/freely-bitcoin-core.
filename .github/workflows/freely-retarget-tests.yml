@@ -1,0 +1,65 @@
+name: FREELY retarget tests
+
+on:
+  pull_request:
+    branches:
+      - freely/upstream-v32.1
+    paths:
+      - "src/test/pow_tests.cpp"
+      - "src/pow.cpp"
+      - "src/pow.h"
+      - "src/validation.cpp"
+      - "src/validation.h"
+      - "src/consensus/params.h"
+      - "src/kernel/chainparams.cpp"
+      - "src/chainparams.cpp"
+      - "test/functional/feature_bip94.py"
+      - "test/functional/test_runner.py"
+      - "contrib/freely/check_retarget_vectors.py"
+      - "docs/FREELY-RETARGET-TEST-VECTORS.md"
+      - ".github/workflows/freely-retarget-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: freely-retarget-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pow-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out FREELY fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install minimal build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            build-essential cmake python3 libboost-dev libevent-dev
+
+      - name: Verify independent integer retarget vectors
+        run: python3 contrib/freely/check_retarget_vectors.py
+
+      - name: Configure unit-test build
+        run: |
+          cmake -B build \
+            -DENABLE_WALLET=OFF \
+            -DENABLE_IPC=OFF \
+            -DBUILD_GUI=OFF \
+            -DBUILD_TESTS=ON
+
+      - name: Build node, CLI and unit-test executable
+        run: cmake --build build --target bitcoind bitcoin-cli test_bitcoin --parallel 2
+
+      - name: Run proof-of-work unit-test suite
+        run: ctest --test-dir build --output-on-failure -R "^pow_tests$"
+
+
+      - name: Run BIP94 timestamp-boundary functional test
+        run: python3 build/test/functional/test_runner.py --jobs=1 feature_bip94.py

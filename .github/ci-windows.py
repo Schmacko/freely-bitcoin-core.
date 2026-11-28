@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -64,18 +65,11 @@ def github_import_vs_env(_ci_type):
 
 
 def generate(ci_type):
-    # CMake 4.5 introduces a new developer warning for legacy directory-scoped
-    # directives. Keep every other developer warning fatal on the v32.1 baseline.
-    cmake_version = run(["cmake", "--version"], capture_output=True, text=True).stdout.splitlines()[0].split()[-1]
-    cmake_major, cmake_minor = (int(part) for part in cmake_version.split(".")[:2])
-    warning_flags = ["-Werror=dev"]
-    if (cmake_major, cmake_minor) >= (4, 5):
-        warning_flags.append("-Wno-error=non-target-directive")
     command = [
         "cmake",
         "-B",
         "build",
-        *warning_flags,
+        "-Werror=dev",
         "--preset=vs2026",
         # Using x64-windows-release for both host and target triplets
         # to ensure vcpkg builds only release packages, thereby optimizing
@@ -84,6 +78,11 @@ def generate(ci_type):
         "-DVCPKG_HOST_TRIPLET=x64-windows-release",
         "-DVCPKG_TARGET_TRIPLET=x64-windows-release",
     ] + GENERATE_OPTIONS[ci_type]
+    cmake_version_output = run(["cmake", "--version"], capture_output=True, text=True).stdout
+    cmake_version = re.search(r"cmake version (\d+)\.(\d+)", cmake_version_output)
+    if cmake_version and (int(cmake_version.group(1)), int(cmake_version.group(2))) >= (4, 5):
+        # CMake 4.5 adds the non-target-directive developer diagnostic.
+        command.append("-Wno-error=non-target-directive")
     if run(command, check=False).returncode != 0:
         print("=== ⚠️ ===")
         print("Generate failure! Network issue? Retry once ...")

@@ -109,18 +109,17 @@ ccache --zero-stats
 # Folder where the build is done.
 BASE_BUILD_DIR=${BASE_BUILD_DIR:-$BASE_SCRATCH_DIR/build-$HOST}
 
-# CMake 4.5 adds the non-target-directive developer warning. Keep all other
-# developer warnings fatal while allowing the legacy v32.1 directory-scoped
-# directives that this pinned source baseline has not migrated yet.
-CMAKE_VERSION="$(cmake --version | sed -n '1s/^cmake version //p')"
-CMAKE_VERSION_MAJOR="${CMAKE_VERSION%%.*}"
-CMAKE_VERSION_MINOR="${CMAKE_VERSION#*.}"
-CMAKE_VERSION_MINOR="${CMAKE_VERSION_MINOR%%.*}"
-CMAKE_DEV_WARNING_FLAGS="-Werror=dev"
-if (( CMAKE_VERSION_MAJOR > 4 || ( CMAKE_VERSION_MAJOR == 4 && CMAKE_VERSION_MINOR >= 5 ) )); then
-  CMAKE_DEV_WARNING_FLAGS="${CMAKE_DEV_WARNING_FLAGS} -Wno-error=non-target-directive"
+BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL '-DCMAKE_INSTALL_PREFIX=$BASE_OUTDIR' -Werror=dev"
+# CMake 4.5 adds the non-target-directive developer diagnostic.
+# Keep developer warnings fatal, but do not fail the build on this upstream
+# compatibility warning until the build files can migrate to target directives.
+CMAKE_VERSION=$(cmake --version | sed -n '1s/^cmake version //p')
+CMAKE_MAJOR=${CMAKE_VERSION%%.*}
+CMAKE_REST=${CMAKE_VERSION#*.}
+CMAKE_MINOR=${CMAKE_REST%%.*}
+if (( CMAKE_MAJOR > 4 || (CMAKE_MAJOR == 4 && CMAKE_MINOR >= 5) )); then
+  BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL -Wno-error=non-target-directive"
 fi
-BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL '-DCMAKE_INSTALL_PREFIX=$BASE_OUTDIR' $CMAKE_DEV_WARNING_FLAGS"
 
 if [[ "${RUN_IWYU}" == true || "${RUN_TIDY}" == true ]]; then
   BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
